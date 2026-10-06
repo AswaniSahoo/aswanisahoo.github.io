@@ -1,0 +1,116 @@
+---
+/** Sheet 04, Writing: every post, newest first. */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SheetBanner from '../../components/SheetBanner.astro';
+import { writingIndex } from '../../lib/writing';
+
+const items = await writingIndex();
+const ext = { target: '_blank', rel: 'noopener noreferrer' };
+---
+
+<BaseLayout
+  sheet="04"
+  title="Writing · Aswani Kumar Sahoo"
+  description="Notes from building an evaluated climate-risk agent in public. Every post was first published on Hashnode and keeps its original date."
+>
+  <SheetBanner sheet="04" parts={['Writing', `${items.length} posts`]}>
+    <h1>Writing</h1>
+    <p class="lede">Notes from building an evaluated climate-risk agent in public. Every post here was first published on Hashnode and keeps its original date.</p>
+    <p class="feed mono"><a href="/rss.xml">RSS feed</a></p>
+  </SheetBanner>
+
+  <section class="wrap writing" aria-label="Posts">
+    <ol class="posts">
+      {items.map((p, i) => (
+        <li class="reveal" style={`--delay: ${Math.min(i, 2) * 60}ms`}>
+          <time class="date mono" datetime={p.date}>{p.date}</time>
+          <div class="body">
+            <h2>
+              {p.external ? <a href={p.href} {...ext}>{p.title}</a> : <a href={p.href}>{p.title}</a>}
+            </h2>
+            <p class="line">{p.summary}</p>
+            <p class="meta mono">
+              {p.external ? <span>on Hashnode ↗</span> : <span>{p.minutes} min read</span>}
+              {p.tags.map((t) => <span>· {t}</span>)}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+</BaseLayout>
+
+<style>
+  .feed {
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .feed a {
+    text-decoration: none;
+  }
+  .feed a::before {
+    content: '↗ ';
+    color: var(--accent);
+  }
+  .feed a:hover {
+    text-decoration: underline;
+  }
+  .writing {
+    padding-block: 2rem clamp(4rem, 8vw, 6rem);
+  }
+  .posts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    border-top: 1px solid var(--line-strong);
+  }
+  .posts li {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    gap: 0.4rem 1.5rem;
+    padding-block: 1.4rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .date {
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding-top: 0.3rem;
+  }
+  .body {
+    display: grid;
+    gap: 0.4rem;
+    max-width: 65ch;
+  }
+  h2 {
+    font-family: var(--font-sans);
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+  h2 a {
+    text-decoration: none;
+  }
+  h2 a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+  .line {
+    color: var(--muted);
+    font-size: 0.97rem;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  @media (max-width: 600px) {
+    .posts li {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

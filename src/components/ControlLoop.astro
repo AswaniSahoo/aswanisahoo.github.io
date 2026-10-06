@@ -1,0 +1,81 @@
+---
+/**
+ * "The LLM proposes, deterministic code decides."
+ * Packets travel the loop on a CSS offset-path; UNKNOWN is a first-class exit.
+ * Drawing rules are the shared .flowsvg styles in global.css; the comparison panel reuses the packets.
+ */
+const nodes = [
+  { x: 10, y: 95, w: 170, h: 70, title: 'Evidence ledger', sub: 'content-addressed' },
+  { x: 250, y: 95, w: 170, h: 70, title: 'LLM proposes', sub: 'allow-listed signals only' },
+  { x: 490, y: 95, w: 170, h: 70, title: 'Deterministic verifier', sub: 'checks every citation' },
+];
+const outs = [
+  { y: 30, label: 'SUPPORTED', tone: 'ok' },
+  { y: 108, label: 'REFUTED', tone: 'warn' },
+  { y: 186, label: 'UNKNOWN · abstain', tone: 'accent' },
+];
+const edges = [
+  'M180 130 L250 130',
+  'M420 130 L490 130',
+  'M660 130 C705 130 705 52 742 52',
+  'M660 130 L742 130',
+  'M660 130 C705 130 705 208 742 208',
+];
+const packets = [
+  { d: 'M180 130 L660 130 C705 130 705 52 742 52', tone: 'ok', at: '0s' },
+  { d: 'M180 130 L742 130', tone: 'warn', at: '1.4s' },
+  { d: 'M180 130 L660 130 C705 130 705 208 742 208', tone: 'accent', at: '2.8s' },
+];
+---
+
+<figure class="loop reveal">
+  <svg class="flowsvg" viewBox="0 0 920 260" role="img" aria-labelledby="loop-title loop-desc">
+    <title id="loop-title">Control loop: evidence ledger, LLM proposes, deterministic verifier, verdict</title>
+    <desc id="loop-desc">The language model may only propose hypotheses over allow-listed signals. A deterministic verifier returns SUPPORTED, REFUTED or UNKNOWN, and UNKNOWN means the system abstains.</desc>
+    {edges.map((d) => <path class="edge" d={d} />)}
+    {nodes.map((n) => (
+      <g>
+        <rect class="node ink" x={n.x} y={n.y} width={n.w} height={n.h} />
+        <text class="t" x={n.x + n.w / 2} y={n.y + 30} text-anchor="middle" font-size="15">{n.title}</text>
+        <text class="s plain" x={n.x + n.w / 2} y={n.y + 50} text-anchor="middle" font-size="12">{n.sub}</text>
+      </g>
+    ))}
+    {outs.map((o) => (
+      <g>
+        <rect class={`out ${o.tone}`} x="742" y={o.y} width="172" height="44" />
+        <text class={`o ${o.tone}`} x="828" y={o.y + 27} text-anchor="middle" font-size="12">{o.label}</text>
+      </g>
+    ))}
+    {packets.map((p) => (
+      <circle class={`packet ${p.tone}`} r="4" style={`offset-path: path('${p.d}'); --at: ${p.at}; --rest: 94%`} />
+    ))}
+  </svg>
+  <figcaption>
+    Gemini may only propose over an allow-list of signals. The verifier decides, and UNKNOWN is a valid answer: on the sealed split the gated arm abstained on 52 of 90 cases rather than assert a cause, and made zero invalid evidence citations.
+  </figcaption>
+</figure>
+
+<style>
+  .loop {
+    margin: 0 0 1rem;
+    display: grid;
+    gap: 0.8rem;
+    container-type: inline-size;
+  }
+  .loop :global(.flowsvg) {
+    padding: 0.5rem;
+  }
+  figcaption {
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 75ch;
+  }
+  /* Narrower than about 840px the drawing would shrink below legible (labels under 10.5px);
+     the comparison panel above carries the same flow in a vertical layout, so only the
+     caption stays. Judged by the figure's own width, not the window's. */
+  @container (max-width: 839px) {
+    .loop :global(.flowsvg) {
+      display: none;
+    }
+  }
+</style>

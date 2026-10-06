@@ -1,0 +1,369 @@
+---
+import MetricTile from './MetricTile.astro';
+import { profile } from '../data/profile';
+import { docathon } from '../data/projects';
+import { upstreamHeadline } from '../data/upstream';
+
+// Baliapal, Balasore district. The low rests here when nobody is pointing.
+const home = { lon: 87.1, lat: 21.6 };
+
+const stats = [
+  {
+    metric: {
+      label: `merged upstream PRs across ${upstreamHeadline.orgs} orgs`,
+      value: String(upstreamHeadline.merged),
+      verifiedAt: upstreamHeadline.verifiedAt,
+      source: '/open-source/#ledger',
+      evidence: 'PR ledger',
+    },
+  },
+  {
+    metric: {
+      label: 'flagship systems evaluated on held-out sets',
+      value: '2',
+      verifiedAt: '2026-09-30',
+      source: '#work',
+      evidence: 'both reports',
+    },
+  },
+  {
+    metric: {
+      label: `of 33 contributors, ${docathon.title}, ${docathon.result}`,
+      value: '7th',
+      verifiedAt: docathon.verifiedAt,
+      source: docathon.source,
+    },
+  },
+];
+---
+
+<section id="top" class="hero" data-hero data-home-lon={home.lon} data-home-lat={home.lat} aria-label="Introduction">
+  <div class="chart" data-chart>
+    <canvas class="hero-canvas" data-base aria-hidden="true"></canvas>
+    <canvas class="hero-canvas" data-part aria-hidden="true"></canvas>
+    <p class="plot mono" data-plot aria-hidden="true" hidden></p>
+    <p class="corner bl mono">Surface analysis · Bay of Bengal sheet · synthetic field</p>
+    <p class="corner br mono">{profile.domain}</p>
+  </div>
+
+  <div class="overlay">
+    <div class="wrap">
+      <div class="legend card boxed">
+        <p class="eyebrow"><b>{profile.name}</b> · {profile.title}</p>
+        <h1>{profile.tagline}</h1>
+        <p class="intro">{profile.intro}</p>
+        <div class="stats">
+          {stats.map((s) => <MetricTile metric={s.metric} size="lg" />)}
+        </div>
+        <div class="cta">
+          <a class="btn primary" href="/work/">See the work</a>
+          <a class="btn" href={profile.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a class="btn" href={profile.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          <a class="btn" href={`mailto:${profile.email}`}>Email</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .chart {
+    position: relative;
+    height: clamp(460px, 76vh, 760px);
+    overflow: hidden;
+    background: var(--bg);
+    cursor: crosshair;
+  }
+  .hero-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  /* The plotter readout: chart coordinates under the pointer. Fine pointers only. */
+  .plot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 2;
+    pointer-events: none;
+    font-size: 0.64rem;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border: 1px solid var(--line-strong);
+    padding: 0.05rem 0.35rem;
+    white-space: nowrap;
+  }
+  .plot[hidden] {
+    display: none;
+  }
+  @media (hover: none), (pointer: coarse) {
+    .plot {
+      display: none;
+    }
+  }
+  .corner {
+    position: absolute;
+    z-index: 2;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .corner.bl {
+    left: 1rem;
+    bottom: 0.75rem;
+  }
+  .corner.br {
+    right: 1rem;
+    bottom: 0.75rem;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .overlay .wrap {
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    padding-top: clamp(1.5rem, 5vh, 3rem);
+  }
+  .legend {
+    pointer-events: auto;
+    max-width: 560px;
+    display: grid;
+    gap: 1rem;
+    padding: 1.5rem 1.6rem 1.4rem;
+    background: color-mix(in srgb, var(--card) 92%, transparent);
+  }
+  .legend .eyebrow {
+    color: var(--muted);
+  }
+  .legend .eyebrow b {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .intro {
+    color: var(--muted);
+    font-size: 0.95rem;
+    max-width: 58ch;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--line);
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.2rem;
+  }
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--text);
+    color: var(--text);
+    transition: background 200ms var(--ease), color 200ms var(--ease), transform 200ms var(--ease);
+  }
+  .btn:hover {
+    background: var(--text);
+    color: var(--bg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+  }
+  .btn.primary {
+    background: var(--text);
+    color: var(--bg);
+  }
+  .btn.primary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  @media (max-width: 760px) {
+    .chart {
+      height: 320px;
+    }
+    .overlay {
+      position: static;
+      pointer-events: auto;
+    }
+    .overlay .wrap {
+      height: auto;
+      padding-top: 0;
+      display: block;
+    }
+    .legend {
+      max-width: none;
+      margin-top: -3rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 3;
+    }
+    /* The card overlaps the bottom 3rem of the chart: lift the corner captions clear of it, so
+       they no longer show through the card as ghost text over its eyebrow line. */
+    .corner.bl,
+    .corner.br {
+      bottom: 3.75rem;
+    }
+    /* Clear of the map's own latitude tick labels along the left edge. */
+    .corner.bl {
+      left: 2.6rem;
+    }
+    .stats {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.6rem;
+    }
+  }
+  @media (max-width: 480px) {
+    .stats {
+      grid-template-columns: 1fr;
+    }
+    /* The domain repeats the header wordmark and, this narrow, brushes the map's station labels. */
+    .corner.br {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { createSynoptic } from '../lib/synoptic';
+
+  // Set up on every page load (first visit and each client-side navigation), torn down
+  // before the next swap, so listeners and the animation loop never pile up.
+  let teardown: (() => void) | null = null;
+
+  const fmt = (lon: number, lat: number) =>
+    `${Math.abs(lat).toFixed(1)}${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(1)}${lon >= 0 ? 'E' : 'W'}`;
+
+  function init() {
+    teardown?.();
+    teardown = null;
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    const chart = hero?.querySelector<HTMLElement>('[data-chart]') ?? null;
+    const base = hero?.querySelector<HTMLCanvasElement>('[data-base]') ?? null;
+    const part = hero?.querySelector<HTMLCanvasElement>('[data-part]') ?? null;
+    const plot = hero?.querySelector<HTMLElement>('[data-plot]') ?? null;
+    if (!hero || !chart || !base || !part) return;
+
+    const ac = new AbortController();
+    const { signal } = ac;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fine = window.matchMedia('(pointer: fine)').matches;
+    const home: [number, number] = [Number(hero.dataset.homeLon), Number(hero.dataset.homeLat)];
+    const syn = createSynoptic({ base, part, themeRoot: document.documentElement, home, reduce });
+    syn.resize();
+    syn.start();
+
+    // The pointer is the low, and the plotter readout names where it is.
+    // Measured against the chart, so the legend box does not block it.
+    if (fine) {
+      hero.addEventListener(
+        'pointermove',
+        (e) => {
+          const r = chart.getBoundingClientRect();
+          const x = e.clientX - r.left;
+          const y = e.clientY - r.top;
+          if (x >= 0 && y >= 0 && x <= r.width && y <= r.height) {
+            syn.setPointer(x, y);
+            if (plot && !reduce) {
+              const [lon, lat] = syn.lonLat(x, y);
+              plot.textContent = fmt(lon, lat);
+              plot.style.transform = `translate(${Math.min(x + 14, r.width - 110)}px, ${Math.min(y + 14, r.height - 24)}px)`;
+              plot.hidden = false;
+            }
+          } else {
+            syn.clearPointer();
+            if (plot) plot.hidden = true;
+          }
+        },
+        { signal },
+      );
+      hero.addEventListener(
+        'pointerleave',
+        () => {
+          syn.clearPointer();
+          if (plot) plot.hidden = true;
+        },
+        { signal },
+      );
+    }
+
+    let rt = 0;
+    window.addEventListener(
+      'resize',
+      () => {
+        clearTimeout(rt);
+        rt = window.setTimeout(() => {
+          syn.resize();
+          if (reduce) syn.once();
+        }, 120);
+      },
+      { signal },
+    );
+
+    // Draw only while the chart is on screen and the tab is visible.
+    let visible = !document.hidden;
+    let onScreen = true;
+    const sync = () => (visible && onScreen ? syn.start() : syn.stop());
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        visible = !document.hidden;
+        sync();
+      },
+      { signal },
+    );
+    const io =
+      'IntersectionObserver' in window
+        ? new IntersectionObserver(
+            (entries) => {
+              for (const e of entries) onScreen = e.isIntersecting;
+              sync();
+            },
+            { threshold: 0 },
+          )
+        : null;
+    io?.observe(chart);
+
+    // Theme changes: the renderer reads its colours from CSS tokens.
+    const mo = new MutationObserver(() => syn.retheme());
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => syn.retheme(), { signal });
+
+    // Redraw the static frame once the chart font has arrived.
+    if (reduce && document.fonts) document.fonts.ready.then(() => syn.once());
+
+    teardown = () => {
+      ac.abort();
+      io?.disconnect();
+      mo.disconnect();
+      clearTimeout(rt);
+      syn.stop();
+    };
+  }
+
+  document.addEventListener('astro:page-load', init);
+  document.addEventListener('astro:before-swap', () => {
+    teardown?.();
+    teardown = null;
+  });
+</script>

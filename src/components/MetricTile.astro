@@ -1,0 +1,69 @@
+---
+import type { Metric } from '../data/types';
+import Receipt from './Receipt.astro';
+import { isFastMoving } from '../lib/evidence';
+
+interface Props {
+  metric: Metric;
+  size?: 'lg' | 'md';
+  /** The source is a private repository: named, not linked. */
+  isPrivate?: boolean;
+}
+const { metric, size = 'md', isPrivate = false } = Astro.props;
+if (!metric.source) throw new Error(`MetricTile: "${metric.label}" has no source`);
+
+// A value that has to wrap breaks only before a separator (/, →, vs, of) and never inside a number
+// and its unit: "+0.76 °C / decade" wraps as "+0.76 °C" over "/ decade", not "+0.76 °C /" over
+// "decade". The text is unchanged; the segments are joined by the same spaces.
+const parts = String(metric.value).split(/ (?=(?:[/→]|vs |of ))/);
+---
+
+<div class:list={['metric', `metric--${size}`]}>
+  <div class="metric-value mono">{parts.map((part, i) => <><span class="seg">{part}</span>{i < parts.length - 1 && ' '}</>)}</div>
+  <div class="metric-label">
+    {metric.label}{metric.note && <span class="note"> · {metric.note}</span>}
+  </div>
+  <Receipt
+    source={metric.source}
+    label={metric.evidence}
+    fast={metric.fast ?? isFastMoving(metric.label)}
+    verifiedAt={metric.verifiedAt}
+    isPrivate={isPrivate}
+  />
+</div>
+
+<style>
+  .metric {
+    display: grid;
+    gap: 0.3rem;
+    align-content: start;
+  }
+  .metric :global(.receipt) {
+    justify-self: start;
+  }
+  .metric-value {
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  /* One unit per segment: it stays whole while it fits, and wraps inside only if the tile is narrower than it. */
+  .seg {
+    display: inline-block;
+    max-width: 100%;
+  }
+  .metric--lg .metric-value {
+    font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  }
+  .metric--md .metric-value {
+    font-size: 1.45rem;
+  }
+  .metric-label {
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+  .note {
+    color: var(--muted);
+  }
+</style>

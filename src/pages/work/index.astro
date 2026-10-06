@@ -1,0 +1,30 @@
+---
+/** Sheet 02, Work: every station, filterable, each card linking to its report. */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SheetBanner from '../../components/SheetBanner.astro';
+import Stations from '../../components/Stations.astro';
+import { stations } from '../../data/projects';
+
+const n = stations.length;
+---
+
+<BaseLayout
+  sheet="02"
+  title="Work · Aswani Kumar Sahoo"
+  description={`Station reports: ${n} repositories, each with its evidence stamped. Flagships first, then by the size of the test suite.`}
+>
+  <SheetBanner sheet="02" parts={['Station reports', `${n} stations`]}>
+    <h1>Station reports</h1>
+    <p class="lede">Every substantive repository I own, reported like a station on the chart. Flagships first, then by the size of the test suite. Each number carries its stamp; open a station for the full report.</p>
+  </SheetBanner>
+
+  <section class="wrap work" aria-label="Stations">
+    <Stations />
+  </section>
+</BaseLayout>
+
+<style>
+  .work {
+    padding-block: 2rem clamp(4rem, 8vw, 6rem);
+  }
+</style>

@@ -1,0 +1,475 @@
+---
+/** Sheet 03, Upstream: the merged PRs told by org, with the graph_weather story first. */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SheetBanner from '../../components/SheetBanner.astro';
+import OrgGraph from '../../components/OrgGraph.astro';
+import MetricTile from '../../components/MetricTile.astro';
+import Receipt from '../../components/Receipt.astro';
+import ledger from '../../data/prs.json';
+import { upstreamHeadline, mergedByOrg } from '../../data/upstream';
+import { docathon, meshSeries } from '../../data/projects';
+import { negativeResults } from '../../data/negative';
+import type { PrLedger, PullRequest } from '../../data/types';
+
+const data = ledger as PrLedger;
+const h = upstreamHeadline;
+const counts = Object.fromEntries(mergedByOrg.map((o) => [o.name, o.merged]));
+const ablation = negativeResults.find((r) => r.title === 'I tested my own mesh claim, and it did not hold');
+if (!ablation) throw new Error('open-source: the #238 ablation is missing from negative.ts');
+
+// Merged and closed PRs per project, in the order the headline counts them, then the rest.
+const order = [...mergedByOrg.map((o) => o.name), ...Object.keys(data.byProject).filter((p) => !counts[p])];
+const slug = (p: string) => p.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const groups = order.map((project) => {
+  const prs = data.prs.filter((pr) => pr.project === project && pr.status !== 'open');
+  const any = data.prs.find((pr) => pr.project === project);
+  return { project, org: any?.org ?? '', repos: [...new Set(data.prs.filter((pr) => pr.project === project).map((pr) => pr.repo))], counts: data.byProject[project], prs };
+});
+const open: PullRequest[] = data.prs.filter((pr) => pr.status === 'open');
+const pr = (n: number) => `${meshSeries.repo}/pull/${n}`;
+const ext = { target: '_blank', rel: 'noopener noreferrer' };
+---
+
+<BaseLayout
+  sheet="03"
+  title="Open source · Aswani Kumar Sahoo"
+  description={`${h.text}: graph_weather, PyTorch, ExecuTorch, krkn-chaos and MalariaGEN. The graph_weather decoder root cause, and every PR by org.`}
+>
+  <SheetBanner sheet="03" parts={['Upstream', `${h.merged} merged`, `${h.orgs} orgs`]}>
+    <h1>Upstream</h1>
+    <p class="lede">
+      The ledger below is regenerated from the GitHub API, not typed in. PyTorch, ExecuTorch and MalariaGEN merge through bots, so GitHub's own is:merged filter under-counts them; this ledger also reads the Merged label. Closed PRs are listed, not hidden.
+    </p>
+  </SheetBanner>
+
+  <section class="wrap headline-row" aria-label="Headline">
+    <div class="headline">
+      <p class="big"><span class="bignum mono">{h.merged}</span> merged upstream PRs across {h.orgs} orgs</p>
+      <Receipt source="#ledger" label="PR ledger" />
+      <ul class="orgs">
+        {mergedByOrg.map((o) => (
+          <li><a href={`#ledger-${slug(o.name)}`}>{o.name}</a><b class="mono">{o.merged}</b></li>
+        ))}
+      </ul>
+    </div>
+    <div class="inset card chart-panel">
+      <OrgGraph counts={counts} />
+    </div>
+  </section>
+
+  <section id="graph-weather" class="wrap section-block" aria-labelledby="story-title">
+    <article class="card boxed story">
+      <p class="eyebrow"><b>Featured</b> · Open Climate Fix · graph_weather</p>
+      <h2 id="story-title">The decoder was forecasting persistence</h2>
+      <p class="prose">{meshSeries.summary}</p>
+      <div class="finding">
+        <p class="prose">{meshSeries.finding.text}</p>
+        <div class="finding-metrics">
+          <MetricTile metric={meshSeries.finding.metric} />
+          <MetricTile metric={meshSeries.metrics[0]} />
+        </div>
+        <p class="refs mono">
+          <a href={pr(237)} {...ext}>PR #237, stretched model</a>
+          <a href={pr(239)} {...ext}>PR #239, regional model</a>
+          <a href={meshSeries.issue} {...ext}>issue #3, the coordination thread</a>
+        </p>
+      </div>
+      <div class="against">
+        <p class="eyebrow"><b>Then it went against me</b> · issue #238</p>
+        <h3>{ablation.title}</h3>
+        <p class="prose">{ablation.whatHappened}</p>
+        <MetricTile metric={ablation.number} />
+        <p class="prose muted">{ablation.whyItMatters}</p>
+      </div>
+      <ol class="arc">
+        {meshSeries.arc.map((a) => (
+          <li>
+            <span class="range mono">{a.range}</span>
+            <span class="when mono">{a.when}</span>
+            <span class="what">{a.what}</span>
+          </li>
+        ))}
+      </ol>
+    </article>
+  </section>
+
+  <section id="ledger" class="wrap section-block" aria-labelledby="ledger-title">
+    <h2 id="ledger-title">Every PR, by org</h2>
+    <p class="prose muted">Merged and closed PRs per project. Open PRs have their own list below. Regenerated from the GitHub API on {data.verifiedAt}.</p>
+    <div class="groups">
+      {groups.map((g, i) => (
+        <details id={`ledger-${slug(g.project)}`} class="group" open={i === 0}>
+          <summary>
+            <span class="gname mono">{g.project}</span>
+            <span class="gorg">{g.org}</span>
+            <span class="gcounts">
+              {g.counts.merged > 0 && <span class="pill merged">{g.counts.merged} merged</span>}
+              {g.counts.closed > 0 && <span class="pill closed">{g.counts.closed} closed</span>}
+              {g.counts.open > 0 && <span class="pill open">{g.counts.open} open</span>}
+            </span>
+          </summary>
+          {g.prs.length > 0 ? (
+            <table>
+              <caption class="sr-only">{g.project}: merged and closed pull requests</caption>
+              <tbody>
+                {g.prs.map((p) => (
+                  <tr>
+                    <td class="prnum mono"><a href={p.url} {...ext}>#{p.number}</a></td>
+                    <td class="title"><a href={p.url} {...ext}>{p.title}</a></td>
+                    <td class="repo mono">{p.repo}</td>
+                    <td class="date mono">{p.date}</td>
+                    <td class="status"><span class:list={['pill', p.status]}>{p.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p class="none muted">No merged or closed PRs yet; see the open list.</p>
+          )}
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <section id="open" class="wrap section-block" aria-labelledby="open-title">
+    <h2 id="open-title">Open PRs</h2>
+    <ul class="open-list">
+      {open.map((p) => (
+        <li>
+          <span class="repo mono">{p.repo}</span>
+          <a href={p.url} {...ext}><span class="mono">#{p.number}</span> {p.title}</a>
+          <span class="date mono">opened {p.date}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section id="docathon" class="wrap section-block last" aria-labelledby="docathon-title">
+    <div class="side">
+      <article class="card boxed docathon">
+        <p class="eyebrow"><b>Recognition</b></p>
+        <h2 id="docathon-title">{docathon.title}</h2>
+        <p class="big-result">{docathon.result}</p>
+        <p class="muted">{docathon.detail}</p>
+        <Receipt source={docathon.source} />
+      </article>
+      <article class="card how">
+        <p class="eyebrow">How this ledger is built</p>
+        <p class="muted">
+          One script, <code>scripts/refresh-prs.mjs</code>, queries every repository through the GitHub CLI and writes the ledger with the date it ran. A PR counts as merged when the API says so or when it carries a Merged label. Anything closed without merging stays listed.
+        </p>
+      </article>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .headline-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 2rem;
+    align-items: center;
+    padding-block: clamp(2rem, 4vw, 3rem);
+  }
+  .headline {
+    display: grid;
+    gap: 0.8rem;
+    justify-items: start;
+  }
+  .big {
+    font-size: 1.15rem;
+    font-weight: 500;
+    max-width: 24ch;
+    line-height: 1.35;
+  }
+  .bignum {
+    display: block;
+    font-size: clamp(3rem, 6vw, 4.2rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .orgs {
+    list-style: none;
+    margin: 0.4rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.35rem;
+    width: min(100%, 22rem);
+  }
+  .orgs li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+  }
+  .orgs a {
+    text-decoration: none;
+  }
+  .orgs a:hover {
+    text-decoration: underline;
+  }
+  .inset {
+    padding: 0.75rem;
+  }
+  .inset:hover {
+    transform: none;
+  }
+  .section-block {
+    display: grid;
+    gap: 1rem;
+    padding-block: 3rem;
+    border-top: 1px solid var(--line-strong);
+  }
+  .section-block.last {
+    padding-bottom: clamp(4rem, 8vw, 6rem);
+  }
+  .section-block h2 {
+    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+  }
+  /* Explicit single column: an auto-fit grid inside must not size the card from its max-width. */
+  .story {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.2rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+  }
+  .story:hover {
+    transform: none;
+  }
+  .story h2 {
+    font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .finding {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .finding-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem 1.5rem;
+    max-width: 44rem;
+  }
+  .refs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    font-size: 0.74rem;
+  }
+  .refs a {
+    color: var(--accent);
+    text-decoration-color: transparent;
+  }
+  .refs a::before {
+    content: '↗ ';
+  }
+  .refs a:hover {
+    text-decoration-color: var(--accent);
+  }
+  .against {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.7rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--line-strong);
+    border-top: 3px solid var(--warn);
+    background: var(--bg-2);
+  }
+  .against h3 {
+    font-size: 1.05rem;
+  }
+  .arc {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    border-left: 1px solid var(--line-strong);
+  }
+  .arc li {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    grid-template-areas: 'range when' 'range what';
+    column-gap: 0.9rem;
+    padding: 0.6rem 0 0.6rem 1rem;
+    position: relative;
+  }
+  .arc li::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0.95rem;
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+  }
+  .range {
+    grid-area: range;
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+  .when {
+    grid-area: when;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .what {
+    grid-area: what;
+    font-size: 0.93rem;
+  }
+  .groups {
+    display: grid;
+    gap: 0.6rem;
+  }
+  .group {
+    border: 1px solid var(--line-strong);
+    background: var(--card);
+  }
+  summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.9rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+  }
+  .gname {
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+  .gorg {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .gcounts {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-left: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  td {
+    padding: 0.5rem 0.6rem;
+    border-top: 1px solid var(--line);
+    vertical-align: top;
+  }
+  td a {
+    text-decoration: none;
+  }
+  td a:hover {
+    text-decoration: underline;
+  }
+  .prnum {
+    width: 5.5rem;
+    color: var(--accent);
+    font-size: 0.8rem;
+  }
+  .repo {
+    width: 15rem;
+    color: var(--muted);
+    font-size: 0.74rem;
+  }
+  .date {
+    width: 6.5rem;
+    color: var(--muted);
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+  .status {
+    width: 5.5rem;
+    text-align: right;
+  }
+  .none {
+    padding: 0 1rem 0.9rem;
+    font-size: 0.88rem;
+  }
+  .open-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .open-list li {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr) auto;
+    gap: 0.3rem 1rem;
+    padding-block: 0.6rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+  }
+  .open-list a {
+    text-decoration: none;
+  }
+  .open-list a:hover {
+    text-decoration: underline;
+  }
+  .side {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .docathon,
+  .how {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: start;
+  }
+  .docathon:hover,
+  .how:hover {
+    transform: none;
+  }
+  .big-result {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .how code {
+    font-size: 0.84rem;
+  }
+  @media (max-width: 960px) {
+    .headline-row,
+    .side {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .repo {
+      display: none;
+    }
+    .open-list li {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .open-list .repo {
+      display: block;
+    }
+  }
+  @media (max-width: 600px) {
+    .date {
+      display: none;
+    }
+    .open-list .date {
+      display: block;
+    }
+    .arc li {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'range' 'when' 'what';
+    }
+    .gcounts {
+      margin-left: 0;
+    }
+  }
+</style>

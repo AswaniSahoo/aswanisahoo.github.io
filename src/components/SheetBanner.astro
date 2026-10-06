@@ -1,0 +1,42 @@
+---
+/**
+ * The top of every inner sheet: the static isobar strip, then the sheet banner line
+ * ("SHEET 02 · STATION REPORTS · 10 STATIONS") and whatever the page puts under it.
+ */
+import IsobarStrip from './IsobarStrip.astro';
+import { sheetById, type SheetId } from '../data/sheets';
+
+interface Props {
+  sheet: SheetId;
+  /** Banner parts after the sheet number. */
+  parts: string[];
+  /** Varies the strip's synthetic field between pages. */
+  seed?: number;
+}
+const { sheet, parts, seed } = Astro.props;
+const s = sheetById(sheet);
+---
+
+<header class="banner">
+  <IsobarStrip seed={seed ?? Number(s.n)} label={`Sheet ${s.n} · ${s.name} · synthetic field`} />
+  <div class="wrap head">
+    <p class="eyebrow"><b>Sheet {s.n}</b> · {parts.join(' · ')}</p>
+    <slot />
+  </div>
+</header>
+
+<style>
+  .head {
+    display: grid;
+    gap: 1rem;
+    justify-items: start;
+    padding-block: clamp(2rem, 5vw, 3.5rem) 0;
+  }
+  .head :global(h1) {
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
+    line-height: 1.1;
+  }
+  .head :global(.lede) {
+    max-width: 65ch;
+  }
+</style>

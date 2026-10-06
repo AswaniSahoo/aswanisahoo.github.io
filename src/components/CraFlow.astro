@@ -1,0 +1,163 @@
+---
+/**
+ * How the Climate-Risk Agent answers, redrawn from the flowchart in the repository README.
+ * Real text in ordered lists, so it reflows at phone width and reads in order aloud.
+ */
+const intake = [
+  { t: 'question', s: 'free text' },
+  { t: 'parse', s: 'location · hazard · horizon' },
+  { t: 'geocode', s: 'Open-Meteo' },
+  { t: 'AR6 region', s: 'IPCC reference regions' },
+];
+const agent = [
+  { t: 'plan', s: 'scope check', gate: true },
+  { t: 'call', s: 'live forecast' },
+  { t: 'research', s: 'IPCC AR6 retrieval' },
+  { t: 'project', s: 'AR6 Ch.12 regional projection' },
+  { t: 'synthesize', s: 'typed, cited RiskReport' },
+];
+---
+
+<figure class="flow reveal">
+  <div class="lane">
+    <p class="lane-label mono">Before the agent</p>
+    <ol>
+      {intake.map((n) => (
+        <li class="node"><b class="mono">{n.t}</b><span>{n.s}</span></li>
+      ))}
+    </ol>
+  </div>
+
+  <div class="lane agent">
+    <p class="lane-label mono">The agent · LangGraph</p>
+    <ol>
+      {agent.map((n) => (
+        <li class:list={['node', { gate: n.gate }]}>
+          <b class="mono">{n.t}</b><span>{n.s}</span>
+          {n.gate && <em class="exit mono">out of scope: refusal, a valid typed output</em>}
+        </li>
+      ))}
+    </ol>
+  </div>
+
+  <div class="instruments">
+    <div class="inst">
+      <p class="lane-label mono">Feeds call and synthesize</p>
+      <b>ERA5 to GEV hazard statistics</b>
+      <span>stationary and drifting-location GEV · likelihood-ratio trend test · return levels with 90% bootstrap CI</span>
+    </div>
+    <div class="inst">
+      <p class="lane-label mono">Feeds research and synthesize</p>
+      <b>IPCC AR6 retrieval</b>
+      <span>BM25 + dense hybrid, RRF fusion · citations validated against the retrieved pages</span>
+    </div>
+  </div>
+</figure>
+
+<style>
+  .flow {
+    margin: 0;
+    display: grid;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line-strong);
+  }
+  .lane {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .lane-label {
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 1.4rem;
+  }
+  .node {
+    position: relative;
+    display: grid;
+    gap: 0.2rem;
+    align-content: start;
+    padding: 0.6rem 0.7rem;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    min-width: 0;
+  }
+  .agent .node {
+    border-color: var(--text);
+  }
+  .node b {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .node span {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+  /* Arrow from each node to the next, drawn in the gap. */
+  .node + .node::before {
+    content: '→';
+    position: absolute;
+    left: -1.15rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .gate {
+    border-color: var(--accent);
+  }
+  .exit {
+    font-style: normal;
+    font-size: 0.68rem;
+    color: var(--accent);
+    border-top: 1px dashed var(--accent);
+    padding-top: 0.3rem;
+    margin-top: 0.3rem;
+  }
+  .instruments {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.4rem;
+  }
+  .inst {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px dashed var(--line-strong);
+    background: var(--card);
+  }
+  .inst b {
+    font-size: 0.9rem;
+  }
+  .inst span {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  /* Narrow screens: the lanes run down the page. */
+  @media (max-width: 860px) {
+    ol {
+      grid-auto-flow: row;
+      gap: 1.1rem;
+    }
+    .node + .node::before {
+      content: '↓';
+      left: 1rem;
+      top: -1.05rem;
+      transform: none;
+    }
+    .instruments {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

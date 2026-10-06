@@ -1,0 +1,58 @@
+---
+/**
+ * The trust mechanic of the site: every number links to its evidence, written as a receipt,
+ * "↗ eval report", "↗ CI run", "↗ PR #239". Fast-moving numbers add the month they were read.
+ * A private source is named as such and not linked.
+ */
+import { evidenceLabel, monthYear } from '../lib/evidence';
+
+interface Props {
+  source: string;
+  /** Overrides the label derived from the URL. */
+  label?: string;
+  /** Show the month the number was read (test counts, live status). */
+  fast?: boolean;
+  verifiedAt?: string;
+  isPrivate?: boolean;
+}
+const { source, label, fast = false, verifiedAt, isPrivate = false } = Astro.props;
+if (!source) throw new Error('Receipt: every number needs a source');
+const text = label ?? evidenceLabel(source);
+const external = /^https?:/.test(source);
+const when = fast && verifiedAt ? monthYear(verifiedAt) : undefined;
+---
+
+{isPrivate ? (
+  <span class="receipt private">private repo · code on request</span>
+) : (
+  <a class="receipt" href={source} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
+    {text}{when && <span class="when"> · {when}</span>}
+  </a>
+)}
+
+<style>
+  .receipt {
+    display: inline-block;
+    max-width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    color: var(--muted);
+    text-decoration: none;
+    /* The underline sweeps in on hover. */
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    transition: background-size 220ms var(--ease), color 200ms var(--ease);
+  }
+  a.receipt::before {
+    content: '↗ ';
+  }
+  a.receipt:hover,
+  a.receipt:focus-visible {
+    color: var(--text);
+    background-size: 100% 1px;
+  }
+  .private {
+    background: none;
+  }
+</style>

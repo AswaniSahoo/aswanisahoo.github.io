@@ -1,0 +1,134 @@
+---
+/**
+ * Home sheet: the upstream strip. The frozen headline, merged PRs per org straight from
+ * the ledger, and the decoder root cause in one line. The full ledger lives on the
+ * Open source sheet, where the headline's receipt points.
+ */
+import Receipt from './Receipt.astro';
+import { upstreamHeadline, mergedByOrg } from '../data/upstream';
+import { meshSeries } from '../data/projects';
+
+const h = upstreamHeadline;
+const fix = meshSeries.finding.metric;
+const pr = (n: number) => `https://github.com/openclimatefix/graph_weather/pull/${n}`;
+---
+
+<section id="upstream" class="upstream chart-panel">
+  <div class="wrap inner">
+    <div class="headline reveal">
+      <p class="eyebrow"><b>03</b> / Open source</p>
+      <p class="big"><span class="num mono">{h.merged}</span> merged upstream PRs across {h.orgs} orgs</p>
+      <Receipt source="/open-source/#ledger" label="PR ledger" />
+    </div>
+
+    <ul class="orgs reveal" style="--delay: 60ms" aria-label="Merged pull requests by org">
+      {mergedByOrg.map((o) => (
+        <li><span>{o.name}</span><b class="mono">{o.merged}</b></li>
+      ))}
+    </ul>
+
+    <div class="finding reveal" style="--delay: 120ms">
+      <p class="eyebrow"><b>Root cause</b> · graph_weather</p>
+      <p class="line">
+        Regional forecasts were stuck at persistence because the decoder seeded its observation nodes with zeros. A zero-parameter skip connection, shipped in <a href={pr(237)} target="_blank" rel="noopener noreferrer">#237</a> and <a href={pr(239)} target="_blank" rel="noopener noreferrer">#239</a>, lifted held-out skill over persistence from {fix.value.replace(' → ', ' to ')}.
+      </p>
+      <Receipt source={fix.source} />
+    </div>
+
+    <p class="more mono"><a href="/open-source/#ledger">Every PR, by org</a></p>
+  </div>
+</section>
+
+<style>
+  .upstream {
+    border-left: 0;
+    border-right: 0;
+    padding-block: clamp(2.5rem, 5vw, 3.5rem);
+  }
+  .inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 1.3fr);
+    gap: 1.5rem 2.5rem;
+    align-items: start;
+  }
+  .headline {
+    display: grid;
+    gap: 0.7rem;
+    justify-items: start;
+  }
+  .big {
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.35;
+    max-width: 22ch;
+  }
+  .num {
+    display: block;
+    font-size: clamp(2.6rem, 5vw, 3.4rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .orgs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.35rem;
+    align-self: center;
+  }
+  .orgs li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+  }
+  .orgs b {
+    font-weight: 600;
+  }
+  .finding {
+    display: grid;
+    gap: 0.6rem;
+    justify-items: start;
+    padding: 0.2rem 0 0.2rem 1rem;
+    border-left: 3px solid var(--accent);
+  }
+  .line {
+    font-size: 0.95rem;
+    max-width: 65ch;
+  }
+  .more {
+    grid-column: 1 / -1;
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .more a {
+    text-decoration: none;
+  }
+  .more a::after {
+    content: ' →';
+    color: var(--accent);
+  }
+  .more a:hover {
+    text-decoration: underline;
+  }
+  @media (max-width: 960px) {
+    .inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .finding {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 600px) {
+    .inner {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

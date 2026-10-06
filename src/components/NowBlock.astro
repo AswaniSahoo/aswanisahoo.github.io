@@ -1,0 +1,72 @@
+---
+/** Home sheet: what is in flight, from src/data/now.ts. The section eyebrow carries the checked date. */
+import { now } from '../data/now';
+---
+
+<div class="now card reveal">
+  <dl>
+    {now.lines.map((l) => (
+      <div class="row">
+        <dt class="mono">{l.label}</dt>
+        <dd>
+          {l.rows.map((parts) => (
+            <p>
+              {parts.map((p) =>
+                typeof p === 'string' ? p : <a class="mono" href={p.url} target="_blank" rel="noopener noreferrer">{p.label}</a>,
+              )}
+            </p>
+          ))}
+        </dd>
+      </div>
+    ))}
+  </dl>
+</div>
+
+<style>
+  .now {
+    display: grid;
+    gap: 0.8rem;
+    max-width: 820px;
+  }
+  dl {
+    margin: 0;
+    display: grid;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 0.3rem 1.25rem;
+    padding-block: 0.7rem;
+    border-top: 1px solid var(--line);
+  }
+  .row:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  dt {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-top: 0.2rem;
+  }
+  dd {
+    margin: 0;
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.97rem;
+  }
+  dd a {
+    font-size: 0.86em;
+    color: var(--accent);
+    text-decoration-color: transparent;
+  }
+  dd a:hover {
+    text-decoration-color: var(--accent);
+  }
+  @media (max-width: 600px) {
+    .row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

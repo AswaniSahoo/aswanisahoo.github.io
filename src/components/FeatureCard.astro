@@ -1,0 +1,85 @@
+---
+/** A featured station on the home sheet: two stamps, one link to the full case. */
+import MetricTile from './MetricTile.astro';
+import type { Metric } from '../data/types';
+
+interface Props {
+  eyebrow: string;
+  name: string;
+  summary: string;
+  /** Only the first two render: the home sheet shows two stamps per station. */
+  metrics: Metric[];
+  href: string;
+  cta?: string;
+}
+const { eyebrow, name, summary, metrics, href, cta = 'Read the case' } = Astro.props;
+---
+
+<article class="card feature">
+  <p class="eyebrow">{eyebrow}</p>
+  <h3>{name}</h3>
+  <p class="summary">{summary}</p>
+  <div class="metrics">
+    {/* Label and stamp only here; each caveat note stays on the full page. */}
+    {metrics.slice(0, 2).map((m) => <MetricTile metric={{ ...m, note: undefined }} />)}
+  </div>
+  <a class="read mono" href={href}>{cta}<span class="sr-only">: {name}</span></a>
+</article>
+
+<style>
+  .feature {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 100%;
+    padding: 1.5rem 1.5rem 1.3rem;
+  }
+  .feature:focus-within {
+    border-color: var(--text);
+  }
+  h3 {
+    font-size: 1.2rem;
+  }
+  .summary {
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+  /* A stamp never wraps its date, so two sit side by side only when the card is wide enough. */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--line-strong);
+    margin-top: auto;
+  }
+  /* Stamps stay clickable above the card-wide link. */
+  .metrics :global(a) {
+    position: relative;
+    z-index: 1;
+  }
+  .read {
+    align-self: flex-start;
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--text);
+    padding-top: 0.2rem;
+  }
+  .read::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .read::after {
+    content: ' →';
+    color: var(--accent);
+  }
+  .feature:hover .read {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.25em;
+  }
+</style>

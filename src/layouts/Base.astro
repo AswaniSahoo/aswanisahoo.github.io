@@ -1,0 +1,149 @@
+---
+import '@fontsource-variable/martian-mono';
+import '@fontsource-variable/public-sans';
+import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import { profile } from '../data/profile';
+import { upstreamHeadline } from '../data/upstream';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Open Graph type: 'article' for a report or a post, 'website' otherwise. */
+  ogType?: 'website' | 'article';
+  /** Keep a page out of search indexes (404). */
+  noindex?: boolean;
+}
+
+const {
+  title = `${profile.name} · ${profile.title}`,
+  description = `${profile.tagline} ${upstreamHeadline.merged} merged upstream pull requests across graph_weather, PyTorch, ExecuTorch, krkn-chaos and MalariaGEN. Two flagships evaluated on held-out sets.`,
+  ogType = 'website',
+  noindex = false,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${profile.name} · Writing`} href="/rss.xml" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <!-- Mirrors --bg in both themes (global.css). -->
+    <meta name="theme-color" content="#1b1a17" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#e8e5da" media="(prefers-color-scheme: light)" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {!noindex && <meta property="og:url" content={canonical} />}
+    <meta property="og:site_name" content={profile.domain} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:creator" content="@AswaniSahoo2" />
+    <script is:inline>
+      // Apply the stored theme before first paint so there is no flash. Client-side navigation
+      // replaces the root element's attributes, so the same restore runs after every swap.
+      (function () {
+        var root = document.documentElement;
+        function apply() {
+          root.classList.add('js');
+          try {
+            var t = localStorage.getItem('theme');
+            if (t === 'dark' || t === 'light') root.setAttribute('data-theme', t);
+          } catch (e) {}
+        }
+        apply();
+        if (window.__sheetSwap) return;
+        window.__sheetSwap = true;
+        document.addEventListener('astro:after-swap', function () {
+          apply();
+          // Blocks on the first screen show at once, so the incoming sheet is never blank.
+          var h = window.innerHeight * 1.1;
+          document.querySelectorAll('.reveal').forEach(function (el) {
+            if (el.getBoundingClientRect().top + window.scrollY < h) el.classList.add('is-in');
+          });
+        });
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+    <script>
+      // Reveal on scroll and scroll progress. Vanilla, one file. Numbers are never animated: every value is
+      // in the page at its final figure from first paint. Set up on every
+      // page load (first visit and each client-side navigation), torn down before the next swap.
+      let cleanup: (() => void) | null = null;
+
+      function init() {
+        cleanup?.();
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const ac = new AbortController();
+        const timers: number[] = [];
+        const observers: IntersectionObserver[] = [];
+
+        // Reveal. The hero is never gated: it must be readable in the first frame.
+        // Everything else reveals on intersection, with a timed safety net so an
+        // observer that never fires (zero-height embed, odd host) cannot hide content.
+        const revealEls = Array.from(document.querySelectorAll<HTMLElement>('.reveal'));
+        const show = (el: HTMLElement) => el.classList.add('is-in');
+        revealEls.filter((el) => el.closest('#top')).forEach(show);
+        const rest = revealEls.filter((el) => !el.classList.contains('is-in'));
+        if (reduce || !('IntersectionObserver' in window)) {
+          rest.forEach(show);
+        } else {
+          const io = new IntersectionObserver(
+            (entries) => {
+              for (const e of entries) {
+                if (e.isIntersecting) {
+                  show(e.target as HTMLElement);
+                  io.unobserve(e.target);
+                }
+              }
+            },
+            { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
+          );
+          observers.push(io);
+          rest.forEach((el) => io.observe(el));
+          const net = () => {
+            const h = window.innerHeight || document.documentElement.clientHeight;
+            for (const el of rest) {
+              if (!el.classList.contains('is-in') && el.getBoundingClientRect().top < h * 1.1) show(el);
+            }
+          };
+          timers.push(window.setTimeout(net, 1500), window.setTimeout(net, 4000));
+        }
+
+        // Scroll progress line in the header.
+        const bar = document.querySelector<HTMLElement>('.progress');
+        if (bar) {
+          const update = () => {
+            const h = document.documentElement;
+            const max = h.scrollHeight - h.clientHeight;
+            bar.style.transform = `scaleX(${max > 0 ? h.scrollTop / max : 0})`;
+          };
+          update();
+          addEventListener('scroll', update, { passive: true, signal: ac.signal });
+          addEventListener('resize', update, { signal: ac.signal });
+        }
+
+        cleanup = () => {
+          ac.abort();
+          timers.forEach(clearTimeout);
+          observers.forEach((o) => o.disconnect());
+          cleanup = null;
+        };
+      }
+
+      document.addEventListener('astro:page-load', init);
+      document.addEventListener('astro:before-swap', () => cleanup?.());
+    </script>
+  </body>
+</html>

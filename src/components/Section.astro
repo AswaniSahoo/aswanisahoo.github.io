@@ -1,0 +1,23 @@
+---
+interface Props {
+  id: string;
+  index: string;
+  verb: string;
+  title: string;
+  lede?: string;
+  /** Tighter rhythm for short home-sheet sections. */
+  compact?: boolean;
+}
+const { id, index, verb, title, lede, compact = false } = Astro.props;
+---
+
+<section id={id} class:list={['section', { compact }]}>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow"><b>{index}</b> / {verb}</p>
+      <h2>{title}</h2>
+      {lede && <p class="lede">{lede}</p>}
+    </div>
+    <slot />
+  </div>
+</section>

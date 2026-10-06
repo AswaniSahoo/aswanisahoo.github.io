@@ -1,0 +1,550 @@
+---
+/**
+ * "What is different": a generic pipeline against this agent, drawn in ControlLoop's language
+ * (ink boxes, packets travelling the lines, outcomes in coloured boxes), at full strength.
+ *
+ * Three drawings, one description. A wide one for panels of about 1060px and up, two vertical
+ * lanes side by side from 520px, and one vertical column below that (phones down to 320px). Box widths are fitted to the text, so a longer label
+ * widens its column instead of spilling out of its box; the wide drawing then scales down
+ * rather than clipping. Packets ride the lines and cross each box where no text sits (between
+ * the title and the subtitle when wide, in the left margin when vertical), so they never
+ * cover a label. Generic lane: still and muted. This agent: ink, red where it differs,
+ * with packets. Under prefers-reduced-motion the packets rest on their lines.
+ *
+ * The panel is drawn from first paint. It has no reveal-on-scroll fade, so a capture taken
+ * just after scrolling cannot catch it half faded.
+ */
+import type { Comparison, FlowOutcome, Tone } from '../data/compare';
+
+interface Props {
+  c: Comparison;
+}
+const { c } = Astro.props;
+
+type Kind = 'sans' | 'bold' | 'mono';
+// Advance widths of ASCII 32 to 126 per 100 units of font size, measured in Chrome for Public Sans
+// at weight 400 (subtitles) and 600 (titles). Martian Mono is fixed pitch: 0.70em plus the
+// 0.06em letter-spacing the outcome labels carry.
+const ADV: Record<'sans' | 'bold', number[]> = {
+  sans: [25,26,41,61,67,91,72,23,31,31,40,56,25,31,23,36,62,42,61,64,64,65,63,61,66,63,24,25,56,56,56,52,79,71,68,70,70,62,58,74,78,29,40,69,60,90,76,73,65,74,68,65,55,71,66,94,70,58,65,31,36,31,48,53,23,53,57,50,59,52,42,64,57,26,27,57,31,86,58,52,57,59,41,49,38,59,51,79,55,54,48,34,27,34,58],
+  bold: [24,28,44,62,68,93,76,24,33,33,44,58,27,32,26,37,64,43,62,66,65,67,65,62,67,65,26,27,57,58,57,53,77,71,69,71,71,63,59,75,78,30,40,71,60,91,78,73,65,74,69,65,56,72,66,93,72,60,66,33,37,32,49,54,25,54,57,49,59,52,42,64,58,27,28,58,32,88,58,52,57,59,42,49,40,59,52,79,57,56,49,37,27,36,60],
+};
+/** Text width in drawing units, rounded up with 2% to spare. */
+const tw = (s: string, size: number, kind: Kind) => {
+  if (kind === 'mono') return Math.ceil(s.length * size * 0.76);
+  const t = ADV[kind];
+  let w = 0;
+  for (const ch of s) w += t[ch.charCodeAt(0) - 32] ?? 55;
+  return Math.ceil((w * size * 1.02) / 100);
+};
+const outLabel = (o: FlowOutcome) => (o.s ? `${o.t} · ${o.s}` : o.t);
+
+type Rect = { x: number; y: number; w: number; h: number; cls: string };
+type Label = { x: number; y: number; text: string; cls: string; size: number; anchor?: 'start' | 'middle' };
+type Path = { d: string; cls: string };
+type Packet = { d: string; tone: Tone; rest: string };
+interface Scene {
+  w: number;
+  h: number;
+  rects: Rect[];
+  labels: Label[];
+  edges: Path[];
+  arrows: Path[];
+  dots: { x: number; y: number }[];
+  packets: Packet[];
+}
+type Seg = ['L', number, number] | ['C', number, number, number, number, number, number];
+
+const blank = (): Scene => ({ w: 0, h: 0, rects: [], labels: [], edges: [], arrows: [], dots: [], packets: [] });
+const packetTone = (o: FlowOutcome): Tone => o.packet ?? o.tone;
+const lastIndex = c.agent.steps.length - 1;
+const branches = c.agent.outcomes.filter((o) => o.from !== undefined && o.from < lastIndex);
+const tails = c.agent.outcomes.filter((o) => o.from === undefined || o.from >= lastIndex);
+
+/** Arrow head with its tip at (x, y). */
+const arrow = (x: number, y: number, dir: 'r' | 'd', muted = false): Path => ({
+  d: dir === 'r' ? `M${x} ${y} l-8 -4.5 v9 z` : `M${x} ${y} l-4.5 -8 h9 z`,
+  cls: muted ? 'arrow muted' : 'arrow',
+});
+
+function bezier(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) {
+  let len = 0;
+  let px = x0;
+  let py = y0;
+  for (let i = 1; i <= 24; i++) {
+    const t = i / 24;
+    const u = 1 - t;
+    const x = u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3;
+    const y = u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3;
+    len += Math.hypot(x - px, y - py);
+    px = x;
+    py = y;
+  }
+  return len;
+}
+
+/** A packet route as an SVG path, plus where the packet rests when motion is off: the middle of the last leg. */
+function route(x0: number, y0: number, segs: Seg[], o: FlowOutcome): Packet {
+  let d = `M${x0} ${y0}`;
+  let px = x0;
+  let py = y0;
+  let total = 0;
+  let last = 0;
+  for (const s of segs) {
+    if (s[0] === 'L') {
+      d += ` L${s[1]} ${s[2]}`;
+      last = Math.hypot(s[1] - px, s[2] - py);
+      px = s[1];
+      py = s[2];
+    } else {
+      d += ` C${s[1]} ${s[2]} ${s[3]} ${s[4]} ${s[5]} ${s[6]}`;
+      last = bezier(px, py, s[1], s[2], s[3], s[4], s[5], s[6]);
+      px = s[5];
+      py = s[6];
+    }
+    total += last;
+  }
+  const back = Math.min(last / 2, 22);
+  return { d, tone: packetTone(o), rest: `${(((total - back) / total) * 100).toFixed(1)}%` };
+}
+
+/** Desktop: two lanes stacked in time. About 170 units tall, drawn 1:1 at a 1440px window. */
+function wide(): Scene {
+  const s = blank();
+  const TARGET = 1128; // inner width of the panel at 1440px
+  const LX = 106; // first column
+  const LW = 82; // lane header cell
+  const PAD = 12;
+  const MINCOL = 92;
+  const GMIN = 22;
+  const RM = 12;
+  const PT = 8;
+  const GH = 32;
+  const LG = 24;
+  const AH = 60;
+  const DROP = 14;
+  const BH = 28;
+  const PB = 8;
+  const gen = c.generic.steps;
+  const ag = c.agent.steps;
+  const ncol = Math.max(gen.length + 1, ag.length);
+  const k = tails.length;
+  const fanW = k ? Math.max(...tails.map((o) => tw(outLabel(o), 12, 'mono'))) + 2 * PAD : 0;
+
+  const cols = Array.from({ length: ncol }, (_, i) => {
+    const a = ag[i] ? Math.max(tw(ag[i].t, 14, 'bold'), ag[i].s ? tw(ag[i].s!, 12, 'sans') : 0) : 0;
+    const g = i < gen.length ? tw(gen[i].t, 13, 'bold') : i === gen.length ? tw(c.generic.outcome.t, 12, 'mono') : 0;
+    return Math.max(MINCOL, Math.max(a, g) + 2 * PAD);
+  });
+  const gaps = ncol - 1 + (k ? 1 : 0);
+  const fixed = LX + cols.reduce((a, b) => a + b, 0) + fanW + RM;
+  let slack = Math.max(0, TARGET - fixed - gaps * GMIN);
+  const dg = Math.min(slack / gaps, 18);
+  slack -= dg * gaps;
+  const dc = Math.min(slack / ncol, 36);
+  const G = GMIN + dg;
+  const cw = cols.map((w) => w + dc);
+  s.w = Math.max(TARGET, Math.ceil(fixed + gaps * GMIN));
+  const xs: number[] = [];
+  let x = LX;
+  for (const w of cw) {
+    xs.push(x);
+    x += w + G;
+  }
+
+  const gy = PT;
+  const gc = gy + GH / 2;
+  const ay = gy + GH + LG;
+  const rail = ay + 30;
+  const link = (x1: number, x2: number, y: number, muted: boolean) => {
+    s.edges.push({ d: `M${x1} ${y} L${x2 - 1} ${y}`, cls: muted ? 'edge muted' : 'edge' });
+    s.arrows.push(arrow(x2, y, 'r', muted));
+  };
+
+  // Lane header cells.
+  s.rects.push({ x: 12, y: gy, w: LW, h: GH, cls: 'cell ghost' });
+  s.labels.push({ x: 12 + LW / 2, y: gc + 4.2, text: 'GENERIC', cls: 'lane', size: 12, anchor: 'middle' });
+  s.rects.push({ x: 12, y: ay, w: LW, h: AH, cls: 'cell ink' });
+  s.labels.push({ x: 12 + LW / 2, y: ay + AH / 2 - 3, text: 'THIS', cls: 'lane inv', size: 12, anchor: 'middle' });
+  s.labels.push({ x: 12 + LW / 2, y: ay + AH / 2 + 12, text: 'AGENT', cls: 'lane inv', size: 12, anchor: 'middle' });
+
+  // Generic lane: still and muted.
+  gen.forEach((st, i) => {
+    s.rects.push({ x: xs[i], y: gy, w: cw[i], h: GH, cls: 'node ghost' });
+    s.labels.push({ x: xs[i] + cw[i] / 2, y: gc + 4.7, text: st.t, cls: 't muted', size: 13, anchor: 'middle' });
+    if (i > 0) link(xs[i - 1] + cw[i - 1], xs[i], gc, true);
+  });
+  const go = gen.length;
+  s.rects.push({ x: xs[go], y: gy, w: cw[go], h: GH, cls: 'out muted' });
+  s.labels.push({ x: xs[go] + cw[go] / 2, y: gc + 4.3, text: c.generic.outcome.t, cls: 'o muted', size: 12, anchor: 'middle' });
+  link(xs[go - 1] + cw[go - 1], xs[go], gc, true);
+
+  // This agent: ink boxes, red where it differs.
+  ag.forEach((st, i) => {
+    const d = !!st.differs;
+    const cx = xs[i] + cw[i] / 2;
+    s.rects.push({ x: xs[i], y: ay, w: cw[i], h: AH, cls: d ? 'node differs' : 'node ink' });
+    if (d) s.rects.push({ x: xs[i], y: ay, w: cw[i], h: 4, cls: 'bar' });
+    s.labels.push({ x: cx, y: ay + 19, text: st.t, cls: 't', size: 14, anchor: 'middle' });
+    if (st.s) s.labels.push({ x: cx, y: ay + 50, text: st.s, cls: d ? 's plain differs' : 's plain', size: 12, anchor: 'middle' });
+    if (i > 0) link(xs[i - 1] + cw[i - 1], xs[i], rail, false);
+  });
+
+  // Outcomes that branch off between two steps drop below the lane.
+  const startX = xs[0] + cw[0];
+  const dropTop = ay + AH + DROP;
+  for (const o of branches) {
+    const from = o.from ?? 0;
+    const gx = xs[from] + cw[from] + G / 2;
+    const w = Math.max(84, tw(outLabel(o), 12, 'mono') + 2 * PAD);
+    s.dots.push({ x: gx, y: rail });
+    s.edges.push({ d: `M${gx} ${rail} L${gx} ${dropTop - 1}`, cls: 'edge' });
+    s.arrows.push(arrow(gx, dropTop, 'd'));
+    s.rects.push({ x: gx - w / 2, y: dropTop, w, h: BH, cls: `out ${o.tone}` });
+    s.labels.push({ x: gx, y: dropTop + BH / 2 + 4.3, text: outLabel(o), cls: `o ${o.tone}`, size: 12, anchor: 'middle' });
+    s.packets.push(route(startX, rail, [['L', gx, rail], ['L', gx, dropTop]], o));
+  }
+
+  // Outcomes of the last step fan out to the right.
+  let bottom = branches.length ? dropTop + BH : ay + AH;
+  if (k) {
+    const xr = xs[lastIndex] + cw[lastIndex];
+    const ox = xr + G;
+    const pitch = 32;
+    const oh = k > 1 ? 26 : 34;
+    const mid = xr + (ox - xr) / 2;
+    if (k > 1) s.dots.push({ x: xr, y: rail });
+    tails.forEach((o, j) => {
+      const cy = rail + (j - (k - 1) / 2) * pitch;
+      const straight = j === (k - 1) / 2;
+      s.edges.push({ d: straight ? `M${xr} ${rail} L${ox - 1} ${cy}` : `M${xr} ${rail} C${mid} ${rail} ${mid} ${cy} ${ox - 1} ${cy}`, cls: 'edge' });
+      s.arrows.push(arrow(ox, cy, 'r'));
+      s.rects.push({ x: ox, y: cy - oh / 2, w: fanW, h: oh, cls: `out ${o.tone}` });
+      s.labels.push({ x: ox + fanW / 2, y: cy + 4.3, text: outLabel(o), cls: `o ${o.tone}`, size: 12, anchor: 'middle' });
+      const tail: Seg = straight ? ['L', ox, cy] : ['C', mid, rail, mid, cy, ox, cy];
+      s.packets.push(route(startX, rail, [['L', xr, rail], tail], o));
+      bottom = Math.max(bottom, cy + oh / 2);
+    });
+  }
+  s.h = Math.ceil(bottom + PB);
+  return s;
+}
+
+/**
+ * Vertical drawings, steps top to bottom along a spine in the left margin of each box.
+ * One column for phones (the lanes stacked); two for tablets and small laptops (generic on the
+ * left, this agent on the right), where the wide drawing would have to shrink below legibility.
+ */
+function stacked(two: boolean): Scene {
+  const s = blank();
+  const X = 10;
+  const HDR = 24;
+  const GHt = 28;
+  const AHt = 46;
+  const VG = 16;
+  const GVG = 14;
+  const PT = 8;
+  const PB = 8;
+  const PAD = 12;
+  const RG = 18;
+  const rw = branches.length ? Math.max(...branches.map((o) => tw(outLabel(o), 12, 'mono'))) + 2 * PAD : 0;
+  const BW = Math.min(230, 300 - (branches.length ? RG + rw : 0));
+  const gen = c.generic.steps;
+  const ag = c.agent.steps;
+  const GX = X;
+  const GBW = two ? 190 : BW;
+  const AX = two ? X + GBW + 28 : X;
+  const RX = AX + BW + RG;
+  s.w = two ? RX + (branches.length ? rw : 0) + X + 6 : 320;
+
+  const down = (sx: number, y1: number, y2: number, muted: boolean) => {
+    s.edges.push({ d: `M${sx} ${y1} L${sx} ${y2 - 1}`, cls: muted ? 'edge muted' : 'edge' });
+    s.arrows.push(arrow(sx, y2, 'd', muted));
+  };
+
+  // Generic lane.
+  const gs = GX + 14;
+  const gt = GX + 32;
+  let y = PT;
+  s.rects.push({ x: GX, y, w: GBW, h: HDR, cls: 'cell ghost' });
+  s.labels.push({ x: GX + 10, y: y + HDR / 2 + 4.2, text: 'GENERIC', cls: 'lane', size: 12 });
+  y += HDR + 8;
+  let prev = 0;
+  gen.forEach((st, i) => {
+    if (i > 0) down(gs, prev, y, true);
+    s.rects.push({ x: GX, y, w: GBW, h: GHt, cls: 'node ghost' });
+    s.labels.push({ x: gt, y: y + GHt / 2 + 4.7, text: st.t, cls: 't muted', size: 13 });
+    prev = y + GHt;
+    y += GHt + GVG;
+  });
+  down(gs, prev, y, true);
+  s.rects.push({ x: GX, y, w: GBW, h: GHt, cls: 'out muted' });
+  s.labels.push({ x: gt, y: y + GHt / 2 + 4.3, text: c.generic.outcome.t, cls: 'o muted', size: 12 });
+  const genBottom = y + GHt;
+
+  // This agent.
+  const as = AX + 14;
+  const at = AX + 32;
+  y = two ? PT : genBottom + 24;
+  s.rects.push({ x: AX, y, w: BW, h: HDR, cls: 'cell ink' });
+  s.labels.push({ x: AX + 10, y: y + HDR / 2 + 4.2, text: 'THIS AGENT', cls: 'lane inv', size: 12 });
+  y += HDR + 8;
+  const tops: number[] = [];
+  ag.forEach((st, i) => {
+    const d = !!st.differs;
+    if (i > 0) down(as, tops[i - 1] + AHt, y, false);
+    s.rects.push({ x: AX, y, w: BW, h: AHt, cls: d ? 'node differs' : 'node ink' });
+    if (d) s.rects.push({ x: AX, y, w: 4, h: AHt, cls: 'bar' });
+    s.labels.push({ x: at, y: y + 19, text: st.t, cls: 't', size: 14 });
+    if (st.s) s.labels.push({ x: at, y: y + 37, text: st.s, cls: d ? 's plain differs' : 's plain', size: 12 });
+    tops.push(y);
+    y += AHt + VG;
+  });
+  const startY = tops[0] + AHt;
+
+  // Outcomes that branch off between two steps sit in the right-hand column.
+  for (const o of branches) {
+    const i = o.from ?? 0;
+    const gy = tops[i] + AHt + VG / 2;
+    s.dots.push({ x: as, y: gy });
+    s.edges.push({ d: `M${as} ${gy} L${RX - 1} ${gy}`, cls: 'edge' });
+    s.arrows.push(arrow(RX, gy, 'r'));
+    s.rects.push({ x: RX, y: gy - 15, w: rw, h: 30, cls: `out ${o.tone}` });
+    s.labels.push({ x: RX + rw / 2, y: gy + 4.3, text: outLabel(o), cls: `o ${o.tone}`, size: 12, anchor: 'middle' });
+    s.packets.push(route(as, startY, [['L', as, gy], ['L', RX, gy]], o));
+  }
+
+  // Outcomes of the last step hang off the spine below it.
+  let bottom = Math.max(tops[lastIndex] + AHt, two ? genBottom : 0);
+  if (tails.length) {
+    const lastBottom = tops[lastIndex] + AHt;
+    const tx = AX + 30;
+    const h = 30;
+    let ty = lastBottom + 16;
+    let from = lastBottom;
+    tails.forEach((o) => {
+      const cy = ty + h / 2;
+      const w = Math.max(96, tw(outLabel(o), 12, 'mono') + 2 * PAD);
+      s.edges.push({ d: `M${as} ${from} L${as} ${cy}`, cls: 'edge' });
+      s.edges.push({ d: `M${as} ${cy} L${tx - 1} ${cy}`, cls: 'edge' });
+      s.dots.push({ x: as, y: cy });
+      s.arrows.push(arrow(tx, cy, 'r'));
+      s.rects.push({ x: tx, y: ty, w, h, cls: `out ${o.tone}` });
+      s.labels.push({ x: tx + w / 2, y: cy + 4.3, text: outLabel(o), cls: `o ${o.tone}`, size: 12, anchor: 'middle' });
+      s.packets.push(route(as, startY, [['L', as, cy], ['L', tx, cy]], o));
+      from = cy;
+      bottom = Math.max(bottom, ty + h);
+      ty += h + 10;
+    });
+  }
+  s.h = Math.ceil(bottom + PB);
+  return s;
+}
+
+const scenes = [
+  { s: wide(), cls: 'wide' },
+  { s: stacked(true), cls: 'mid' },
+  { s: stacked(false), cls: 'narrow' },
+];
+const PERIOD = 4.2;
+---
+
+<figure class="compare card boxed">
+  <p class="eyebrow"><b>What is different</b> · a generic pipeline against this agent</p>
+  <div class="scenes">
+    {scenes.map(({ s, cls }) => (
+      <svg
+        class={`flowsvg bold ${cls}`}
+        viewBox={`0 0 ${s.w} ${s.h}`}
+        style={cls === 'wide' ? undefined : `max-width: ${Math.round(s.w * 1.15)}px`}
+        role="img"
+        aria-label={c.description}
+      >
+        {s.edges.map((e) => <path class={e.cls} d={e.d} />)}
+        {s.arrows.map((a) => <path class={a.cls} d={a.d} />)}
+        {s.dots.map((d) => <circle class="junction" cx={d.x} cy={d.y} r="3.2" />)}
+        {s.rects.map((r) => <rect class={r.cls} x={r.x} y={r.y} width={r.w} height={r.h} />)}
+        {s.labels.map((l) => (
+          <text class={l.cls} x={l.x} y={l.y} font-size={l.size} text-anchor={l.anchor ?? 'start'}>{l.text}</text>
+        ))}
+        {s.packets.map((p, i) => (
+          <circle
+            class={`packet ${p.tone}`}
+            r="5"
+            style={`offset-path: path('${p.d}'); --dur: ${PERIOD}s; --at: ${((i * PERIOD) / s.packets.length).toFixed(1)}s; --rest: ${p.rest}`}
+          />
+        ))}
+      </svg>
+    ))}
+  </div>
+  <figcaption class="mono">{c.caption}</figcaption>
+</figure>
+
+<style>
+  /* The panel: a boxed legend with an ink border and a hard offset shadow. The drawing sits on a
+     recessed canvas so the boxes stand off it in both themes. */
+  .compare.card {
+    --cv-canvas: var(--bg-2);
+    --cv-box: var(--card);
+    display: grid;
+    gap: 0.6rem;
+    padding: 0.75rem;
+    margin: 0;
+    border-width: 2px;
+    border-color: var(--text);
+    box-shadow: 5px 5px 0 color-mix(in srgb, var(--text) 16%, transparent);
+  }
+  :global(:root[data-theme='dark']) .compare.card {
+    --cv-canvas: var(--bg);
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .compare.card {
+      --cv-canvas: var(--bg);
+    }
+  }
+  .compare:hover {
+    transform: none;
+  }
+  .eyebrow {
+    color: var(--text);
+  }
+  .eyebrow b {
+    color: var(--accent);
+  }
+  figcaption {
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+
+  /* Two drawings; the panel's own width picks one (not the window's), so it holds anywhere it is placed. */
+  .scenes {
+    container-type: inline-size;
+    background: var(--cv-canvas);
+    border: 1px solid var(--line-strong);
+  }
+  .wide,
+  .mid {
+    display: none;
+  }
+  /* The vertical drawings never scale past 1.15x (each carries its own max-width). */
+  .narrow {
+    display: block;
+    margin-inline: auto;
+  }
+  .mid {
+    margin-inline: auto;
+  }
+  @container (min-width: 520px) {
+    .mid {
+      display: block;
+    }
+    .narrow {
+      display: none;
+    }
+  }
+  @container (min-width: 1060px) {
+    .wide {
+      display: block;
+    }
+    .mid {
+      display: none;
+    }
+  }
+
+  /* Drawing: this agent at full strength, the generic lane muted but still readable (4.5:1 or better). */
+  .flowsvg.bold {
+    background: none;
+    border: 0;
+  }
+  .bold .edge {
+    stroke: var(--text);
+    stroke-width: 1.8;
+  }
+  .bold .edge.muted {
+    stroke: var(--muted);
+    stroke-width: 1.2;
+    stroke-dasharray: 4 4;
+  }
+  .bold .arrow {
+    fill: var(--text);
+  }
+  .bold .arrow.muted {
+    fill: var(--muted);
+  }
+  .bold .junction {
+    fill: var(--text);
+  }
+  .bold .node {
+    fill: var(--cv-box);
+  }
+  .bold .node.ghost {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.1;
+  }
+  .bold .node.ink {
+    stroke: var(--text);
+    stroke-width: 1.8;
+  }
+  .bold .node.differs {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+  .bold .bar {
+    fill: var(--accent);
+  }
+  .bold .cell.ink {
+    fill: var(--text);
+    stroke: var(--text);
+    stroke-width: 1.8;
+  }
+  .bold .cell.ghost {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.1;
+    stroke-dasharray: 4 3;
+  }
+  .bold .lane {
+    fill: var(--muted);
+    font-weight: 500;
+  }
+  .bold .lane.inv {
+    fill: var(--bg);
+    font-weight: 600;
+  }
+  .bold .t {
+    font-weight: 600;
+  }
+  .bold .t.muted {
+    font-weight: 500;
+  }
+  .bold .s {
+    fill: var(--muted);
+  }
+  .bold .s.differs {
+    fill: var(--accent);
+  }
+  .bold .out {
+    fill: var(--cv-box);
+    stroke-width: 2;
+  }
+  .bold .out.muted {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.2;
+    stroke-dasharray: 5 4;
+  }
+  .bold .o {
+    font-weight: 500;
+  }
+  .bold .packet {
+    stroke: var(--cv-canvas);
+    stroke-width: 3;
+    paint-order: stroke;
+  }
+  .compare {
+    /* Packets travel evenly, so the eye can follow them along the whole lane. */
+    --flow-ease: cubic-bezier(0.45, 0.05, 0.3, 1);
+  }
+</style>

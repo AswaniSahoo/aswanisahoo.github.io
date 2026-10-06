@@ -1,0 +1,59 @@
+export const profile = {
+  name: 'Aswani Kumar Sahoo',
+  handle: 'AswaniSahoo',
+  domain: 'aswanisahoo.bio',
+  title: 'ML / AI systems engineer',
+  tagline: 'Weather models upstream. Agents built to refuse. Everything instrumented.',
+  intro:
+    'I contribute to weather-forecasting models in the open, build LLM agents that are allowed to say "I don\'t know", and put metrics on all of it. Every public number on this site links to its evidence.',
+  location: 'Rourkela, Odisha, India',
+  email: 'aswanisahoo227@gmail.com',
+  links: {
+    github: 'https://github.com/AswaniSahoo',
+    linkedin: 'https://linkedin.com/in/aswani-sahoo/',
+    x: 'https://x.com/AswaniSahoo2',
+    blog: 'https://aswanisahoo.hashnode.dev',
+  },
+  origin: {
+    hometown: 'Baliapal, Balasore district, Odisha',
+    coast: 'Bay of Bengal',
+    // Aswani's own call (2026-09-03): the coast-to-weather link is "partly" true.
+    // So the page states both facts side by side and claims no motive.
+    line: 'I grew up on the Bay of Bengal coast. My first upstream code went into a weather model.',
+  },
+  education: {
+    degree: 'B.Tech, Ceramic Engineering',
+    school: 'National Institute of Technology Rourkela',
+    years: '2023 to 2027',
+    cgpa: '8.02',
+    note: 'Pre-final year. Machine learning is self-taught, credentialed by upstream merges rather than a degree.',
+  },
+  /** Tools with the repo that proves each one. Used in About. */
+  stack: [
+    { tool: 'Python', proof: 'everywhere' },
+    { tool: 'PyTorch', proof: 'weather-transformer-scratch, graph_weather' },
+    { tool: 'LangGraph', proof: 'climate-risk-agent' },
+    { tool: 'FastAPI', proof: 'Incident Evidence Compiler, climate-risk-agent' },
+    { tool: 'PostgreSQL', proof: 'Incident Evidence Compiler' },
+    { tool: 'FAISS, BM25, rerankers', proof: 'complaint-intelligence-system' },
+    { tool: 'xarray, zarr, H3', proof: 'graph_weather, weather-transformer-scratch' },
+    { tool: 'PEFT / LoRA', proof: 'llama-task-agent' },
+    { tool: 'Gemini on Vertex AI', proof: 'climate-risk-agent, Incident Evidence Compiler, vera-bot' },
+    { tool: 'MCP', proof: 'climate-risk-agent: 2 servers, registry entry, public container' },
+    { tool: 'Prometheus', proof: 'Incident Evidence Compiler: range-query ingestion and /metrics' },
+    { tool: 'Docker, Cloud Run, GitHub Actions', proof: 'climate-risk-agent, vera-bot, Incident Evidence Compiler' },
+    { tool: 'scipy, extreme-value statistics', proof: 'climate-risk-agent GEV hazard fits' },
+    { tool: 'Kubernetes (learning)', proof: 'krkn-chaos contributions' },
+  ],
+  writing: [
+    {
+      title: '5 mistakes that cost me GSoC and LFX',
+      url: 'https://aswanisahoo.hashnode.dev/5-mistakes-that-cost-me-gsoc-and-lfx',
+      date: '2026-06-14',
+      opening: 'It took me five rejections to understand this: I had the merged pull requests.',
+      summary:
+        'Ranked #1 for one GSoC project, #2 for another, interviewed, and still 0 for 5 across GSoC and LFX. The post is about the decisions made before any code was written.',
+      verifiedAt: '2026-09-03',
+    },
+  ],
+} as const;

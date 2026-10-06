@@ -1,0 +1,553 @@
+/* ------------------------------------------------------------------ */
+/* Tokens. Paper is the default theme: a surface analysis chart sheet. */
+/* Lamp is the same sheet under a desk lamp. Blue exists only as the   */
+/* cold-front symbol colour.                                           */
+/*                                                                     */
+/* LIGHT PALETTE: the colour values in this first block are the only   */
+/* place the light theme lives. Swapping the light palette is one edit */
+/* here (plus the light theme-color meta in Base.astro, which mirrors  */
+/* --bg). The lamp blocks below are unchanged and untouched by it.     */
+/* ------------------------------------------------------------------ */
+
+:root {
+  color-scheme: light;
+  --bg: #e8e5da;
+  --bg-2: #dedacb;
+  --card: #f2f0e8;
+  --line: #c7c4b6;
+  --line-strong: #a8a497;
+  --text: #1c1c22;
+  --muted: #5a5a62;
+  --accent: #ab2e18;
+  --accent-soft: rgba(171, 46, 24, 0.1);
+  --cold: #2f5fa8;
+  --ok: #2e5e3c;
+  --ok-soft: rgba(46, 94, 60, 0.12);
+  --warn: #ab2e18;
+  --warn-soft: rgba(171, 46, 24, 0.1);
+  --ink-shadow: 4px 4px 0 rgba(28, 28, 34, 0.12);
+  --grat-size: 48px;
+
+  --font-sans: 'Public Sans Variable', 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Martian Mono Variable', 'Martian Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 700ms;
+  --radius: 0;
+  --max: 1160px;
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #1b1a17;
+  --bg-2: #22211e;
+  --card: #232220;
+  --line: #34322d;
+  --line-strong: #4a4740;
+  --text: #e6e2d6;
+  --muted: #a19d92;
+  --accent: #e26246;
+  --accent-soft: rgba(226, 98, 70, 0.14);
+  --cold: #5b84c9;
+  --ok: #7fb08a;
+  --ok-soft: rgba(127, 176, 138, 0.14);
+  --warn: #e26246;
+  --warn-soft: rgba(226, 98, 70, 0.14);
+  --ink-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #1b1a17;
+    --bg-2: #22211e;
+    --card: #232220;
+    --line: #34322d;
+    --line-strong: #4a4740;
+    --text: #e6e2d6;
+    --muted: #a19d92;
+    --accent: #e26246;
+    --accent-soft: rgba(226, 98, 70, 0.14);
+    --cold: #5b84c9;
+    --ok: #7fb08a;
+    --ok-soft: rgba(127, 176, 138, 0.14);
+    --warn: #e26246;
+    --warn-soft: rgba(226, 98, 70, 0.14);
+    --ink-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reset and base                                                      */
+/* ------------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 0.18em;
+  transition: color 200ms var(--ease), text-decoration-color 200ms var(--ease);
+}
+
+a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+h1,
+h2 {
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(1.45rem, 2.6vw, 1.95rem);
+  line-height: 1.14;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+}
+
+h3 {
+  font-size: 1.1rem;
+  letter-spacing: -0.005em;
+}
+
+p {
+  margin: 0;
+}
+
+code,
+kbd,
+pre,
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--accent);
+  color: var(--bg);
+  padding: 0.5rem 1rem;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--max));
+  margin-inline: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared primitives                                                   */
+/* ------------------------------------------------------------------ */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.eyebrow b {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.lede {
+  color: var(--muted);
+  font-size: 1.08rem;
+  max-width: 64ch;
+}
+
+/* A printed legend box: hairline ink border, hard offset shadow. */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  padding: 1.4rem 1.5rem;
+  transition: border-color 300ms var(--ease), transform 500ms var(--ease), box-shadow 500ms var(--ease);
+}
+
+.card:hover {
+  border-color: var(--text);
+}
+
+/* Cards lift 2px on hover, only when motion is welcome. */
+@media (prefers-reduced-motion: no-preference) {
+  .card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.card.boxed {
+  border-color: var(--text);
+  box-shadow: var(--ink-shadow);
+}
+
+/* A panel that is itself a chart: printed graticule. */
+.chart-panel {
+  background-color: var(--bg-2);
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: var(--grat-size) var(--grat-size);
+  border: 1px solid var(--line-strong);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.chips li {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  border: 1px solid var(--line-strong);
+  padding: 0.15rem 0.5rem;
+}
+
+.pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.14rem 0.5rem;
+  border: 1px solid transparent;
+}
+
+.pill.merged {
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-color: var(--ok);
+}
+
+.pill.open {
+  color: var(--text);
+  background: transparent;
+  border-color: var(--text);
+}
+
+.pill.closed {
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--line-strong);
+}
+
+.pill.red {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.cmd {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  padding: 0.6rem 0.9rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.cmd::before {
+  content: '$';
+  color: var(--accent);
+}
+
+/* Anchored sections and cards clear the sticky header (two rows on phones). */
+section[id],
+article[id] {
+  scroll-margin-top: 6rem;
+}
+
+/* Visually hidden, still read aloud. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Text columns stop at 65 characters. */
+.prose {
+  max-width: 65ch;
+}
+
+/* ------------------------------------------------------------------ */
+/* Flow diagrams: ink boxes on a chart panel, packets travelling the   */
+/* lines, outcomes in coloured boxes. Shared by ControlLoop and the    */
+/* comparison panel on the flagship reports.                           */
+/* ------------------------------------------------------------------ */
+
+.flowsvg {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+.flowsvg .edge {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.4;
+}
+.flowsvg .edge.muted {
+  stroke-dasharray: 4 4;
+}
+.flowsvg .node {
+  fill: var(--card);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.flowsvg .node.ink {
+  stroke: var(--text);
+}
+.flowsvg .node.differs {
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+.flowsvg .t {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+.flowsvg .t.muted {
+  fill: var(--muted);
+  font-weight: 500;
+}
+.flowsvg .s {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+}
+.flowsvg .s.plain {
+  font-family: var(--font-sans);
+}
+.flowsvg .s.differs {
+  fill: var(--accent);
+}
+.flowsvg .lane {
+  fill: var(--muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+}
+.flowsvg .lane.ink {
+  fill: var(--text);
+}
+.flowsvg .out {
+  fill: var(--card);
+  stroke-width: 1.2;
+}
+.flowsvg .out.ok { stroke: var(--ok); }
+.flowsvg .out.warn { stroke: var(--warn); }
+.flowsvg .out.accent { stroke: var(--accent); }
+.flowsvg .out.muted {
+  stroke: var(--line-strong);
+  stroke-dasharray: 4 3;
+}
+.flowsvg .o {
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+}
+.flowsvg .o.ok { fill: var(--ok); }
+.flowsvg .o.warn { fill: var(--warn); }
+.flowsvg .o.accent { fill: var(--accent); }
+.flowsvg .o.muted { fill: var(--muted); }
+.flowsvg .packet {
+  opacity: 0;
+  offset-rotate: 0deg;
+  animation: flow-travel var(--dur, 4.2s) var(--flow-ease, var(--ease)) infinite;
+  animation-delay: var(--at, 0s);
+}
+.flowsvg .packet.ok { fill: var(--ok); }
+.flowsvg .packet.warn { fill: var(--warn); }
+.flowsvg .packet.accent { fill: var(--accent); }
+.flowsvg .packet.muted { fill: var(--muted); }
+@keyframes flow-travel {
+  0% { offset-distance: 0%; opacity: 0; }
+  8% { opacity: 1; }
+  62% { opacity: 1; }
+  70% { offset-distance: 100%; opacity: 0; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+/* Reduced motion: packets stay still on their lines, outcomes stay visible. */
+@media (prefers-reduced-motion: reduce) {
+  .flowsvg .packet {
+    animation: none !important;
+    opacity: 1;
+    offset-distance: var(--rest, 90%);
+  }
+}
+
+/* Section scaffold */
+.section {
+  padding-block: clamp(3.5rem, 8vw, 6.5rem);
+  border-top: 1px solid var(--line-strong);
+}
+
+/* Short sections: 48px a side on desktop, so 96px between them, on the 8px scale. */
+.section.compact {
+  padding-block: clamp(2.5rem, 5vw, 3rem);
+}
+
+.section-head {
+  display: grid;
+  gap: 0.8rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+  max-width: 72ch;
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                              */
+/* ------------------------------------------------------------------ */
+
+/* Resting state is visible. Only a JS-enabled page hides sections before reveal. */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  transition-delay: var(--delay, 0ms);
+}
+
+html.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Between sheets (Astro view transitions): a short slide plus fade. */
+@keyframes sheet-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+@keyframes sheet-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes sheet-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes sheet-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+/* The active nav rule slides from the old sheet to the new one. */
+::view-transition-group(sheet-rule) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  html.js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Print: a recruiter may print this. */
+@media print {
+  .site-header,
+  .reticle,
+  .theme-toggle,
+  .hero-canvas {
+    display: none !important;
+  }
+  html.js .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
