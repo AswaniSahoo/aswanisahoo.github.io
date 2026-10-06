@@ -1,9 +1,18 @@
 export const profile = {
   name: 'Aswani Kumar Sahoo',
   handle: 'AswaniSahoo',
-  domain: 'aswanisahoo.bio',
+  // The host the site is served from, read from `site` in astro.config.mjs, so the wordmark and
+  // the chart's corner always name an address that opens this site. It becomes aswanisahoo.bio
+  // by itself once the custom domain is pointed (README, Deploy).
+  domain: new URL(import.meta.env.SITE).host,
   title: 'ML / AI systems engineer',
-  tagline: 'Weather models upstream. Agents built to refuse. Everything instrumented.',
+  // The status tab on the hero card. Keep it short and true; update it when it changes.
+  availability: 'Open to AI / ML engineer internships · graduating 2027',
+  // Served from public/. The résumé buttons appear only once this file exists (src/lib/resume.ts).
+  resume: '/aswani-kumar-sahoo-resume.pdf',
+  // Three sentences, one per hero line (Hero.astro splits on the full stops). In Martian Mono
+  // each is 24 characters, so the three lines form one even block.
+  tagline: 'Weather models upstream. Agents that won\'t guess. Everything instrumented.',
   intro:
     'I contribute to weather-forecasting models in the open, build LLM agents that are allowed to say "I don\'t know", and put metrics on all of it. Every public number on this site links to its evidence.',
   location: 'Rourkela, Odisha, India',
@@ -26,7 +35,7 @@ export const profile = {
     school: 'National Institute of Technology Rourkela',
     years: '2023 to 2027',
     cgpa: '8.02',
-    note: 'Pre-final year. Machine learning is self-taught, credentialed by upstream merges rather than a degree.',
+    note: 'Final year. Machine learning is self-taught, credentialed by upstream merges rather than a degree.',
   },
   /** Tools with the repo that proves each one. Used in About. */
   stack: [

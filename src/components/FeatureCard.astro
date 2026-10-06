@@ -47,12 +47,42 @@ const { eyebrow, name, summary, metrics, href, cta = 'Read the case' } = Astro.p
   }
   /* A stamp never wraps its date, so two sit side by side only when the card is wide enough. */
   .metrics {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 1rem;
     padding-top: 1rem;
-    border-top: 1px dashed var(--line-strong);
     margin-top: auto;
+  }
+  /* The dashed rule over the stamps, drawn so it can be plotted in. */
+  .metrics::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--line-strong) 0 4px, transparent 4px 7px);
+    transform-origin: left center;
+  }
+  /* As the card arrives, the rule is drawn, then the stamps land (global.css, Motion). Only a
+     card waiting inside an unrevealed .reveal starts hidden. */
+  @media screen and (prefers-reduced-motion: no-preference) {
+    .metrics::before {
+      transition: transform 900ms var(--ease) calc(var(--delay, 0ms) + 250ms);
+    }
+    .metrics > :global(*) {
+      transition:
+        opacity 500ms var(--ease) calc(var(--delay, 0ms) + 550ms),
+        transform 500ms var(--ease) calc(var(--delay, 0ms) + 550ms);
+    }
+    :global(html.js .reveal:not(.is-in)) .metrics::before {
+      transform: scaleX(0);
+    }
+    :global(html.js .reveal:not(.is-in)) .metrics > :global(*) {
+      opacity: 0;
+      transform: translateY(6px);
+    }
   }
   /* Stamps stay clickable above the card-wide link. */
   .metrics :global(a) {

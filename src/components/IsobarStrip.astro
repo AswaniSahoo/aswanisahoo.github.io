@@ -36,7 +36,7 @@ const parallels = [48, 96];
       {parallels.map((y) => <line x1="0" y1={y} x2={W} y2={y} />)}
     </g>
     <g class="isobars">
-      {paths.map((d) => <path d={d} />)}
+      {paths.map((d, i) => <path d={d} pathLength="1" style={`--i: ${i}`} />)}
     </g>
     <text class="high" x={high.x} y={high.y + 22} text-anchor="middle">H</text>
     <text class="low" x={low.x} y={low.y + 9} text-anchor="middle">L</text>
@@ -84,6 +84,29 @@ const parallels = [48, 96];
     font-family: var(--font-mono);
     font-weight: 700;
     font-size: 22px;
+  }
+  /* On arrival the isobars are plotted one after another, then the centres are marked. */
+  @media screen and (prefers-reduced-motion: no-preference) {
+    :global(html.js) .isobars path {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: isobar-draw 1.4s var(--ease) forwards;
+      animation-delay: calc(var(--i) * 45ms);
+    }
+    :global(html.js) .low,
+    :global(html.js) .high {
+      animation: isobar-mark 600ms var(--ease) 700ms both;
+    }
+  }
+  @keyframes isobar-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes isobar-mark {
+    from {
+      opacity: 0;
+    }
   }
   .corner-wrap {
     position: absolute;

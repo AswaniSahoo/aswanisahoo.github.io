@@ -6,7 +6,7 @@ import OrgGraph from '../../components/OrgGraph.astro';
 import MetricTile from '../../components/MetricTile.astro';
 import Receipt from '../../components/Receipt.astro';
 import ledger from '../../data/prs.json';
-import { upstreamHeadline, mergedByOrg } from '../../data/upstream';
+import { upstreamHeadline, mergedByOrg, ledgerId } from '../../data/upstream';
 import { docathon, meshSeries } from '../../data/projects';
 import { negativeResults } from '../../data/negative';
 import type { PrLedger, PullRequest } from '../../data/types';
@@ -19,7 +19,6 @@ if (!ablation) throw new Error('open-source: the #238 ablation is missing from n
 
 // Merged and closed PRs per project, in the order the headline counts them, then the rest.
 const order = [...mergedByOrg.map((o) => o.name), ...Object.keys(data.byProject).filter((p) => !counts[p])];
-const slug = (p: string) => p.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 const groups = order.map((project) => {
   const prs = data.prs.filter((pr) => pr.project === project && pr.status !== 'open');
   const any = data.prs.find((pr) => pr.project === project);
@@ -48,7 +47,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
       <Receipt source="#ledger" label="PR ledger" />
       <ul class="orgs">
         {mergedByOrg.map((o) => (
-          <li><a href={`#ledger-${slug(o.name)}`}>{o.name}</a><b class="mono">{o.merged}</b></li>
+          <li><a href={`#${ledgerId(o.name)}`}>{o.name}</a><b class="mono">{o.merged}</b></li>
         ))}
       </ul>
     </div>
@@ -98,7 +97,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     <p class="prose muted">Merged and closed PRs per project. Open PRs have their own list below. Regenerated from the GitHub API on {data.verifiedAt}.</p>
     <div class="groups">
       {groups.map((g, i) => (
-        <details id={`ledger-${slug(g.project)}`} class="group" open={i === 0}>
+        <details id={ledgerId(g.project)} class="group" open={i === 0}>
           <summary>
             <span class="gname mono">{g.project}</span>
             <span class="gorg">{g.org}</span>
@@ -473,3 +472,13 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     }
   }
 </style>
+
+<script>
+  // A link to one org's group (#ledger-...) opens that group, from this sheet or from another.
+  const openTarget = () => {
+    const el = location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+    if (el instanceof HTMLDetailsElement) el.open = true;
+  };
+  document.addEventListener('astro:page-load', openTarget);
+  window.addEventListener('hashchange', openTarget);
+</script>

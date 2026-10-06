@@ -10,6 +10,8 @@ import { meshSeries } from '../data/projects';
 
 const h = upstreamHeadline;
 const fix = meshSeries.finding.metric;
+// Each org row is also a bar: its share of the largest count (the ledger lists largest first).
+const most = mergedByOrg[0]?.merged ?? 1;
 const pr = (n: number) => `https://github.com/openclimatefix/graph_weather/pull/${n}`;
 ---
 
@@ -22,8 +24,8 @@ const pr = (n: number) => `https://github.com/openclimatefix/graph_weather/pull/
     </div>
 
     <ul class="orgs reveal" style="--delay: 60ms" aria-label="Merged pull requests by org">
-      {mergedByOrg.map((o) => (
-        <li><span>{o.name}</span><b class="mono">{o.merged}</b></li>
+      {mergedByOrg.map((o, i) => (
+        <li style={`--share: ${(o.merged / most).toFixed(3)}; --i: ${i}`}><span>{o.name}</span><b class="mono">{o.merged}</b></li>
       ))}
     </ul>
 
@@ -79,6 +81,8 @@ const pr = (n: number) => `https://github.com/openclimatefix/graph_weather/pull/
     align-self: center;
   }
   .orgs li {
+    position: relative;
+    isolation: isolate;
     display: flex;
     justify-content: space-between;
     gap: 1rem;
@@ -88,15 +92,55 @@ const pr = (n: number) => `https://github.com/openclimatefix/graph_weather/pull/
     background: var(--card);
     border: 1px solid var(--line-strong);
   }
+  /* The bar behind each row: that org's share of the largest count. The figure beside it is
+     printed at its final value; only the bar is plotted in. */
+  .orgs li::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    width: calc(var(--share) * 100%);
+    background: var(--accent-soft);
+    border-right: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    transform-origin: left center;
+  }
   .orgs b {
     font-weight: 600;
   }
   .finding {
+    position: relative;
     display: grid;
     gap: 0.6rem;
     justify-items: start;
     padding: 0.2rem 0 0.2rem 1rem;
-    border-left: 3px solid var(--accent);
+  }
+  .finding::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: var(--accent);
+    transform-origin: center top;
+  }
+  /* Plotted in as the strip arrives: the bars grow one after another, the finding's rule runs
+     down (global.css, Motion). */
+  @media screen and (prefers-reduced-motion: no-preference) {
+    .orgs li::before {
+      transition: transform 1s var(--ease) calc(var(--i) * 90ms + 200ms);
+    }
+    .finding::before {
+      transition: transform 900ms var(--ease) 300ms;
+    }
+    :global(html.js) .orgs:not(.is-in) li::before {
+      transform: scaleX(0);
+    }
+    :global(html.js) .finding:not(.is-in)::before {
+      transform: scaleY(0);
+    }
   }
   .line {
     font-size: 0.95rem;

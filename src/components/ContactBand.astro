@@ -1,6 +1,7 @@
 ---
 /** Home sheet: the contact band above the footer strip. */
 import { profile } from '../data/profile';
+import { resumeHref } from '../lib/resume';
 ---
 
 <section id="contact" class="contact">
@@ -12,6 +13,7 @@ import { profile } from '../data/profile';
     <div class="ways">
       <a class="mail mono" href={`mailto:${profile.email}`}>{profile.email}</a>
       <p class="links mono">
+        {resumeHref && <a class="file" href={resumeHref} target="_blank" rel="noopener">Résumé (PDF)</a>}
         <a href={profile.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
         <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <a href={profile.links.x} target="_blank" rel="noopener noreferrer">X</a>
@@ -41,11 +43,22 @@ import { profile } from '../data/profile';
     gap: 0.9rem;
     justify-items: start;
   }
+  /* The address is underlined in accent, drawn in as the band arrives (global.css, Motion). */
   .mail {
     font-size: clamp(0.95rem, 2.2vw, 1.3rem);
     font-weight: 500;
-    text-decoration-color: var(--accent);
+    text-decoration: none;
+    background: linear-gradient(var(--accent), var(--accent)) 0 100% / 100% 1px no-repeat;
+    padding-bottom: 0.15em;
     overflow-wrap: anywhere;
+  }
+  @media screen and (prefers-reduced-motion: no-preference) {
+    .mail {
+      transition: background-size 1s var(--ease) 350ms, color 200ms var(--ease);
+    }
+    :global(html.js) .inner:not(.is-in) .mail {
+      background-size: 0 1px;
+    }
   }
   .links {
     display: flex;
@@ -63,6 +76,9 @@ import { profile } from '../data/profile';
   }
   .links a.internal::before {
     content: '→ ';
+  }
+  .links a.file::before {
+    content: '↓ ';
   }
   .links a:hover {
     text-decoration: underline;
