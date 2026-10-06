@@ -1,7 +1,6 @@
 /* ------------------------------------------------------------------ */
 /* Tokens. Paper is the default theme: a surface analysis chart sheet. */
-/* Lamp is the same sheet under a desk lamp. Blue exists only as the   */
-/* cold-front symbol colour.                                           */
+/* Lamp is the same sheet under a desk lamp.                           */
 /*                                                                     */
 /* LIGHT PALETTE: the colour values in this first block are the only   */
 /* place the light theme lives. Swapping the light palette is one edit */
@@ -20,7 +19,6 @@
   --muted: #5a5a62;
   --accent: #ab2e18;
   --accent-soft: rgba(171, 46, 24, 0.1);
-  --cold: #2f5fa8;
   --ok: #2e5e3c;
   --ok-soft: rgba(46, 94, 60, 0.12);
   --warn: #ab2e18;
@@ -49,7 +47,6 @@
   --muted: #a19d92;
   --accent: #e26246;
   --accent-soft: rgba(226, 98, 70, 0.14);
-  --cold: #5b84c9;
   --ok: #7fb08a;
   --ok-soft: rgba(127, 176, 138, 0.14);
   --warn: #e26246;
@@ -69,7 +66,6 @@
     --muted: #a19d92;
     --accent: #e26246;
     --accent-soft: rgba(226, 98, 70, 0.14);
-    --cold: #5b84c9;
     --ok: #7fb08a;
     --ok-soft: rgba(127, 176, 138, 0.14);
     --warn: #e26246;
@@ -445,10 +441,21 @@ article[id] {
   }
 }
 
-/* Section scaffold */
+/* Section scaffold. The top rule is a pseudo-element so it can be plotted in (Motion). */
 .section {
+  position: relative;
   padding-block: clamp(3.5rem, 8vw, 6.5rem);
-  border-top: 1px solid var(--line-strong);
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--line-strong);
+  transform-origin: left center;
 }
 
 /* Short sections: 48px a side on desktop, so 96px between them, on the 8px scale. */
@@ -478,6 +485,20 @@ html.js .reveal {
 html.js .reveal.is-in {
   opacity: 1;
   transform: none;
+}
+
+/* Scroll motion: the sheet is plotted as it is read. A section's top rule is drawn left to
+   right as the section arrives; components plot their own rules and bars the same way
+   (FeatureCard, UpstreamStrip, ContactBand, IsobarStrip). Every start state is set only on
+   screen, with JS and with motion welcome, so print, reduced motion and no-JS readers get
+   the finished sheet. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .section::before {
+    transition: transform 1.2s var(--ease);
+  }
+  html.js .section:has(.section-head.reveal:not(.is-in))::before {
+    transform: scaleX(0);
+  }
 }
 
 /* Between sheets (Astro view transitions): a short slide plus fade. */

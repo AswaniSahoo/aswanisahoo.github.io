@@ -31,3 +31,6 @@ export const mergedByOrg = Object.entries(data.byProject)
   .sort((a, b) => b.merged - a.merged);
 
 export const ledgerVerifiedAt = data.verifiedAt;
+
+/** The id of a project's group in the ledger on the Open source sheet. */
+export const ledgerId = (project: string) => `ledger-${project.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;

@@ -4,8 +4,9 @@
  *
  *   base  - graticule, isobars (marching squares over a drifting synthetic
  *           pressure field), the coarse hex model grid around the low and the
- *           refined aperture-7 patch inside it, pressure centres, fronts,
- *           station plots, a locator globe.
+ *           refined aperture-7 patch inside it, the low's track and forecast
+ *           cone while it moves, pressure centres, station plots, a locator
+ *           globe.
  *   part  - wind particles advected along the field, with fading trails. The
  *           fastest air, round the low, is drawn brightest.
  *
@@ -46,7 +47,6 @@ interface Colors {
   inkRgb: string;
   red: string;
   redRgb: string;
-  cold: string;
   grat: string;
   muted: string;
 }
@@ -75,6 +75,14 @@ const FADE = 0.06;
 const SLOW = 0.06;
 const FAST = 0.09;
 const BAND_ALPHA = [0.28, 0.5, 0.85];
+/** Track: a dot every TRACK_STEP px the low moves, each fading over TRACK_LIFE frames. */
+const TRACK_STEP = 14;
+const TRACK_LIFE = 200;
+const TRACK_MAX = 28;
+/** Forecast cone: shown above CONE_FROM px per frame, LEAD frames ahead, at most CONE_MAX px long. */
+const CONE_FROM = 0.4;
+const LEAD = 40;
+const CONE_MAX = 170;
 
 /** Marching-squares edge pairs per 4-bit cell index. */
 const CASES: number[][] = [[], [3, 2], [2, 1], [3, 1], [0, 1], [0, 3, 1, 2], [0, 2], [0, 3], [0, 3], [0, 2], [0, 1, 2, 3], [0, 1], [3, 1], [1, 2], [2, 3], []];
@@ -108,7 +116,6 @@ function readColors(el: Element): Colors {
     inkRgb: hexToRgb(ink),
     red,
     redRgb: hexToRgb(red),
-    cold: get('--cold', '#2f5fa8'),
     grat: get('--line', '#c7c4b6'),
     muted: get('--muted', '#5a5a62'),
   };
@@ -141,6 +148,9 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
   let target: [number, number] = [home[0], home[1]];
   const lowPos: [number, number] = [home[0], home[1]];
   let depth = DEPTH_IDLE;
+  /** Smoothed velocity of the low, degrees per 60 Hz frame. */
+  const vel: [number, number] = [0, 0];
+  const track: { lon: number; lat: number; t: number }[] = [];
   let hover = false;
   let hi: [number, number] = [70, 24];
   let lo2: [number, number] = [100, 9];
@@ -229,47 +239,81 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     c.fillText(text, x, y);
   }
 
-  function quad(p0: number[], p1: number[], p2: number[], s: number): [number, number] {
-    const a = 1 - s;
-    return [a * a * p0[0] + 2 * a * s * p1[0] + s * s * p2[0], a * a * p0[1] + 2 * a * s * p1[1] + s * s * p2[1]];
+  /** The low's speed in canvas pixels per 60 Hz frame, from its smoothed velocity. */
+  function speedPx(): number {
+    return Math.hypot((vel[0] * W) / lonR, (vel[1] * H) / (LAT1 - LAT0));
   }
 
-  /** A front drawn as a quadratic curve with the standard symbols. */
-  function front(c: CanvasRenderingContext2D, p0: number[], p1: number[], p2: number[], kind: 'warm' | 'cold'): void {
-    const color = kind === 'warm' ? C.red : C.cold;
+  /**
+   * The low's recent track and a forecast cone along its motion, drawn the way cyclone
+   * advisories draw them: dots where it has been, and ahead a cone that widens with lead
+   * time, because a forecast is less certain the further out it goes. Both appear only
+   * while the low moves, so the idle chart stays quiet.
+   */
+  function trackAndCone(c: CanvasRenderingContext2D, lx: number, ly: number, tt: number): void {
+    for (const p of track) {
+      const a = 1 - (tt - p.t) / TRACK_LIFE;
+      if (a <= 0) continue;
+      c.beginPath();
+      c.arc(projX(p.lon), projY(p.lat), 2, 0, TAU);
+      c.fillStyle = `rgba(${C.redRgb},${(0.7 * a).toFixed(3)})`;
+      c.fill();
+    }
+
+    const speed = speedPx();
+    const vis = Math.min(1, Math.max(0, (speed - CONE_FROM) / 1.6));
+    if (vis < 0.01) return;
+    // Unit vector along the motion (canvas y points down, latitude up) and its normal.
+    const ux = ((vel[0] * W) / lonR) / speed;
+    const uy = (-(vel[1] * H) / (LAT1 - LAT0)) / speed;
+    const qx = -uy;
+    const qy = ux;
+    const len = Math.min(CONE_MAX, speed * LEAD);
+    const spread = (d: number) => 6 + 0.32 * d;
+    const w0 = spread(0);
+    const w1 = spread(len);
+    const ex = lx + ux * len;
+    const ey = ly + uy * len;
+    const ang = Math.atan2(uy, ux);
+
+    c.save();
+    c.globalAlpha = vis;
     c.beginPath();
-    c.moveTo(p0[0], p0[1]);
-    c.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]);
-    c.lineWidth = 2;
-    c.strokeStyle = color;
+    c.moveTo(lx + qx * w0, ly + qy * w0);
+    c.lineTo(ex + qx * w1, ey + qy * w1);
+    c.arc(ex, ey, w1, ang + Math.PI / 2, ang - Math.PI / 2, true);
+    c.lineTo(lx - qx * w0, ly - qy * w0);
+    c.arc(lx, ly, w0, ang - Math.PI / 2, ang + Math.PI / 2, true);
+    c.closePath();
+    c.fillStyle = `rgba(${C.redRgb},0.09)`;
+    c.fill();
+    c.setLineDash([4, 4]);
+    c.lineWidth = 1;
+    c.strokeStyle = `rgba(${C.redRgb},0.55)`;
     c.stroke();
-    c.fillStyle = color;
-    for (let i = 2; i <= 36; i += 5) {
-      const s = i / 38;
-      const a = quad(p0, p1, p2, s);
-      const b = quad(p0, p1, p2, s + 0.01);
-      const tx = b[0] - a[0];
-      const ty = b[1] - a[1];
-      const L = Math.hypot(tx, ty) || 1;
-      const nxn = -ty / L;
-      const nyn = tx / L;
-      const ux = tx / L;
-      const uy = ty / L;
-      if (kind === 'warm') {
-        const ang = Math.atan2(nyn, nxn);
-        c.beginPath();
-        c.arc(a[0], a[1], 4.5, ang - Math.PI / 2, ang + Math.PI / 2);
-        c.closePath();
-        c.fill();
-      } else {
-        c.beginPath();
-        c.moveTo(a[0] - ux * 5, a[1] - uy * 5);
-        c.lineTo(a[0] + nxn * 9, a[1] + nyn * 9);
-        c.lineTo(a[0] + ux * 5, a[1] + uy * 5);
-        c.closePath();
-        c.fill();
+    c.beginPath();
+    c.moveTo(lx, ly);
+    c.lineTo(ex, ey);
+    c.stroke();
+    c.setLineDash([]);
+    // Forecast positions at three lead times, labelled when the cone is long enough to hold them.
+    for (let i = 1; i <= 3; i++) {
+      const d = (len * i) / 3;
+      const fx = lx + ux * d;
+      const fy = ly + uy * d;
+      c.beginPath();
+      c.arc(fx, fy, 2.6, 0, TAU);
+      c.fillStyle = C.paper;
+      c.fill();
+      c.lineWidth = 1.2;
+      c.strokeStyle = C.red;
+      c.stroke();
+      if (len > 100) {
+        const off = spread(d) + 12;
+        halo(c, `+${12 * i}h`, fx + qx * off, fy + qy * off, `8.5px ${mono}`, C.red);
       }
     }
+    c.restore();
   }
 
   /** Orthographic locator globe, hidden hemisphere culled. */
@@ -494,14 +538,10 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     c.setLineDash([]);
     halo(c, 'refined patch', lx, ly + PATCH_R + 22, `8.5px ${mono}`, C.red);
 
-    // Fronts attached to the low, swinging slowly.
-    const ph = tt * 0.0025;
-    const rot = (x: number, y: number): [number, number] => [lx + x * Math.cos(ph) - y * Math.sin(ph), ly + x * Math.sin(ph) + y * Math.cos(ph)];
-    front(c, [lx, ly], rot(110, 28), rot(240, 18), 'warm');
-    front(c, [lx, ly], rot(-30, 95), rot(-150, 205), 'cold');
+    trackAndCone(c, lx, ly, tt);
 
     // Station plots: circle, wind barb, temperature left, pressure tail right. Half ink, so
-    // they read as chart furniture under the low and its fronts.
+    // they read as chart furniture under the low.
     c.save();
     c.globalAlpha = 0.5;
     c.lineWidth = 1.2;
@@ -609,9 +649,24 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     if (!hover) target = [home[0] + 0.9 * Math.sin(tt * 0.004), home[1] + 0.6 * Math.cos(tt * 0.0031)];
     // Easing per 60 Hz frame, compounded over k frames.
     const e = 1 - Math.pow(1 - 0.06, k);
+    const was: [number, number] = [lowPos[0], lowPos[1]];
     lowPos[0] += (target[0] - lowPos[0]) * e;
     lowPos[1] += (target[1] - lowPos[1]) * e;
     depth += ((hover ? DEPTH_HELD : DEPTH_IDLE) - depth) * (1 - Math.pow(1 - 0.03, k));
+    if (animate) {
+      // Velocity for the forecast cone, smoothed so the cone does not twitch with the pointer.
+      const sv = 1 - Math.pow(1 - 0.12, k);
+      vel[0] += ((lowPos[0] - was[0]) / k - vel[0]) * sv;
+      vel[1] += ((lowPos[1] - was[1]) / k - vel[1]) * sv;
+      // The track drops a dot each TRACK_STEP px the low travels, only while it really moves.
+      const tail = track[track.length - 1];
+      const moved = tail ? Math.hypot(projX(lowPos[0]) - projX(tail.lon), projY(lowPos[1]) - projY(tail.lat)) : Infinity;
+      if (speedPx() > CONE_FROM && moved >= TRACK_STEP) {
+        track.push({ lon: lowPos[0], lat: lowPos[1], t: tt });
+        if (track.length > TRACK_MAX) track.shift();
+      }
+      while (track.length && tt - track[0].t > TRACK_LIFE) track.shift();
+    }
     // The chart layer redraws at about 30 Hz, the particles every frame.
     if (!animate || tt - baseAt >= 1.9) {
       drawBase(tt);

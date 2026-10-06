@@ -2,7 +2,8 @@
 import MetricTile from './MetricTile.astro';
 import { profile } from '../data/profile';
 import { docathon } from '../data/projects';
-import { upstreamHeadline } from '../data/upstream';
+import { upstreamHeadline, mergedByOrg, ledgerId } from '../data/upstream';
+import { resumeHref } from '../lib/resume';
 
 // Baliapal, Balasore district. The low rests here when nobody is pointing.
 const home = { lon: 87.1, lat: 21.6 };
@@ -52,14 +53,20 @@ const stats = [
   <div class="overlay">
     <div class="wrap">
       <div class="legend card boxed" data-legend>
+        <p class="status mono"><span class="dot" aria-hidden="true"></span>{profile.availability}</p>
         <p class="eyebrow"><b>{profile.name}</b> · <span class="role">{profile.title}</span></p>
         <h1>{beats.map((b, i) => <>{i > 0 && ' '}<span class="beat">{b}</span></>)}</h1>
         <p class="intro">{profile.intro}</p>
         <div class="stats">
           {stats.map((s) => <MetricTile metric={s.metric} size="lg" />)}
         </div>
+        <p class="orgs">
+          <span class="mono">Merged in</span>
+          {mergedByOrg.map((o, i) => <>{i > 0 && <span aria-hidden="true"> · </span>}<a href={`/open-source/#${ledgerId(o.name)}`}>{o.name}</a></>)}
+        </p>
         <div class="cta">
           <a class="btn primary" href="/work/">See the work</a>
+          {resumeHref && <a class="btn" href={resumeHref} target="_blank" rel="noopener">Résumé</a>}
           <a class="btn" href={profile.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
           <a class="btn" href={profile.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
           <a class="btn" href={`mailto:${profile.email}`}>Email</a>
@@ -152,6 +159,7 @@ const stats = [
     padding-block: clamp(1.5rem, 5vh, 3rem);
   }
   .legend {
+    position: relative;
     pointer-events: auto;
     /* The headline is sized against the card (cqi, below). A size container cannot take its
        width from its own content, so the width is given here. */
@@ -176,6 +184,64 @@ const stats = [
   }
   /* On phones the eyebrow wraps before the title, never inside "ML / AI". */
   .role {
+    white-space: nowrap;
+  }
+  /* Availability, as a tab on the card's top edge, so it adds no height to the card. */
+  .status {
+    position: absolute;
+    top: 0;
+    left: 1.6rem;
+    max-width: calc(100% - 3.2rem);
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.64rem;
+    line-height: 1.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--text);
+  }
+  .dot {
+    flex: none;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--ok);
+  }
+  /* Three pulses, then still: under five seconds, so it needs no pause control. */
+  @media (prefers-reduced-motion: no-preference) {
+    .dot {
+      animation: status-pulse 1.5s var(--ease) 3;
+    }
+  }
+  @keyframes status-pulse {
+    from {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent);
+    }
+    to {
+      box-shadow: 0 0 0 0.5rem transparent;
+    }
+  }
+  /* The orgs behind the merged count, each linking to its group in the ledger. */
+  .orgs {
+    margin-top: -0.35rem;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .orgs .mono {
+    margin-right: 0.45rem;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .orgs a {
+    color: var(--text);
+    text-decoration-color: var(--line-strong);
     white-space: nowrap;
   }
   /* One sentence per line. Martian Mono is wide: a 24-character line fits the card only at 6%
@@ -205,10 +271,11 @@ const stats = [
   .stats :global(.metric) {
     grid-template-rows: auto 1fr auto;
   }
+  /* Five buttons fit one row of the desktop card. */
   .cta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.45rem;
     padding-top: 0.2rem;
   }
   .btn {
@@ -217,7 +284,7 @@ const stats = [
     letter-spacing: 0.06em;
     text-transform: uppercase;
     text-decoration: none;
-    padding: 0.5rem 0.85rem;
+    padding: 0.5rem 0.75rem;
     border: 1px solid var(--text);
     color: var(--text);
     transition: background 200ms var(--ease), color 200ms var(--ease), transform 200ms var(--ease);
@@ -260,11 +327,11 @@ const stats = [
       position: relative;
       z-index: 3;
     }
-    /* The card overlaps the bottom 3rem of the chart: lift the corner captions clear of it, so
-       they no longer show through the card as ghost text over its eyebrow line. */
+    /* The card overlaps the bottom 3rem of the chart and its status tab rises above that: lift
+       the corner captions clear of both. */
     .corner.bl,
     .corner.br {
-      bottom: 3.75rem;
+      bottom: 4.75rem;
     }
     /* Clear of the map's own latitude tick labels along the left edge. */
     .corner.bl {
@@ -282,6 +349,15 @@ const stats = [
     /* Each sentence takes two lines here; a little air keeps the three pairs apart. */
     .beat + .beat {
       margin-top: 0.25em;
+    }
+    /* One line down to a 360px phone. */
+    .status {
+      left: 0.75rem;
+      max-width: calc(100% - 1.5rem);
+      gap: 0.4rem;
+      padding-inline: 0.5rem;
+      font-size: 0.58rem;
+      letter-spacing: 0;
     }
     /* The domain repeats the header wordmark and, this narrow, brushes the map's station labels. */
     .corner.br {

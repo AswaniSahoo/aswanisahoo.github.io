@@ -1,8 +1,15 @@
 export const profile = {
   name: 'Aswani Kumar Sahoo',
   handle: 'AswaniSahoo',
-  domain: 'aswanisahoo.bio',
+  // The host the site is served from, read from `site` in astro.config.mjs, so the wordmark and
+  // the chart's corner always name an address that opens this site. It becomes aswanisahoo.bio
+  // by itself once the custom domain is pointed (README, Deploy).
+  domain: new URL(import.meta.env.SITE).host,
   title: 'ML / AI systems engineer',
+  // The status tab on the hero card. Keep it short and true; update it when it changes.
+  availability: 'Open to ML internships · graduating 2027',
+  // Served from public/. The résumé buttons appear only once this file exists (src/lib/resume.ts).
+  resume: '/aswani-kumar-sahoo-resume.pdf',
   // Three sentences, one per hero line (Hero.astro splits on the full stops). In Martian Mono
   // each is 24 characters, so the three lines form one even block.
   tagline: 'Weather models upstream. Agents that won\'t guess. Everything instrumented.',

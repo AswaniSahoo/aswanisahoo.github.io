@@ -40,6 +40,7 @@ public/
   CNAME        custom domain for GitHub Pages (see Deploy before the first deploy)
   og.jpg       link preview card (Open Graph and X large card), made by og-image.mjs
   robots.txt   points at the sitemap
+  aswani-kumar-sahoo-resume.pdf   the résumé, once added (see Updating numbers and posts)
 ```
 
 ## Commands
@@ -67,12 +68,14 @@ In Git Bash on Windows, prefix `screenshots` with `MSYS_NO_PATHCONV=1` when pass
 - The upstream headline is frozen in `src/data/upstream.ts`. If a refreshed ledger disagrees with it, the build stops, so the headline changes on purpose, together with the wiki.
 - Everything else lives in `src/data/*.ts`. Each metric has `value`, `verifiedAt` and `source`. Change the date only after checking the source again. Pages show the source as a receipt link, not the date.
 - The Now block on the home sheet is `src/data/now.ts`, edited by hand, with the date it was checked.
+- Résumé: put the PDF at `public/aswani-kumar-sahoo-resume.pdf` (the path is `resume` in `src/data/profile.ts`). The build checks for the file, so the résumé buttons on the hero and the contact band appear only once it is there, never as a broken link.
+- The hero's status tab is `availability` in `src/data/profile.ts`. Update it when your plans change.
 - The link preview card `public/og.jpg` shows the name, title, tagline and the orgs with merged PRs, read from the built home page. It carries no counts, so a new merge does not make it stale. After changing the tagline or title, or when a new org appears in the ledger: build, run `npm run og-image`, build again, and commit the new image.
 - Posts: `date` is the original publish date. The optional `hashnode` field links the original and prints "First published on Hashnode"; leave it out when the Hashnode post no longer exists.
 
 ## Deploy
 
-Deployed to https://aswanisahoo.github.io by `.github/workflows/deploy.yml` (GitHub Actions, official Astro action), on every push to `main`. The URLs that depend on the domain (listed below) point at the github.io origin for now.
+Deployed to https://aswanisahoo.github.io by `.github/workflows/deploy.yml` (GitHub Actions, official Astro action), on every push to `main`. The URLs that depend on the domain (listed below) point at the github.io origin for now. The domain shown on the page (header wordmark, chart corner, footer strip, `og:site_name`) is read from `site`, so it always names an address that opens this site.
 
 The custom domain `aswanisahoo.bio` is a free Gravatar domain and still serves the Gravatar profile. Gravatar's documentation (support.gravatar.com/custom-domains, checked 2026-10-06) says DNS management is not available on free domains until they are renewed or were bought for more than a year upfront. The exact lock period is not stated there. Until DNS can be edited:
 
