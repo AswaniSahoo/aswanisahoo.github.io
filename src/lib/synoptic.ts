@@ -2,12 +2,16 @@
  * Synoptic chart renderer for the hero. A surface analysis sheet over the
  * Bay of Bengal, plotted live on two canvases:
  *
- *   base  - graticule, coarse hex model grid, isobars (marching squares over a
- *           drifting synthetic pressure field), pressure centres, fronts,
- *           station plots, the refined aperture-7 hex patch, a locator globe.
- *   part  - wind particles advected along the field, with fading trails.
+ *   base  - graticule, isobars (marching squares over a drifting synthetic
+ *           pressure field), the coarse hex model grid around the low and the
+ *           refined aperture-7 patch inside it, pressure centres, fronts,
+ *           station plots, a locator globe.
+ *   part  - wind particles advected along the field, with fading trails. The
+ *           fastest air, round the low, is drawn brightest.
  *
- * The pointer is the low. Idle, the low returns home (Baliapal) and drifts.
+ * The pointer is the low, and holding it deepens it. Idle, the low returns
+ * home (Baliapal) and drifts. Motion is timed in 60 Hz frames, so a 120 Hz
+ * screen runs at the same speed in smaller steps.
  * The field is synthetic; the chart says so in its corner label.
  * No dependencies. Colours are read from CSS custom properties so the lamp
  * theme needs no second code path.
@@ -34,8 +38,6 @@ export interface Synoptic {
   clearPointer(): void;
   /** Current position of the low, [lon, lat]. */
   low(): [number, number];
-  /** Chart position under a canvas pixel, [lon, lat]. */
-  lonLat(x: number, y: number): [number, number];
 }
 
 interface Colors {
@@ -64,6 +66,15 @@ const CELL = 12;
 const COARSE_R = 36;
 const PATCH_R = 84;
 const APERTURE7_ROT = Math.atan2(Math.sqrt(3), 5);
+/** Depth of the low in hPa, idle and while the pointer holds it. */
+const DEPTH_IDLE = 14;
+const DEPTH_HELD = 20;
+/** Share of each particle trail erased per 60 Hz frame. Lower is longer. */
+const FADE = 0.06;
+/** Wind speeds (degrees per 60 Hz frame) splitting the particles into three brightness bands. */
+const SLOW = 0.06;
+const FAST = 0.09;
+const BAND_ALPHA = [0.28, 0.5, 0.85];
 
 /** Marching-squares edge pairs per 4-bit cell index. */
 const CASES: number[][] = [[], [3, 2], [2, 1], [3, 1], [0, 1], [0, 3, 1, 2], [0, 2], [0, 3], [0, 3], [0, 2], [0, 1, 2, 3], [0, 1], [3, 1], [1, 2], [2, 3], []];
@@ -129,13 +140,17 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
 
   let target: [number, number] = [home[0], home[1]];
   const lowPos: [number, number] = [home[0], home[1]];
+  let depth = DEPTH_IDLE;
   let hover = false;
   let hi: [number, number] = [70, 24];
   let lo2: [number, number] = [100, 9];
 
   let raf = 0;
   let running = false;
+  /** Time in 60 Hz frames. */
   let t = 0;
+  let last = 0;
+  let baseAt = -Infinity;
 
   const mono = '"Martian Mono Variable", "Martian Mono", ui-monospace, monospace';
 
@@ -144,12 +159,13 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
   const unproj = (x: number, y: number): [number, number] => [LONC - lonR / 2 + (x / W) * lonR, LAT1 - (y / H) * (LAT1 - LAT0)];
   const inDomain = (lon: number, lat: number) => lon > LONC - lonR / 2 - 1 && lon < LONC + lonR / 2 + 1 && lat > LAT0 - 1 && lat < LAT1 + 1;
 
-  /** Synthetic sea-level pressure, hPa. */
+  /** Synthetic sea-level pressure, hPa. The base sits between isobar levels (every 4 hPa
+   *  from 988): at 1012 the background wave's zero lines, which are straight, drew as isobars. */
   function P(lon: number, lat: number, tt: number): number {
     return (
-      1012 +
+      1013 +
       6 * Math.sin(lon * 0.22 + tt * 0.004) * Math.cos(lat * 0.31 - tt * 0.003) -
-      14 * gauss(lon, lat, lowPos[0], lowPos[1], 4.2) +
+      depth * gauss(lon, lat, lowPos[0], lowPos[1], 4.2) +
       10 * gauss(lon, lat, hi[0], hi[1], 6.5) -
       6 * gauss(lon, lat, lo2[0], lo2[1], 4.5)
     );
@@ -181,8 +197,9 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     nx = Math.floor(W / CELL) + 2;
     ny = Math.floor(H / CELL) + 2;
     vals = new Float32Array(nx * ny);
+    baseAt = -Infinity;
     parts.length = 0;
-    const n = Math.round(Math.min(900, (W * H) / 850));
+    const n = Math.round(Math.min(1300, (W * H) / 700));
     for (let i = 0; i < n; i++) {
       const q: Particle = { x: 0, y: 0, age: 0, life: 0 };
       seed(q);
@@ -374,13 +391,27 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     c.textAlign = 'left';
     for (let lat = 10; lat < 30; lat += 10) c.fillText(`${lat}N`, 6, projY(lat) - 4);
 
-    // Coarse hex model grid.
-    c.strokeStyle = `rgba(${C.inkRgb},0.075)`;
+    // Coarse hex model grid, drawn only round the low and fading with distance, so the eye
+    // goes to the storm and the refined patch inside it rather than to wallpaper.
+    const lx = projX(lowPos[0]);
+    const ly = projY(lowPos[1]);
+    const meshR = PATCH_R * 3.2;
+    const meshFade = c.createRadialGradient(lx, ly, PATCH_R, lx, ly, meshR);
+    meshFade.addColorStop(0, `rgba(${C.inkRgb},0.16)`);
+    meshFade.addColorStop(1, `rgba(${C.inkRgb},0)`);
+    c.strokeStyle = meshFade;
     c.lineWidth = 1;
     c.beginPath();
     const r = COARSE_R;
     const w = Math.sqrt(3) * r;
-    for (let j = -1; j * 1.5 * r < H + r; j++) for (let i = -1; i * w < W + w; i++) hexPath(c, i * w + ((j & 1) * w) / 2, j * 1.5 * r, r, 0);
+    for (let j = -1; j * 1.5 * r < H + r; j++) {
+      for (let i = -1; i * w < W + w; i++) {
+        const hx = i * w + ((j & 1) * w) / 2;
+        const hy = j * 1.5 * r;
+        const d = Math.hypot(hx - lx, hy - ly);
+        if (d > PATCH_R - r * 0.5 && d < meshR + r) hexPath(c, hx, hy, r, 0);
+      }
+    }
     c.stroke();
 
     // Sample the field.
@@ -392,8 +423,12 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
       }
     }
 
-    // Isobars every 4 hPa by marching squares.
-    c.strokeStyle = `rgba(${C.inkRgb},0.85)`;
+    // Isobars every 4 hPa by marching squares: strongest round the low, quiet at the edges.
+    const isoFade = c.createRadialGradient(lx, ly, 0, lx, ly, Math.max(W, H) * 0.55);
+    isoFade.addColorStop(0, `rgba(${C.inkRgb},0.8)`);
+    isoFade.addColorStop(0.3, `rgba(${C.inkRgb},0.5)`);
+    isoFade.addColorStop(1, `rgba(${C.inkRgb},0.26)`);
+    c.strokeStyle = isoFade;
     c.lineWidth = 1;
     c.beginPath();
     const labels: [number, number, number][] = [];
@@ -423,7 +458,7 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
             const q = e[sg[s + 1]];
             c.moveTo(p[0], p[1]);
             c.lineTo(q[0], q[1]);
-            if (!labeled && L % 8 === 0 && j > ny * 0.3 && j < ny * 0.7 && i > nx * 0.12 && i < nx * 0.9) {
+            if (!labeled && L % 8 === 0 && j > ny * 0.3 && j < ny * 0.7 && i > nx * 0.12 && i < nx * 0.9 && Math.hypot(p[0] - lx, p[1] - ly) > 72) {
               labels.push([p[0], p[1], L]);
               labeled = true;
             }
@@ -435,8 +470,6 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     for (const [x, y, L] of labels) halo(c, String(L), x, y, `9.5px ${mono}`, C.ink);
 
     // Refined patch around the low: aperture-7 rotated fine hexes.
-    const lx = projX(lowPos[0]);
-    const ly = projY(lowPos[1]);
     const rf = r / Math.sqrt(7);
     const wf = Math.sqrt(3) * rf;
     const al = APERTURE7_ROT;
@@ -467,7 +500,10 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     front(c, [lx, ly], rot(110, 28), rot(240, 18), 'warm');
     front(c, [lx, ly], rot(-30, 95), rot(-150, 205), 'cold');
 
-    // Station plots: circle, wind barb, temperature left, pressure tail right.
+    // Station plots: circle, wind barb, temperature left, pressure tail right. Half ink, so
+    // they read as chart furniture under the low and its fronts.
+    c.save();
+    c.globalAlpha = 0.5;
     c.lineWidth = 1.2;
     for (const [slon, slat] of STATIONS) {
       if (!inDomain(slon, slat)) continue;
@@ -501,6 +537,7 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
       halo(c, String(temp), sx - 9, sy - 7, `8.5px ${mono}`, C.ink, 'right');
       halo(c, String(pr).padStart(3, '0'), sx + 9, sy - 7, `8.5px ${mono}`, C.ink, 'left');
     }
+    c.restore();
 
     // Pressure centres.
     halo(c, 'H', projX(hi[0]), projY(hi[1]), `700 26px ${mono}`, C.ink);
@@ -512,61 +549,86 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     globe(c, tt);
   }
 
-  function drawParts(tt: number): void {
+  /** Strokes three paths, slow to fast air, faint to bright. */
+  function strokeBands(c: CanvasRenderingContext2D, bands: Path2D[]): void {
+    c.lineWidth = 1;
+    for (let b = 0; b < bands.length; b++) {
+      c.strokeStyle = `rgba(${C.inkRgb},${BAND_ALPHA[b]})`;
+      c.stroke(bands[b]);
+    }
+  }
+
+  const band = (u: number, v: number): number => {
+    const s = Math.hypot(u, v);
+    return s > FAST ? 2 : s > SLOW ? 1 : 0;
+  };
+
+  /** One particle step; k is the frame's length in 60 Hz frames. */
+  function drawParts(tt: number, k: number): void {
     const c = pctx;
     if (!c) return;
+    // Erase the same share of the trails per second at any frame rate.
     c.globalCompositeOperation = 'destination-out';
-    c.fillStyle = 'rgba(0,0,0,0.09)';
+    c.fillStyle = `rgba(0,0,0,${1 - Math.pow(1 - FADE, k)})`;
     c.fillRect(0, 0, W, H);
     c.globalCompositeOperation = 'source-over';
-    c.strokeStyle = `rgba(${C.inkRgb},0.55)`;
-    c.lineWidth = 1;
-    c.beginPath();
+    const bands = [new Path2D(), new Path2D(), new Path2D()];
     for (const p of parts) {
       const [u, v] = wind(p.x, p.y, tt);
       const x0 = projX(p.x);
       const y0 = projY(p.y);
-      p.x += u;
-      p.y += v;
-      p.age++;
+      p.x += u * k;
+      p.y += v * k;
+      p.age += k;
       if (p.age > p.life || !inDomain(p.x, p.y)) {
         seed(p);
         continue;
       }
-      c.moveTo(x0, y0);
-      c.lineTo(projX(p.x), projY(p.y));
+      const path = bands[band(u, v)];
+      path.moveTo(x0, y0);
+      path.lineTo(projX(p.x), projY(p.y));
     }
-    c.stroke();
+    strokeBands(c, bands);
   }
 
   function drawStaticWind(tt: number): void {
     const c = pctx;
     if (!c) return;
     c.clearRect(0, 0, W, H);
-    c.strokeStyle = `rgba(${C.inkRgb},0.5)`;
-    c.lineWidth = 1;
-    c.beginPath();
+    const bands = [new Path2D(), new Path2D(), new Path2D()];
     for (const p of parts) {
       const [u, v] = wind(p.x, p.y, tt);
-      c.moveTo(projX(p.x), projY(p.y));
-      c.lineTo(projX(p.x + u * 6), projY(p.y + v * 6));
+      const path = bands[band(u, v)];
+      path.moveTo(projX(p.x), projY(p.y));
+      path.lineTo(projX(p.x + u * 6), projY(p.y + v * 6));
     }
-    c.stroke();
+    strokeBands(c, bands);
   }
 
-  function step(tt: number, animate: boolean): void {
+  function step(tt: number, animate: boolean, k = 1): void {
     if (!hover) target = [home[0] + 0.9 * Math.sin(tt * 0.004), home[1] + 0.6 * Math.cos(tt * 0.0031)];
-    lowPos[0] += (target[0] - lowPos[0]) * 0.06;
-    lowPos[1] += (target[1] - lowPos[1]) * 0.06;
-    if (!animate || tt % 2 === 0) drawBase(tt);
-    if (animate) drawParts(tt);
+    // Easing per 60 Hz frame, compounded over k frames.
+    const e = 1 - Math.pow(1 - 0.06, k);
+    lowPos[0] += (target[0] - lowPos[0]) * e;
+    lowPos[1] += (target[1] - lowPos[1]) * e;
+    depth += ((hover ? DEPTH_HELD : DEPTH_IDLE) - depth) * (1 - Math.pow(1 - 0.03, k));
+    // The chart layer redraws at about 30 Hz, the particles every frame.
+    if (!animate || tt - baseAt >= 1.9) {
+      drawBase(tt);
+      baseAt = tt;
+    }
+    if (animate) drawParts(tt, k);
     else drawStaticWind(tt);
   }
 
-  const tick = (): void => {
+  const tick = (now: number): void => {
     if (!running) return;
-    t += 1;
-    step(t, true);
+    // k: this frame's length in 60 Hz frames, capped so the first frame after a stall
+    // does not jump.
+    const k = last ? Math.min(3, (now - last) / (1000 / 60)) : 1;
+    last = now;
+    t += k;
+    step(t, true, k);
     raf = requestAnimationFrame(tick);
   };
 
@@ -579,6 +641,7 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
       }
       if (running) return;
       running = true;
+      last = 0;
       raf = requestAnimationFrame(tick);
     },
     stop() {
@@ -601,9 +664,6 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     },
     low() {
       return [lowPos[0], lowPos[1]];
-    },
-    lonLat(x, y) {
-      return unproj(x, y);
     },
   };
 }

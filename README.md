@@ -35,8 +35,10 @@ scripts/
   check-links.mjs   checks every internal link and #fragment in dist/
   screenshots.mjs   full-page screenshots in both themes at 1440 and 390 (headless Chrome, no dependencies)
   make-preview.mjs  builds a single-file preview from dist/
+  og-image.mjs      renders public/og.jpg, the link preview card, from the built home page
 public/
   CNAME        custom domain for GitHub Pages (see Deploy before the first deploy)
+  og.jpg       link preview card (Open Graph and X large card), made by og-image.mjs
   robots.txt   points at the sitemap
 ```
 
@@ -53,6 +55,7 @@ npm run preview          # serve dist/
 npm run check-links      # after a build: internal links and fragments
 npm run screenshots -- <outDir> [paths]   # after a build; set CHROME_PATH if needed
 npm run refresh-prs      # re-pull the PR ledger (needs `gh auth login`)
+npm run og-image         # after a build: re-render public/og.jpg; set CHROME_PATH if needed
 node scripts/make-preview.mjs             # single-file preview of dist/
 ```
 
@@ -64,6 +67,7 @@ In Git Bash on Windows, prefix `screenshots` with `MSYS_NO_PATHCONV=1` when pass
 - The upstream headline is frozen in `src/data/upstream.ts`. If a refreshed ledger disagrees with it, the build stops, so the headline changes on purpose, together with the wiki.
 - Everything else lives in `src/data/*.ts`. Each metric has `value`, `verifiedAt` and `source`. Change the date only after checking the source again. Pages show the source as a receipt link, not the date.
 - The Now block on the home sheet is `src/data/now.ts`, edited by hand, with the date it was checked.
+- The link preview card `public/og.jpg` shows the name, title, tagline and the orgs with merged PRs, read from the built home page. It carries no counts, so a new merge does not make it stale. After changing the tagline or title, or when a new org appears in the ledger: build, run `npm run og-image`, build again, and commit the new image.
 - Posts: `date` is the original publish date. The optional `hashnode` field links the original and prints "First published on Hashnode"; leave it out when the Hashnode post no longer exists.
 
 ## Deploy

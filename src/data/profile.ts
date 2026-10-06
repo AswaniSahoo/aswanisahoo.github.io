@@ -3,7 +3,9 @@ export const profile = {
   handle: 'AswaniSahoo',
   domain: 'aswanisahoo.bio',
   title: 'ML / AI systems engineer',
-  tagline: 'Weather models upstream. Agents built to refuse. Everything instrumented.',
+  // Three sentences, one per hero line (Hero.astro splits on the full stops). In Martian Mono
+  // each is 24 characters, so the three lines form one even block.
+  tagline: 'Weather models upstream. Agents that won\'t guess. Everything instrumented.',
   intro:
     'I contribute to weather-forecasting models in the open, build LLM agents that are allowed to say "I don\'t know", and put metrics on all of it. Every public number on this site links to its evidence.',
   location: 'Rourkela, Odisha, India',

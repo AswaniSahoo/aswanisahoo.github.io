@@ -10,7 +10,8 @@
     "preview": "astro preview",
     "refresh-prs": "node scripts/refresh-prs.mjs",
     "check-links": "node scripts/check-links.mjs",
-    "screenshots": "node scripts/screenshots.mjs"
+    "screenshots": "node scripts/screenshots.mjs",
+    "og-image": "node scripts/og-image.mjs"
   },
   "dependencies": {
     "@fontsource-variable/martian-mono": "^5.3.0",
