@@ -1,5 +1,5 @@
 /**
- * The Now block on the home sheet, edited by hand.
+ * The Now block on the home page, edited by hand.
  * Every line was checked at its source on `checkedAt`; change the date only after checking again.
  * A row is a sentence made of plain text and links, in reading order.
  */
@@ -18,7 +18,7 @@ export const now: { checkedAt: string; lines: NowLine[] } = {
   checkedAt: '2026-09-30',
   lines: [
     {
-      label: 'Upstream',
+      label: 'Open source',
       rows: [
         ['Merged 2026-09-29: ', { label: 'krkn-ai #481', url: pr('krkn-chaos/krkn-ai', 481) }, '.'],
         [
@@ -40,10 +40,6 @@ export const now: { checkedAt: string; lines: NowLine[] } = {
           ', released 2026-09-08.',
         ],
       ],
-    },
-    {
-      label: 'Building',
-      rows: [['This site, redrawn as five sheets with one job each.']],
     },
   ],
 };

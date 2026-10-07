@@ -1,7 +1,7 @@
 ---
-title: "How a Chunking Bug Taught Me More Than a Model Failure"
+title: "How a chunking bug taught me more than a model failure"
 date: "2026-07-23"
-summary: "This post is about how that hypothesis was half wrong, what was actually happening, and why the failure made me trust the system more, not less."
+summary: "Three wrong refusals, traced to a table chunker that kept each row and lost the column header saying which warming level a number belonged to."
 tags: ["retrieval","evaluation"]
 series: "Building an evaluated climate-risk agent in public"
 part: 4

@@ -9,7 +9,7 @@ import { isobarPaths } from '../lib/isobars';
 interface Props {
   /** Shifts the low and the high so each sheet reads as its own chart. */
   seed?: number;
-  /** Corner label, e.g. "Sheet 02 · Station reports · synthetic field". */
+  /** Corner label: says the field is made up. */
   label: string;
 }
 const { seed = 2, label } = Astro.props;
@@ -116,11 +116,17 @@ const parallels = [48, 96];
   }
   .corner {
     display: inline-block;
-    font-size: 0.6rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
     background: color-mix(in srgb, var(--bg) 88%, transparent);
     padding: 0.1rem 0.35rem;
+  }
+  /* On a phone the strip is too narrow to keep the caption clear of the pressure centres. */
+  @media (max-width: 600px) {
+    .corner-wrap {
+      display: none;
+    }
   }
 </style>

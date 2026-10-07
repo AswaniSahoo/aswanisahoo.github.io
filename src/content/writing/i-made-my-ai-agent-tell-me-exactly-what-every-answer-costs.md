@@ -1,7 +1,7 @@
 ---
-title: "I Made My AI Agent Tell Me Exactly What Every Answer Costs"
+title: "I made my AI agent tell me exactly what every answer costs"
 date: "2026-07-28"
-summary: "This one is about something a portfolio project usually skips: whether I actually know what a single answer costs, and whether the thing serving it can hold up under a real HTTP request instead of a notebook cell."
+summary: "What a single answer costs, and whether the service holds up under a real HTTP request instead of a notebook cell."
 tags: ["observability"]
 series: "Building an evaluated climate-risk agent in public"
 part: 6

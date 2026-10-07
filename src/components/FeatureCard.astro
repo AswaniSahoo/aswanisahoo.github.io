@@ -1,61 +1,73 @@
 ---
-/** A featured station on the home sheet: two stamps, one link to the full case. */
-import MetricTile from './MetricTile.astro';
-import type { Metric } from '../data/types';
+/**
+ * A flagship project: what it does in one plain sentence, one result with its evidence,
+ * a few tags, and the whole card as one link to the case study.
+ */
+import Receipt from './Receipt.astro';
+import { reportHref, type Featured } from '../data/work';
 
 interface Props {
-  eyebrow: string;
-  name: string;
-  summary: string;
-  /** Only the first two render: the home sheet shows two stamps per station. */
-  metrics: Metric[];
-  href: string;
-  cta?: string;
+  project: Featured;
 }
-const { eyebrow, name, summary, metrics, href, cta = 'Read the case' } = Astro.props;
+const { project: p } = Astro.props;
 ---
 
 <article class="card feature">
-  <p class="eyebrow">{eyebrow}</p>
-  <h3>{name}</h3>
-  <p class="summary">{summary}</p>
-  <div class="metrics">
-    {/* Label and stamp only here; each caveat note stays on the full page. */}
-    {metrics.slice(0, 2).map((m) => <MetricTile metric={{ ...m, note: undefined }} />)}
+  <p class="eyebrow">{p.eyebrow}</p>
+  <h3><a href={reportHref(p.slug)}>{p.name}</a></h3>
+  <p class="outcome">{p.outcome}</p>
+  <div class="result">
+    <span class="value mono">{p.metric.value}</span>
+    <span class="what">
+      {p.metric.label}
+      <Receipt source={p.metric.source} label={p.metric.evidence} verifiedAt={p.metric.verifiedAt} isPrivate={p.isPrivate} />
+    </span>
   </div>
-  <a class="read mono" href={href}>{cta}<span class="sr-only">: {name}</span></a>
+  <ul class="chips">
+    {p.tags.map((t) => <li>{t}</li>)}
+  </ul>
+  <span class="read mono" aria-hidden="true">Case study</span>
 </article>
 
 <style>
+  /* Six rows shared with the neighbouring card when the grid around it allows (FeatureGrid). */
   .feature {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    height: 100%;
+    display: grid;
+    grid-row: span 6;
+    grid-template-rows: subgrid;
+    row-gap: 0.85rem;
+    align-content: start;
     padding: 1.5rem 1.5rem 1.3rem;
   }
   .feature:focus-within {
     border-color: var(--text);
   }
-  h3 {
-    font-size: 1.2rem;
+  h3 a {
+    text-decoration: none;
   }
-  .summary {
-    font-size: 0.95rem;
+  /* The whole card is the link; the evidence link sits above it. */
+  h3 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .outcome {
+    font-size: var(--fs-text);
     color: var(--muted);
+    max-width: 52ch;
   }
-  /* A stamp never wraps its date, so two sit side by side only when the card is wide enough. */
-  .metrics {
+  /* One result: the figure, then what it measures and where it is proven. */
+  .result {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 1rem;
-    padding-top: 1rem;
-    margin-top: auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.4rem 1rem;
+    align-items: baseline;
+    align-content: start;
+    padding-top: 0.9rem;
   }
-  /* The dashed rule over the stamps, drawn so it can be plotted in. */
-  .metrics::before {
+  .result::before {
     content: '';
     position: absolute;
     top: 0;
@@ -65,43 +77,32 @@ const { eyebrow, name, summary, metrics, href, cta = 'Read the case' } = Astro.p
     background: repeating-linear-gradient(90deg, var(--line-strong) 0 4px, transparent 4px 7px);
     transform-origin: left center;
   }
-  /* As the card arrives, the rule is drawn, then the stamps land (global.css, Motion). Only a
-     card waiting inside an unrevealed .reveal starts hidden. */
-  @media screen and (prefers-reduced-motion: no-preference) {
-    .metrics::before {
-      transition: transform 900ms var(--ease) calc(var(--delay, 0ms) + 250ms);
-    }
-    .metrics > :global(*) {
-      transition:
-        opacity 500ms var(--ease) calc(var(--delay, 0ms) + 550ms),
-        transform 500ms var(--ease) calc(var(--delay, 0ms) + 550ms);
-    }
-    :global(html.js .reveal:not(.is-in)) .metrics::before {
-      transform: scaleX(0);
-    }
-    :global(html.js .reveal:not(.is-in)) .metrics > :global(*) {
-      opacity: 0;
-      transform: translateY(6px);
-    }
+  .value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--text);
   }
-  /* Stamps stay clickable above the card-wide link. */
-  .metrics :global(a) {
+  .what {
+    display: grid;
+    gap: 0.25rem;
+    justify-items: start;
+    font-size: var(--fs-small);
+    line-height: 1.4;
+    color: var(--muted);
+  }
+  .what :global(.receipt) {
     position: relative;
     z-index: 1;
   }
   .read {
-    align-self: flex-start;
-    font-size: 0.74rem;
+    justify-self: start;
+    align-self: end;
+    font-size: var(--fs-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    text-decoration: none;
     color: var(--text);
-    padding-top: 0.2rem;
-  }
-  .read::before {
-    content: '';
-    position: absolute;
-    inset: 0;
   }
   .read::after {
     content: ' →';
@@ -111,5 +112,24 @@ const { eyebrow, name, summary, metrics, href, cta = 'Read the case' } = Astro.p
     text-decoration: underline;
     text-decoration-color: var(--accent);
     text-underline-offset: 0.25em;
+  }
+  /* As the card arrives, the rule is drawn, then the result lands (global.css, Motion). Only a
+     card waiting inside an unrevealed .reveal starts hidden. */
+  @media screen and (prefers-reduced-motion: no-preference) {
+    .result::before {
+      transition: transform 900ms var(--ease) calc(var(--delay, 0ms) + 250ms);
+    }
+    .result > * {
+      transition:
+        opacity 500ms var(--ease) calc(var(--delay, 0ms) + 550ms),
+        transform 500ms var(--ease) calc(var(--delay, 0ms) + 550ms);
+    }
+    :global(html.js .reveal:not(.is-in)) .result::before {
+      transform: scaleX(0);
+    }
+    :global(html.js .reveal:not(.is-in)) .result > * {
+      opacity: 0;
+      transform: translateY(6px);
+    }
   }
 </style>

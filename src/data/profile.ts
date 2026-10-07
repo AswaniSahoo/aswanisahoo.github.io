@@ -10,11 +10,9 @@ export const profile = {
   availability: 'Open to AI / ML engineer internships · graduating 2027',
   // Served from public/. The résumé buttons appear only once this file exists (src/lib/resume.ts).
   resume: '/aswani-kumar-sahoo-resume.pdf',
-  // Three sentences, one per hero line (Hero.astro splits on the full stops). In Martian Mono
-  // each is 24 characters, so the three lines form one even block.
-  tagline: 'Weather models upstream. Agents that won\'t guess. Everything instrumented.',
-  intro:
-    'I contribute to weather-forecasting models in the open, build LLM agents that are allowed to say "I don\'t know", and put metrics on all of it. Every public number on this site links to its evidence.',
+  // The hero's one-line pitch under the name, also the start of every page's meta description.
+  // Plain words first: a first-time reader should know what this person does from it alone.
+  tagline: 'ML engineer. I contribute to open-source weather models and build AI agents that say "I don\'t know" instead of guessing.',
   location: 'Rourkela, Odisha, India',
   email: 'aswanisahoo227@gmail.com',
   links: {

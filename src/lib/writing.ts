@@ -1,5 +1,5 @@
 /**
- * Sheet 04 helpers: posts from the writing collection plus posts that live only elsewhere
+ * Writing helpers: posts from the writing collection plus posts that live only elsewhere
  * (profile.writing), newest first, with a reading time computed from the text.
  */
 import { getCollection, type CollectionEntry } from 'astro:content';

@@ -1,0 +1,35 @@
+---
+/**
+ * The four flagship projects. Every card spans the same six rows (eyebrow, name, outcome,
+ * result, tags, link), so the results and tags line up across a row however long each
+ * outcome runs.
+ */
+import FeatureCard from './FeatureCard.astro';
+import { featured } from '../data/work';
+---
+
+<div class="features">
+  {featured.map((p, i) => (
+    <div class="slot reveal" style={`--delay: ${(i % 2) * 60}ms`}>
+      <FeatureCard project={p} />
+    </div>
+  ))}
+</div>
+
+<style>
+  .features {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+  .slot {
+    display: grid;
+    grid-row: span 6;
+    grid-template-rows: subgrid;
+  }
+  @media (max-width: 860px) {
+    .features {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

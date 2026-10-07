@@ -193,7 +193,7 @@ const iecCase: CaseStudy = {
     diagram: 'control-loop',
     lead: iec.summary,
     notes: [
-      { title: 'Telemetry', text: readout('Incident Evidence Compiler ingests').text, readout: readout('Incident Evidence Compiler ingests') },
+      { title: 'Telemetry', text: readout('Incident Evidence Compiler reads').text, readout: readout('Incident Evidence Compiler reads') },
       { title: 'Hostile input', text: readout('Incident Evidence Compiler: 3,000').text, readout: readout('Incident Evidence Compiler: 3,000') },
       { title: 'Architecture', text: need(iec.bullets[2], 'IEC architecture bullet') },
     ],

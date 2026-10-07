@@ -1,5 +1,5 @@
 ---
-/** Home sheet: what is in flight, from src/data/now.ts. The section eyebrow carries the checked date. */
+/** Home page: what is in flight, from src/data/now.ts. The section eyebrow carries the checked date. */
 import { now } from '../data/now';
 ---
 
@@ -44,7 +44,7 @@ import { now } from '../data/now';
     padding-top: 0;
   }
   dt {
-    font-size: 0.7rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
@@ -54,7 +54,7 @@ import { now } from '../data/now';
     margin: 0;
     display: grid;
     gap: 0.3rem;
-    font-size: 0.97rem;
+    font-size: var(--fs-text);
   }
   dd a {
     font-size: 0.86em;

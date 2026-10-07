@@ -187,7 +187,7 @@ export const instruments = [
   {
     heading: 'Telemetry',
     items: [
-      { text: 'Incident Evidence Compiler ingests a real Prometheus v3.6.0 through a bounded range-query client and exposes five iec_* metrics at /metrics: job outcomes, per-stage duration, provider timeouts, tokens, verdict distribution. No PII, no dependency.', source: `${IEC}#readme`, verifiedAt: '2026-09-19' },
+      { text: 'Incident Evidence Compiler reads a real Prometheus through a bounded range-query client and exposes five metrics at /metrics: job outcomes, per-stage duration, provider timeouts, tokens and verdicts.', source: `${IEC}#readme`, verifiedAt: '2026-09-19' },
       { text: 'Climate-Risk Agent records per-request telemetry and cost, with a shared Redis cache, a disk fallback and a prewarm script for the hazard fits.', source: `${CRA}/blob/main/tools/cache_backend.py`, verifiedAt: '2026-09-19' },
     ],
   },
@@ -196,7 +196,7 @@ export const instruments = [
     items: [
       { text: 'Incident Evidence Compiler: the held-out split was sealed and opened once, against a named commit, with the protocol committed next to the results.', source: `${IEC}/blob/main/docs/evaluation/re2-tt-sealed-protocol.md`, verifiedAt: '2026-09-30' },
       { text: 'Model ablations run with 5 seeds and a held-out split before any architecture claim is made.', source: `${GW}/issues/238#issuecomment-5150272270`, verifiedAt: '2026-09-30' },
-      { text: 'Climate-Risk Agent: both eval sets are frozen by SHA-256, so neither can quietly change. Rerankers and query rewriting were measured on the dev set and kept off. Forecast skill is measured per lead day over 13 cities and weights the confidence of every report.', source: `${CRA}#readme`, verifiedAt: '2026-09-30' },
+      { text: 'Climate-Risk Agent: both eval sets are frozen by SHA-256, so neither can quietly change. Rerankers and query rewriting were measured on the dev set and kept off.', source: `${CRA}#readme`, verifiedAt: '2026-09-30' },
     ],
   },
   {
@@ -254,7 +254,7 @@ export const stations: Station[] = [
     domain: 'Agentic AI · climate risk',
     summary: 'Cited, typed climate-risk reports or an explicit refusal, for any location. LangGraph, hybrid IPCC retrieval, two MCP servers, frozen evals.',
     repo: CRA,
-    status: { label: 'live, v1.0.0', kind: 'live' },
+    status: { label: 'live', kind: 'live' },
     tests: { label: 'test functions', value: '490', verifiedAt: '2026-09-19', source: `${CRA}/tree/main/tests` },
     metrics: [
       { label: 'recall@3 held-out', value: '87%', verifiedAt: '2026-09-19', source: `${CRA}/blob/main/evals/results/retrieval-test-2026-09-07.json` },
@@ -270,7 +270,7 @@ export const stations: Station[] = [
     domain: 'AI systems · reliability',
     summary: 'Incident root cause where the LLM proposes and deterministic code decides. Content-addressed evidence, allow-listed hypotheses, sealed RCAEval evaluation.',
     repo: IEC,
-    status: { label: 'evaluated, Apache-2.0', kind: 'plain' },
+    status: { label: 'evaluated', kind: 'plain' },
     tests: { label: 'tests in the CI gate', value: '363', verifiedAt: '2026-09-19', source: IEC_CI_RUN },
     metrics: [
       { label: 'held-out top-1', value: '0.767', verifiedAt: '2026-09-19', source: `${IEC}/blob/main/docs/evaluation/re2-tt-baseline.json` },
@@ -341,7 +341,7 @@ export const stations: Station[] = [
     slug: 'complaint-intelligence-system',
     name: 'complaint-intelligence-system',
     domain: 'LLM · retrieval',
-    summary: 'RAG and NLP benchmark over CFPB consumer complaints: MiniLM against BGE embeddings, KMeans against BERTopic, vector, BM25, hybrid and reranked retrieval measured for latency.',
+    summary: 'RAG and NLP benchmark over CFPB consumer complaints: MiniLM against BGE embeddings, KMeans against BERTopic, and four retrieval modes timed against each other.',
     repo: `${GH}/complaint-intelligence-system`,
     status: { label: 'benchmarked', kind: 'plain' },
     // README (commit ea68a72) line 3: "An NLP pipeline that processes 200K consumer complaints from the CFPB database".

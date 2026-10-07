@@ -34,6 +34,19 @@
   --radius: 0;
   --max: 1160px;
   --gutter: clamp(1rem, 4vw, 2.5rem);
+
+  /* Type scale. Every text size on the site is one of these steps, and nothing meant to be
+     read is smaller than --fs-label (12px). Mono carries headings, numbers and one label
+     style; sans carries reading text. */
+  --fs-label: 0.75rem;
+  --fs-small: 0.875rem;
+  --fs-text: 0.9375rem;
+  --fs-body: 1.0625rem;
+  --fs-lede: 1.2rem;
+  --fs-h3: 1.2rem;
+  --fs-h2: clamp(1.5rem, 2.8vw, 2.1rem);
+  --fs-h1: clamp(2rem, 4vw, 2.8rem);
+  --fs-display: clamp(2.4rem, 5.4vw, 3.6rem);
 }
 
 :root[data-theme='dark'] {
@@ -94,7 +107,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 1.0625rem;
+  font-size: var(--fs-body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -139,16 +152,16 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(1.45rem, 2.6vw, 1.95rem);
-  line-height: 1.14;
+  font-size: var(--fs-h1);
+  line-height: 1.1;
 }
 
 h2 {
-  font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  font-size: var(--fs-h2);
 }
 
 h3 {
-  font-size: 1.1rem;
+  font-size: var(--fs-h3);
   letter-spacing: -0.005em;
 }
 
@@ -192,10 +205,11 @@ pre,
 /* Shared primitives                                                   */
 /* ------------------------------------------------------------------ */
 
+/* The one label style: mono, capitals, 12px. Section labels, buttons, tags. */
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  font-size: var(--fs-label);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -207,8 +221,9 @@ pre,
 
 .lede {
   color: var(--muted);
-  font-size: 1.08rem;
-  max-width: 64ch;
+  font-size: var(--fs-lede);
+  line-height: 1.5;
+  max-width: 58ch;
 }
 
 /* A printed legend box: hairline ink border, hard offset shadow. */
@@ -254,7 +269,7 @@ pre,
 
 .chips li {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: var(--fs-label);
   color: var(--muted);
   border: 1px solid var(--line-strong);
   padding: 0.15rem 0.5rem;
@@ -263,7 +278,7 @@ pre,
 .pill {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: var(--fs-label);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 0.14rem 0.5rem;
@@ -299,7 +314,7 @@ pre,
   align-items: center;
   gap: 0.6rem;
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: var(--fs-small);
   background: var(--bg-2);
   border: 1px solid var(--line-strong);
   padding: 0.6rem 0.9rem;

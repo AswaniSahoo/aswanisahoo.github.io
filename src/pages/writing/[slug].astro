@@ -23,7 +23,6 @@ const minutes = readingMinutes(post.body);
 
 <BaseLayout sheet="04" title={`${d.title} · Writing · Aswani Kumar Sahoo`} description={d.summary} ogType="article">
   <SheetBanner sheet="04" parts={['Writing', d.part ? `Climate-risk agent, part ${d.part}` : 'Post']} seed={(d.part ?? 1) + 3}>
-    <p class="crumbs mono"><a href="/writing/">Writing</a> <span aria-hidden="true">/</span> {d.date}</p>
     <h1>{d.title}</h1>
     <p class="meta mono">
       <time datetime={d.date}>{d.date}</time>
@@ -32,7 +31,7 @@ const minutes = readingMinutes(post.body);
     </p>
     {d.hashnode && (
       <p class="origin mono">
-        First published on Hashnode, {d.date}. <a href={d.hashnode} target="_blank" rel="noopener noreferrer">Original post</a>
+        First published on Hashnode. <a href={d.hashnode} target="_blank" rel="noopener noreferrer">Original post</a>
       </p>
     )}
   </SheetBanner>
@@ -51,24 +50,16 @@ const minutes = readingMinutes(post.body);
 </BaseLayout>
 
 <style>
-  .crumbs {
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-  }
-  .crumbs a {
-    color: var(--text);
-  }
   .meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.2rem 0.5rem;
-    font-size: 0.72rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.04em;
     color: var(--muted);
   }
   .origin {
-    font-size: 0.72rem;
+    font-size: var(--fs-label);
     color: var(--muted);
   }
   .origin a {
@@ -79,7 +70,7 @@ const minutes = readingMinutes(post.body);
   }
   .body {
     max-width: 65ch;
-    font-size: 1.06rem;
+    font-size: var(--fs-body);
     line-height: 1.7;
   }
   .body > :global(* + *) {
@@ -93,10 +84,10 @@ const minutes = readingMinutes(post.body);
     margin-top: 2.2em;
   }
   .body :global(h2) {
-    font-size: 1.3rem;
+    font-size: var(--fs-h3);
   }
   .body :global(h3) {
-    font-size: 1.05rem;
+    font-size: var(--fs-body);
   }
   .body :global(p em:only-child) {
     color: var(--muted);
@@ -132,7 +123,7 @@ const minutes = readingMinutes(post.body);
     border: 1px solid var(--line-strong);
     padding: 0.9rem 1rem;
     overflow-x: auto;
-    font-size: 0.84rem;
+    font-size: var(--fs-small);
     line-height: 1.55;
   }
   .body :global(pre code) {
@@ -145,7 +136,7 @@ const minutes = readingMinutes(post.body);
     display: block;
     overflow-x: auto;
     border-collapse: collapse;
-    font-size: 0.88rem;
+    font-size: var(--fs-small);
     font-variant-numeric: tabular-nums;
   }
   .body :global(th),
@@ -156,7 +147,7 @@ const minutes = readingMinutes(post.body);
   }
   .body :global(th) {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--muted);
@@ -177,7 +168,7 @@ const minutes = readingMinutes(post.body);
     align-items: center;
     margin-top: 0.5rem;
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
@@ -190,7 +181,7 @@ const minutes = readingMinutes(post.body);
     gap: 1rem;
     padding-block: 1.5rem clamp(4rem, 8vw, 6rem);
     border-top: 1px solid var(--line);
-    font-size: 0.72rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.04em;
   }
   .pager a {

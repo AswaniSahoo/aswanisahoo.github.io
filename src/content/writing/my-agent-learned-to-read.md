@@ -1,7 +1,7 @@
 ---
-title: "My Agent Learned to Read"
+title: "My agent learned to read"
 date: "2026-08-06"
-summary: "The fix is a typed pipeline in front of the graph, not inside it."
+summary: "The plan step was an if-statement over a hardcoded location. Now a typed pipeline parses, geocodes and maps any question to an IPCC region, or refuses."
 tags: ["agents"]
 series: "Building an evaluated climate-risk agent in public"
 part: 7

@@ -35,7 +35,7 @@ export interface Project {
   isPrivate?: boolean;
 }
 
-/** One entry in the Station reports grid: every substantive own repository. */
+/** One project: every substantive repository I own has one, and a case study. */
 export interface Station {
   slug: string;
   name: string;
@@ -46,7 +46,7 @@ export interface Station {
   isPrivate?: boolean;
   /** Short state label and how to colour it. */
   status: { label: string; kind: 'live' | 'private' | 'plain' };
-  /** Test count drives the station glyph's cloud cover. Optional: some repos have no suite. */
+  /** Size of the test suite, shown on the case study. Optional: some repos have no suite. */
   tests?: Metric;
   metrics: Metric[];
   stack: string[];

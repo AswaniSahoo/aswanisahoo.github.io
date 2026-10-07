@@ -1,7 +1,7 @@
 ---
 title: "My favorite number in this project is zero. Twice."
 date: "2026-07-17"
-summary: "This post is about how a RAG system earns numbers you can defend, instead of the usual \"we implemented retrieval-augmented generation\" with no evidence attached."
+summary: "How a RAG system earns numbers you can defend: the evaluation came before the retriever."
 tags: ["retrieval","evaluation"]
 series: "Building an evaluated climate-risk agent in public"
 part: 3

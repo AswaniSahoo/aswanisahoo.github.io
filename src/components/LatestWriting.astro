@@ -1,5 +1,5 @@
 ---
-/** Home sheet: the latest posts, newest first, date + title + one line. At most three. */
+/** Home page: the three latest posts, newest first, date and title only. */
 import { writingIndex } from '../lib/writing';
 
 const latest = (await writingIndex()).slice(0, 3);
@@ -17,7 +17,6 @@ const latest = (await writingIndex()).slice(0, 3);
             <a href={p.href}>{p.title}</a>
           )}
         </h3>
-        <p class="line">{p.summary}</p>
       </div>
     </li>
   ))}
@@ -35,18 +34,16 @@ const latest = (await writingIndex()).slice(0, 3);
   .posts li {
     display: grid;
     grid-template-columns: 8rem minmax(0, 1fr);
-    gap: 0.4rem 1.5rem;
-    padding-block: 1.1rem;
+    gap: 0.25rem 1.5rem;
+    align-items: baseline;
+    padding-block: 1rem;
     border-bottom: 1px solid var(--line);
   }
   .date {
-    font-size: 0.75rem;
+    font-size: var(--fs-label);
     color: var(--muted);
-    padding-top: 0.2rem;
   }
   .body {
-    display: grid;
-    gap: 0.35rem;
     max-width: 65ch;
   }
   h3 a {
@@ -60,13 +57,9 @@ const latest = (await writingIndex()).slice(0, 3);
   h3 a:hover {
     text-decoration: underline;
   }
-  .line {
-    color: var(--muted);
-    font-size: 0.95rem;
-  }
   .more {
     margin-top: 1.25rem;
-    font-size: 0.74rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
