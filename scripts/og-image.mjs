@@ -152,7 +152,7 @@ const facts = await evaluate(s, `(() => {
     '<p class="og-h1"><span>' + esc(facts.name) + '</span></p>' +
     '<p class="og-pitch">' + esc(facts.pitch) + '</p>' +
     '<p class="og-label">Merged open-source PRs</p>' +
-    '<p class="og-orgs">' + facts.orgs.map(esc).join(' · ') + '</p>';
+    '<p class="og-orgs">' + facts.orgs.map((o) => '<span>' + esc(o) + '</span>').join(' · ') + '</p>';
   frame.append(chart, card);
   document.body.replaceChildren(frame);
   const style = document.createElement('style');
@@ -171,6 +171,8 @@ const facts = await evaluate(s, `(() => {
     .og-pitch { margin-top: 16px !important; font-family: var(--font-sans); font-size: 25px; line-height: 1.4; color: var(--text); }
     .og-label { margin-top: 30px !important; padding-top: 20px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
     .og-orgs { margin-top: 8px !important; font-family: var(--font-sans); font-size: 22px; color: var(--text); }
+    /* A name never breaks at its own hyphen (krkn-chaos); the line wraps between names. */
+    .og-orgs span { white-space: nowrap; }
   \`;
   document.head.append(style);
   return facts;

@@ -20,7 +20,7 @@ import { hyphenSafe } from '../../lib/text';
   <SheetBanner sheet="05" parts={['About', profile.location]}>
     <h1>{profile.name}</h1>
     <p class="lede">{profile.origin.line}</p>
-    <p class="avail mono"><span class="dot" aria-hidden="true"></span>{profile.availability}{resumeHref && <> · <a href={resumeHref} target="_blank" rel="noopener">résumé (PDF)</a></>}</p>
+    <p class="avail mono"><span class="dot" aria-hidden="true"></span>{profile.availabilityDetail}{resumeHref && <> · <a href={resumeHref} target="_blank" rel="noopener">résumé (PDF)</a></>}</p>
   </SheetBanner>
 
   <section class="wrap cols section-block first" aria-label="Education and experience">

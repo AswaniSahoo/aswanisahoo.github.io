@@ -48,19 +48,17 @@ export const featured: Featured[] = [
     metric: figure('incident-evidence-compiler', 'held-out top-1', 'root cause ranked first on 90 unseen incidents, by the deterministic engine'),
     tags: ['FastAPI', 'PostgreSQL', 'Prometheus'],
   }),
-  card('vera-bot', {
-    name: 'vera-bot',
-    outcome: 'Merchant-messaging engine for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts.',
-    metric: figure('vera-bot', 'judge-replica', "correlation of its offline judge with the contest's official scores, 15 cases"),
-    tags: ['FastAPI', 'Vertex AI', 'Cloud Run'],
-    isPrivate: true,
+  card('weather-transformer-scratch', {
+    name: 'Weather Transformer from Scratch',
+    outcome: 'Predicts the weather six hours ahead from ERA5 data. Every block, attention included, is written and unit-tested by hand.',
+    metric: figure('weather-transformer-scratch', 'RMSE over persistence', 'lower error (RMSE) than a no-change forecast, on the 2020 test year'),
+    tags: ['PyTorch', 'xarray', 'ERA5'],
   }),
-  card('fairness-credit-risk', {
-    name: 'Fairness-Aware Credit Scoring',
-    outcome: 'Credit scoring with standard fairness fixes, each tested against a tuned baseline on identical seeded splits. The result was a null, and I published it.',
-    // The same finding as "0 of 4", led by what was done: four methods, none better than the baseline.
-    metric: figure('fairness-credit-risk', 'alternatives beat', 'tested on identical seeded splits; none beat the tuned baseline beyond noise', '4 methods'),
-    tags: ['AIF360', 'Fairlearn', 'FastAPI'],
+  card('complaint-intelligence-system', {
+    name: 'Complaint Intelligence System',
+    outcome: 'Searches 200K US consumer complaints and groups them into topics, comparing two embedding models and four search methods.',
+    metric: figure('complaint-intelligence-system', 'vector search p95', '95th-percentile vector search time over 200K complaints'),
+    tags: ['FAISS', 'Sentence-Transformers', 'BERTopic'],
   }),
 ];
 
@@ -69,6 +67,7 @@ export const others: Station[] = stations.filter((s) => !featured.some((f) => f.
 
 /** The one figure a listed project shows, in plain words, where it has one. */
 export const listFigure: Record<string, Metric> = {
-  'weather-transformer-scratch': figure('weather-transformer-scratch', 'RMSE over persistence', 'lower RMSE than a no-change forecast, on the 2020 test year'),
-  'complaint-intelligence-system': figure('complaint-intelligence-system', 'vector search p95', '95th-percentile vector search time over 200K complaints'),
+  'vera-bot': figure('vera-bot', 'judge-replica', "correlation of its offline judge with the contest's official scores, 15 cases"),
+  // The same finding as the case study's "0 of 4": three fairness fixes and a tabular foundation model.
+  'fairness-credit-risk': figure('fairness-credit-risk', 'alternatives beat', 'methods beat the tuned baseline by more than noise'),
 };

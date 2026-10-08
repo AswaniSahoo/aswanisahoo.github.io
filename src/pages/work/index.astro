@@ -35,7 +35,7 @@ const n = stations.length;
             {listFigure[s.slug] && (
               <p class="fig">
                 <b class="mono">{listFigure[s.slug].value}</b> {listFigure[s.slug].label}
-                <Receipt source={listFigure[s.slug].source} label={listFigure[s.slug].evidence} verifiedAt={listFigure[s.slug].verifiedAt} />
+                <Receipt source={listFigure[s.slug].source} label={listFigure[s.slug].evidence} verifiedAt={listFigure[s.slug].verifiedAt} isPrivate={s.isPrivate} />
               </p>
             )}
             <ul class="chips">{s.stack.slice(0, 3).map((t) => <li>{t}</li>)}</ul>

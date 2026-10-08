@@ -12,8 +12,11 @@ export const monthYear = (iso: string): string => {
   return `${name} ${y}`;
 };
 
-/** Test counts and live status change often; everything else is pinned to its source. */
-export const isFastMoving = (label: string): boolean => /\btests?\b|test functions|\blive\b/i.test(label);
+/**
+ * Test counts and live status change often; everything else is pinned to its source. Test counts
+ * match in the plural only: a result can mention a test ("the 2020 test year", "trend test").
+ */
+export const isFastMoving = (label: string): boolean => /\btests\b|test functions|\blive\b/i.test(label);
 
 export function evidenceLabel(source: string): string {
   if (!source) throw new Error('Every number needs a source');

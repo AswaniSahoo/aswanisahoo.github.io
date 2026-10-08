@@ -8,7 +8,10 @@ export const profile = {
   title: 'ML / AI systems engineer',
   // The status tab on the hero card. Keep it short and true; update it when it changes.
   // The school goes here too: the first screen should say where the degree is from.
-  availability: 'Open to AI / ML engineer internships · NIT Rourkela ’27',
+  // At most about 55 characters, or the tab takes two lines on a desktop card.
+  availability: 'Internship from Dec, then full-time · NIT Rourkela ’27',
+  // The same in full, on the About page.
+  availabilityDetail: 'Open to a 6-month internship from December 2026, in my final semester, and to full-time roles after that',
   // Served from public/. The résumé buttons appear only once this file exists (src/lib/resume.ts).
   resume: '/aswani-kumar-sahoo-resume.pdf',
   // The hero's one-line pitch under the name, also the start of every page's meta description.

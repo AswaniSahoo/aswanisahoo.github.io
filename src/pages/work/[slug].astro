@@ -23,7 +23,8 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const { c } = Astro.props as Props;
 const live = c.links.find((l) => l.label === 'live app')?.url;
 // Results lead the page; the size of the test suite is engineering detail, listed under Stack.
-const isTests = (m: { label: string }) => /\btests?\b|test functions/i.test(m.label);
+// Plural only: a result can mention a test in the singular ("the 2020 test year", "trend test").
+const isTests = (m: { label: string }) => /\btests\b|test functions/i.test(m.label);
 const results = c.metrics.filter((m) => !isTests(m));
 const suites = c.metrics.filter(isTests);
 // The page opens with one result; the supporting figures open the Evaluation section.
