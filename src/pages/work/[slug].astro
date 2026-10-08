@@ -421,8 +421,12 @@ const next = cases[position];
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
+  /* Labels may wrap on a phone; the numbers never do. */
+  .latency thead th,
+  .latency tbody th {
+    white-space: normal;
+  }
   .latency thead th {
-    white-space: nowrap;
     color: var(--muted);
     font-weight: 500;
     letter-spacing: 0.06em;

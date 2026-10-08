@@ -50,14 +50,15 @@ export const featured: Featured[] = [
   }),
   card('weather-transformer-scratch', {
     name: 'Weather Transformer from Scratch',
-    outcome: 'Predicts the weather six hours ahead from ERA5 data. Every block, attention included, is written and unit-tested by hand.',
-    metric: figure('weather-transformer-scratch', 'RMSE over persistence', 'lower error (RMSE) than a no-change forecast, on the 2020 test year'),
+    outcome: 'Forecasts four ERA5 weather fields six hours ahead. Every block, attention included, is written and unit-tested by hand.',
+    // Pooled over four fields; the per-field split is on the case study, and the caption says where the gain is.
+    metric: figure('weather-transformer-scratch', 'RMSE over persistence', 'lower error (RMSE) than a no-change forecast over 2020, mostly in wind; temperature is 2.8% worse'),
     tags: ['PyTorch', 'xarray', 'ERA5'],
   }),
   card('complaint-intelligence-system', {
     name: 'Complaint Intelligence System',
-    outcome: 'Searches 200K US consumer complaints and groups them into topics, comparing two embedding models and four search methods.',
-    metric: figure('complaint-intelligence-system', 'vector search p95', '95th-percentile vector search time over 200K complaints'),
+    outcome: 'Benchmarks four ways to search 200K US consumer complaints and two ways to group them into topics.',
+    metric: figure('complaint-intelligence-system', 'vector search p95', '95th-percentile search time over 200K complaints, including encoding the query'),
     tags: ['FAISS', 'Sentence-Transformers', 'BERTopic'],
   }),
 ];
@@ -67,7 +68,8 @@ export const others: Station[] = stations.filter((s) => !featured.some((f) => f.
 
 /** The one figure a listed project shows, in plain words, where it has one. */
 export const listFigure: Record<string, Metric> = {
-  'vera-bot': figure('vera-bot', 'judge-replica', "correlation of its offline judge with the contest's official scores, 15 cases"),
+  // A measured count; the judge-replica correlation needs its caveat, so it stays on the case study.
+  'vera-bot': { ...station('vera-bot').tests!, label: 'test functions across 37 files' },
   // The same finding as the case study's "0 of 4": three fairness fixes and a tabular foundation model.
   'fairness-credit-risk': figure('fairness-credit-risk', 'alternatives beat', 'methods beat the tuned baseline by more than noise'),
 };

@@ -4,7 +4,7 @@
  * Sections are optional: a project with little audited material gets a short page, not padding.
  */
 import type { Link, Metric, Station } from './types';
-import { climateRiskAgent, hazardStats, iec, instruments, llamaTaskAgent, retrievalLatency, stations, veraBot, weatherTransformer } from './projects';
+import { climateRiskAgent, complaintFindings, hazardStats, iec, instruments, llamaTaskAgent, retrievalLatency, stations, veraBot, weatherByField, weatherTransformer } from './projects';
 import { negativeResults } from './negative';
 
 export interface Readout {
@@ -338,11 +338,31 @@ const wtCase: CaseStudy = {
   summary: wt.summary,
   status: { label: wt.status.label, kind: wt.status.kind, detail: weatherTransformer.role },
   metrics: weatherTransformer.metrics,
+  figures: [
+    {
+      src: '/images/work/weather-transformer-forecast.webp',
+      width: 1400,
+      height: 710,
+      size: 'wide',
+      alt: 'Four world maps of north–south surface wind for one 2020 test case: the input, the 6-hour forecast, the true field six hours later, and the forecast minus the truth. The forecast keeps the large-scale patterns; the errors are small and scattered.',
+      caption: 'The first 2020 test case, north–south wind at 10 m: the input, the 6-hour forecast, the truth and the error, in standardised units. Wind is where the model gains most over a no-change forecast.',
+      source: weatherByField.source,
+    },
+  ],
   how: {
     lead: weatherTransformer.summary,
     notes: [{ title: 'Built block by block', text: need(weatherTransformer.bullets[0], 'transformer blocks bullet') }],
   },
-  evaluation: { text: [need(weatherTransformer.bullets[1], 'transformer evaluation bullet')] },
+  evaluation: {
+    text: [need(weatherTransformer.bullets[1], 'transformer evaluation bullet')],
+    table: {
+      caption: 'Error by field, 2020 test year, standardised units',
+      head: ['field', 'model RMSE', 'vs a no-change forecast'],
+      rows: weatherByField.rows.map((r) => [r.field, r.rmse, r.change]),
+      verifiedAt: weatherByField.verifiedAt,
+      source: weatherByField.source,
+    },
+  },
   stack: { chips: weatherTransformer.stack },
   links: wt.links,
 };
@@ -356,16 +376,17 @@ const cisCase: CaseStudy = {
   name: cis.name,
   summary: cis.summary,
   status: { label: cis.status.label, kind: cis.status.kind },
-  metrics: [{ ...cisP95, label: '95th-percentile vector search time over 200K complaints' }],
+  metrics: [{ ...cisP95, label: '95th-percentile search time over 200K complaints, including encoding the query' }],
   evaluation: {
     text: [retrievalLatency.summary],
+    metrics: complaintFindings,
     table: {
       caption: retrievalLatency.name,
       head: ['method', 'p50 (ms)', 'p95 (ms)'],
       rows: retrievalLatency.rows.map((r) => [r.method, r.p50, r.p95]),
       barColumn: 2,
       verifiedAt: retrievalLatency.verifiedAt,
-      source: `${retrievalLatency.repo}#retrieval-latency`,
+      source: retrievalLatency.source,
     },
   },
   stack: { chips: cis.stack },
@@ -407,6 +428,7 @@ const all: CaseStudy[] = [
   bioCase,
   wtCase,
   cisCase,
+  plain('kmesh-mcp-poc'),
   llamaCase,
   plain('mlops-batch-signal-task'),
   plain('krkn-doc-sync-bot'),
