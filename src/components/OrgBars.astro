@@ -46,15 +46,15 @@ const most = mergedByOrg[0]?.merged ?? 1;
     background: var(--card);
     border: 1px solid var(--line-strong);
   }
+  /* The bar runs along the row's foot, so it never ends halfway through a name. */
   .orgs li::before {
     content: '';
     position: absolute;
-    top: 0;
     bottom: 0;
     left: 0;
-    z-index: -1;
+    height: 3px;
     width: calc(var(--share) * 100%);
-    background: var(--accent-soft);
+    background: var(--accent);
     transform-origin: left center;
   }
   .orgs a {

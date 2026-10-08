@@ -25,7 +25,7 @@ const stats: Metric[] = [
   {
     // PR #237: held-out region-weighted MSE 0.206 with the old decoder, 0.171 with the fix:
     // (0.206 - 0.171) / 0.206 = 17% lower.
-    label: 'lower forecast error on unseen regions, from a decoder fix I shipped',
+    label: 'lower forecast error on unseen regions after my fix',
     value: '17%',
     verifiedAt: skill.verifiedAt,
     source: skill.source,
@@ -33,7 +33,7 @@ const stats: Metric[] = [
   },
   {
     // 47 of 49 held-out answers; the coverage (how often it refused) is on the project card below.
-    label: "of the climate agent's held-out answers cite the right source pages",
+    label: "of the climate agent's held-out answers cite the right page",
     value: citations.value,
     verifiedAt: citations.verifiedAt,
     source: citations.source,

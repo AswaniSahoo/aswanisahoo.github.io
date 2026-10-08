@@ -23,7 +23,7 @@ export const negativeResults: NegativeResult[] = [
     where: '/work/fairness-credit-risk/#changes',
   },
   {
-    title: 'The held-out number is lower, on purpose',
+    title: 'The held-out score is lower than the development score',
     claimTested: 'That the engine\'s accuracy on the development incidents would hold on a sealed held-out set.',
     whatHappened:
       'On the development incidents the engine ranked the true root cause first 93.2% of the time. On the sealed held-out set, opened once against a frozen commit, it was 76.7%. Both are published side by side, with the protocol.',

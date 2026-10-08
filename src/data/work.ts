@@ -38,27 +38,27 @@ export const featured: Featured[] = [
   card('climate-risk-agent', {
     name: 'Climate-Risk Agent',
     outcome: 'Answers climate-risk questions for any place with cited reports, and refuses when it cannot check the answer.',
-    metric: figure('climate-risk-agent', 'false answers', 'on 105 held-out questions; it also refused 21 it could have answered'),
+    metric: figure('climate-risk-agent', 'false answers', 'on 105 held-out questions; 21 answerable ones refused'),
     tags: ['LangGraph', 'MCP', 'Gemini'],
     live: station('climate-risk-agent').links.find((l) => l.label === 'live app')?.url,
   }),
   card('incident-evidence-compiler', {
     name: 'Incident Evidence Compiler',
     outcome: 'Finds the root cause of an outage. The LLM only proposes, deterministic checks decide, and “unknown” is a valid answer.',
-    metric: figure('incident-evidence-compiler', 'held-out top-1', 'true root cause ranked first, on 90 incidents it had never seen'),
+    metric: figure('incident-evidence-compiler', 'held-out top-1', 'root cause ranked first on 90 unseen incidents'),
     tags: ['FastAPI', 'PostgreSQL', 'Prometheus'],
   }),
   card('vera-bot', {
     name: 'vera-bot',
     outcome: 'Merchant-messaging engine for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts.',
-    metric: figure('vera-bot', 'judge-replica', "agreement of its offline judge with the official scores (Spearman, 15 cases)"),
+    metric: figure('vera-bot', 'judge-replica', "its offline judge against the contest's official scores, 15 cases"),
     tags: ['FastAPI', 'Vertex AI', 'Cloud Run'],
     isPrivate: true,
   }),
   card('fairness-credit-risk', {
     name: 'Fairness-Aware Credit Scoring',
     outcome: 'Credit scoring with standard fairness fixes, each tested against a tuned baseline on identical seeded splits. The result was a null, and I published it.',
-    metric: figure('fairness-credit-risk', 'alternatives beat', 'fairness fixes and models beat the tuned baseline by more than noise'),
+    metric: figure('fairness-credit-risk', 'alternatives beat', 'fixes beat the tuned baseline beyond noise'),
     tags: ['AIF360', 'Fairlearn', 'FastAPI'],
   }),
 ];

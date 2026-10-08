@@ -10,7 +10,7 @@ Five pages, listed in `src/data/sheets.ts`. The weather chart is the visual them
 
 | Page | Path | Holds |
 |---|---|---|
-| Home | `/` | name, one-line pitch and three results over the live chart, the four flagship projects, the open-source record, latest writing, Now, contact |
+| Home | `/` | name, one-line pitch and three results over the live chart, the four flagship projects, the open-source record, latest writing, contact |
 | Projects | `/work/`, `/work/<slug>/` | the four flagships (`featured` in `src/data/work.ts`), every other project in a list, one case study per project (`src/data/cases.ts`) |
 | Open source | `/open-source/` | merged PRs by project, the graph_weather story, every PR listed |
 | Writing | `/writing/`, `/writing/<slug>/` | posts from `src/content/writing/`, RSS at `/rss.xml` |
@@ -25,7 +25,7 @@ src/
                Compare draws the comparison panel, CraFlow the climate agent's flow
   content/     writing/*.md, one file per post (schema in src/content.config.ts)
   data/        audited content: profile, projects, cases, compare, negative results, certifications,
-               prs.json, now.ts (the Now block), upstream.ts (the frozen upstream headline),
+               prs.json, upstream.ts (the frozen upstream headline),
                sheets.ts (the five pages), work.ts (the four flagships), types.ts
   lib/         synoptic.ts (hero canvas), isobars.ts (static strip), resume.ts (résumé check),
                evidence.ts (receipt labels), writing.ts (post helpers)
@@ -67,7 +67,6 @@ In Git Bash on Windows, prefix `screenshots` with `MSYS_NO_PATHCONV=1` when pass
 - Pull requests: run `npm run refresh-prs`, then rebuild. The script counts a PR as merged when the API says so or when it carries a `Merged` label, because PyTorch, ExecuTorch and MalariaGEN merge through bots and report `mergedAt: null`.
 - The upstream headline is frozen in `src/data/upstream.ts`. If a refreshed ledger disagrees with it, the build stops, so the headline changes on purpose, together with the wiki.
 - Everything else lives in `src/data/*.ts`. Each metric has `value`, `verifiedAt` and `source`. Change the date only after checking the source again. Pages show the source as a receipt link, not the date.
-- The Now block on the home page is `src/data/now.ts`, edited by hand, with the date it was checked.
 - Résumé: put the PDF at `public/aswani-kumar-sahoo-resume.pdf` (the path is `resume` in `src/data/profile.ts`). The build checks for the file, so the résumé buttons on the hero and the contact band appear only once it is there, never as a broken link.
 - The hero's status tab is `availability` in `src/data/profile.ts`. Update it when your plans change.
 - The link preview card `public/og.jpg` shows the availability line, the name, the one-line pitch (`tagline`) and the projects with merged PRs, read from the built home page. It carries no counts, so a new merge does not make it stale. After changing the availability or the pitch, or when a new project appears in the ledger: build, run `npm run og-image`, build again, and commit the new image.

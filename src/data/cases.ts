@@ -34,6 +34,8 @@ export interface CaseTable {
   rows: (string | number)[][];
   /** Column drawn as a bar scaled to its maximum. */
   barColumn?: number;
+  /** The value a full bar stands for (100 for percentages); the column's largest value if unset. */
+  barMax?: number;
   verifiedAt: string;
   source: string;
 }
@@ -226,19 +228,20 @@ const iecCase: CaseStudy = {
     // README, Held-out (sealed RE2-TT): baseline 0.767 / 0.878, abstention 0.000; Gemini 0.156 / 0.156,
     // abstention 0.578 (checked 2026-10-07). An abstention counts as a miss.
     table: {
-      caption: 'Sealed held-out set, 90 incidents. An abstention counts as a miss.',
-      head: ['arm', 'first (%)', 'top 3 (%)', 'abstained (%)'],
+      caption: 'Percent of the 90 sealed held-out incidents. An abstention counts as a miss.',
+      head: ['arm', 'first', 'top 3', 'abstained'],
       rows: [
         ['Deterministic engine', 76.7, 87.8, 0],
         ['Gemini, names only', 15.6, 15.6, 57.8],
       ],
       barColumn: 1,
+      barMax: 100,
       verifiedAt: '2026-10-07',
       source: `${iec.repo}#held-out-sealed-re2-tt`,
     },
     artifacts: iec.links ?? [],
   },
-  changes: [negative('The held-out number is lower, on purpose')],
+  changes: [negative('The held-out score is lower than the development score')],
   stack: { chips: iec.stack },
   links: [repoLink(iec.repo), ...(iec.links ?? [])],
 };

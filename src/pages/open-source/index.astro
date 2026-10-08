@@ -83,7 +83,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
         ))}
       </ol>
       <div class="against">
-        <p class="eyebrow"><b>Then it went against me</b> · issue #238</p>
+        <p class="eyebrow"><b>Follow-up</b> · issue #238</p>
         <h3>{ablation.title}</h3>
         <MetricTile metric={ablation.number} />
         <p class="prose muted">{ablation.whyItMatters}</p>
@@ -103,7 +103,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
         <details id={ledgerId(g.project)} class="group" open={i === 0}>
           <summary>
             <span class="gname mono">{g.project}</span>
-            <span class="gorg">{g.org}</span>
+            {g.org && g.org !== g.project && <span class="gorg">{g.org}</span>}
             <span class="gcounts">
               {g.counts.merged > 0 && <span class="pill merged">{g.counts.merged} merged</span>}
               {g.counts.closed > 0 && <span class="pill closed">{g.counts.closed} closed</span>}
@@ -315,7 +315,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   .range {
     grid-area: range;
     font-size: var(--fs-small);
-    color: var(--accent);
+    color: var(--text);
     white-space: nowrap;
   }
   .when {
@@ -383,7 +383,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   td {
     padding: 0.5rem 0.6rem;
     border-top: 1px solid var(--line);
-    vertical-align: top;
+    vertical-align: baseline;
   }
   td a {
     text-decoration: none;
@@ -393,7 +393,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   }
   .prnum {
     width: 5.5rem;
-    color: var(--accent);
+    color: var(--text);
     font-size: var(--fs-small);
   }
   .repo {

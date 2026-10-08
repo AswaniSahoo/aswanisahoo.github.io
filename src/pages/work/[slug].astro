@@ -25,6 +25,9 @@ const { c } = Astro.props as Props;
 const isTests = (m: { label: string }) => /\btests?\b|test functions/i.test(m.label);
 const results = c.metrics.filter((m) => !isTests(m));
 const suites = c.metrics.filter(isTests);
+// The page opens with one result; the supporting figures open the Evaluation section.
+const evalMetrics = [...results.slice(1, 5), ...(c.evaluation?.metrics ?? [])];
+const evaluation = c.evaluation ?? (evalMetrics.length > 0 ? {} : undefined);
 const isPrivate = c.station.isPrivate === true;
 const position = stations.findIndex((s) => s.slug === c.slug) + 1;
 const diagrams = { 'cra-flow': CraFlow };
@@ -34,12 +37,12 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
 const related = c.relatedSeries ? (await posts()).filter((p) => p.data.series === c.relatedSeries) : [];
 const table = c.evaluation?.table;
 const comparison = comparisons[c.slug];
-const barMax = table && table.barColumn !== undefined ? Math.max(...table.rows.map((r) => Number(r[table.barColumn!]))) : 0;
+const barMax = table && table.barColumn !== undefined ? (table.barMax ?? Math.max(...table.rows.map((r) => Number(r[table.barColumn!])))) : 0;
 
 const present = {
   problem: Boolean(c.problem?.length),
   how: Boolean(c.how),
-  evaluation: Boolean(c.evaluation),
+  evaluation: Boolean(evaluation),
   changes: Boolean(c.changes?.length),
   stack: true,
   links: true,
@@ -75,11 +78,6 @@ const next = cases[position];
   {results.length > 0 && (
     <section class="wrap readings" aria-label="Headline measurements">
       <MetricTile metric={results[0]} size="lg" isPrivate={isPrivate} />
-      {results.length > 1 && (
-        <div class="rest">
-          {results.slice(1, 5).map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
-        </div>
-      )}
     </section>
   )}
 
@@ -88,7 +86,9 @@ const next = cases[position];
       {c.figures.map((f) => (
         <figure class="shot">
           {'code' in f ? (
-            <pre class="output" aria-label={f.label}><code>{f.code}</code></pre>
+            <pre class="output" aria-label={f.label}><code>{f.code.split('\n').map((line) => (
+              <span class="ln" style={`--i: ${line.length - line.trimStart().length}`}>{line.trimStart()}</span>
+            ))}</code></pre>
           ) : (
             <img src={f.src} width={f.width} height={f.height} alt={f.alt} loading="lazy" decoding="async" />
           )}
@@ -148,10 +148,15 @@ const next = cases[position];
         </section>
       )}
 
-      {c.evaluation && (
+      {evaluation && (
         <section id="evaluation" class="block">
           <h2>Evaluation</h2>
-          {c.evaluation.text?.map((p) => <p class="prose">{p}</p>)}
+          {evalMetrics.length > 0 && (
+            <div class="eval-metrics">
+              {evalMetrics.map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
+            </div>
+          )}
+          {evaluation.text?.map((p) => <p class="prose">{p}</p>)}
           {table && (
             <figure class="latency">
               <table class="mono">
@@ -179,20 +184,15 @@ const next = cases[position];
               </figcaption>
             </figure>
           )}
-          {c.evaluation.metrics && c.evaluation.metrics.length > 0 && (
-            <div class="eval-metrics">
-              {c.evaluation.metrics.map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
-            </div>
-          )}
-          {c.evaluation.readouts?.map((r) => (
+          {evaluation.readouts?.map((r) => (
             <div class="readout">
               <p>{r.text}</p>
               <Receipt source={r.source} isPrivate={isPrivate} />
             </div>
           ))}
-          {c.evaluation.artifacts && c.evaluation.artifacts.length > 0 && !isPrivate && (
+          {evaluation.artifacts && evaluation.artifacts.length > 0 && !isPrivate && (
             <p class="refs mono">
-              {c.evaluation.artifacts.map((a) => <a href={a.url} {...ext}>{a.label}</a>)}
+              {evaluation.artifacts.map((a) => <a href={a.url} {...ext}>{a.label}</a>)}
             </p>
           )}
         </section>
@@ -288,7 +288,7 @@ const next = cases[position];
     font-size: var(--fs-label);
     color: var(--muted);
   }
-  /* One lead result, then the supporting figures in a row under it. */
+  /* One lead result under the banner. */
   .readings {
     display: grid;
     gap: 1.25rem;
@@ -298,17 +298,6 @@ const next = cases[position];
   }
   .readings > :global(.metric) {
     max-width: 60ch;
-  }
-  .rest {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.25rem 1.5rem;
-    padding-top: 1.25rem;
-    border-top: 1px dashed var(--line);
-  }
-  .rest :global(.metric--md .metric-value) {
-    font-size: 1.3rem;
-    overflow-wrap: anywhere;
   }
   .compare-row {
     padding-top: clamp(1.5rem, 3vw, 2rem);
@@ -359,12 +348,11 @@ const next = cases[position];
   .muted {
     color: var(--muted);
   }
-  /* Each note only as tall as its text, so the accent rule ends with it. */
+  /* One column: a short note never leaves a hole beside a long one. */
   .notes {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem;
-    align-items: start;
+    max-width: 65ch;
   }
   .note p,
   .eval-metrics :global(.metric-label) {
@@ -376,15 +364,11 @@ const next = cases[position];
     align-content: start;
     justify-items: start;
     padding-left: 0.9rem;
-    border-left: 2px solid var(--accent);
+    border-left: 2px solid var(--line-strong);
     font-size: var(--fs-text);
   }
   .note h3 {
     font-size: var(--fs-body);
-  }
-  /* An odd last note takes the full row instead of leaving a hole beside it. */
-  .note:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
   }
   .note-metrics,
   .eval-metrics {
@@ -402,7 +386,7 @@ const next = cases[position];
     gap: 0.4rem;
     justify-items: start;
     padding-left: 0.9rem;
-    border-left: 2px solid var(--accent);
+    border-left: 2px solid var(--line-strong);
     font-size: var(--fs-text);
     max-width: 65ch;
   }
@@ -552,6 +536,12 @@ const next = cases[position];
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
+  /* A wrapped line hangs under its own first character, not at the left edge. */
+  .output .ln {
+    display: block;
+    padding-left: calc((var(--i) + 2) * 1ch);
+    text-indent: -2ch;
+  }
   .shot figcaption {
     display: flex;
     flex-wrap: wrap;
@@ -636,7 +626,6 @@ const next = cases[position];
     }
   }
   @media (max-width: 760px) {
-    .notes,
     .figures.pair {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -657,6 +646,9 @@ const next = cases[position];
     .latency th,
     .latency td {
       white-space: normal;
+    }
+    .barcol {
+      display: none;
     }
   }
 </style>

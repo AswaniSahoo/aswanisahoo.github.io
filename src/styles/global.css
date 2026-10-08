@@ -221,9 +221,10 @@ pre,
   color: var(--muted);
 }
 
+/* The lead word of a label: brighter, not coloured. The accent is kept for links and evidence. */
 .eyebrow b {
-  color: var(--accent);
-  font-weight: 500;
+  color: var(--text);
+  font-weight: 600;
 }
 
 .lede {

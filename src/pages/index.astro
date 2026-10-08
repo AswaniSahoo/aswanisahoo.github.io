@@ -1,7 +1,7 @@
 ---
 /**
  * The home page: who this is in a few seconds, then routes out. The hero, four flagship
- * projects, the open-source record, the latest writing, what is in flight, contact.
+ * projects, the open-source record, the latest writing; the contact band comes from the layout.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
@@ -9,9 +9,7 @@ import Section from '../components/Section.astro';
 import FeatureGrid from '../components/FeatureGrid.astro';
 import UpstreamStrip from '../components/UpstreamStrip.astro';
 import LatestWriting from '../components/LatestWriting.astro';
-import NowBlock from '../components/NowBlock.astro';
 import { stations } from '../data/projects';
-import { now } from '../data/now';
 ---
 
 <BaseLayout sheet="01">
@@ -43,10 +41,6 @@ import { now } from '../data/now';
 
   <Section id="writing" label="Writing" title="Latest writing" compact>
     <LatestWriting />
-  </Section>
-
-  <Section id="now" label={`Now · checked ${now.checkedAt}`} title="What is in flight" compact>
-    <NowBlock />
   </Section>
 
 </BaseLayout>
