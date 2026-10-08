@@ -33,6 +33,8 @@ export function evidenceLabel(source: string): string {
   if (/\/actions\/runs\//.test(p)) return 'CI run';
   if (/\/releases\/tag\//.test(p)) return 'release notes';
   if (/eval/i.test(p) && p.endsWith('.json')) return 'eval report';
+  if (p.endsWith('.json')) return 'results file';
+  if (p.endsWith('.ipynb')) return 'notebook';
   if (/\/tree\/[^/]+\/tests\/?$/.test(p)) return 'test suite';
   if (/\/pulls\/?$/.test(p) && u.search.includes('author')) return 'PR list';
   if (/leaderboard/.test(p)) return 'leaderboard';

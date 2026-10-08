@@ -55,15 +55,19 @@ export const weatherTransformer: Project = {
   name: 'Weather transformer, from scratch',
   repo: `${GH}/weather-transformer-scratch`,
   role: 'Solo',
+  // Checked 2026-10-08 against the repo at 595f010: src/models/attention.py, src/training/physics_loss.py,
+  // results/metrics.json and notebooks/03_results_analysis.ipynb. The README's own figures are off in places
+  // (sample counts, best epoch), so the evidence links point at the results file and the notebook.
   summary:
-    'A physics-aware vision transformer with 4.8 million parameters for 6-hour ERA5 prediction, with attention written by hand instead of nn.MultiheadAttention, and a physics-informed loss.',
+    'A vision transformer with 4.8 million parameters that forecasts four ERA5 fields six hours ahead, with attention written by hand instead of nn.MultiheadAttention. Its loss adds two penalties to the error: one for jagged fields and one for a wrong global mean.',
   bullets: [
-    'Every block implemented and unit-tested individually: patch embedding, positional encoding, attention, transformer block, physics loss.',
-    'Tested on a held-out 2020 slice of ERA5 against persistence, a forecast that assumes nothing changes in six hours. That is the honest floor for short-range forecasts.',
+    'Every block implemented and unit-tested on its own: patch embedding, positional encoding, attention, transformer block and loss. A test checks that nn.MultiheadAttention is never used.',
+    'Tested on all 1,463 six-hour steps of 2020, a year held out from training, against persistence: a forecast that assumes nothing changes in six hours. The error is pooled over four standardised fields on a 5.625° grid without latitude weighting, so it does not compare with WeatherBench2 scores. Almost all of the gain is in wind; for temperature the model is slightly worse than persistence.',
   ],
   metrics: [
-    { label: 'lower error (RMSE) than a no-change forecast, on the 2020 test year', value: '27%', verifiedAt: '2026-07-19', source: `${GH}/weather-transformer-scratch` },
-    { label: 'unit tests', value: '74', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
+    // results/metrics.json: rmse 0.19598 (model) against 0.26805 (persistence), a 26.9% reduction.
+    { label: 'lower error (RMSE) than a no-change forecast, on the 2020 test year', value: '27%', note: '0.196 against 0.268 in standardised units, pooled over four fields', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/blob/main/results/metrics.json`, evidence: 'results file' },
+    { label: 'unit tests', value: '74', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/tree/main/tests` },
   ],
   stack: ['PyTorch', 'xarray', 'zarr', 'ERA5 / WeatherBench2'],
 };
@@ -159,12 +163,13 @@ export const veraBot: Project = {
     'A merchant-messaging engine that is deterministic first: a resolver decides what is true, a validator gates every outbound body, and a template guarantees a message inside the latency budget. Gemini on Vertex AI rewrites the prose from the same facts when it answers in time, and is dropped when it does not.',
   bullets: [
     'Fabrication is blocked at the type level: a Fact cannot be constructed without a provenance path into merchant, category, trigger or customer data.',
-    'A local replica of the organiser\'s LLM judge, validated against their ten published case-study scores, measures every change before it ships.',
-    'On a 100-trigger set the bot emits 69 actions and stays silent on 31 by design; every emitted action carries a trigger-connected fact.',
+    // Checked 2026-10-08 at d6ccb67 (docs/evaluation/plan.md, tests/test_replica.py, README "How it was evaluated").
+    'A local replica of the organiser\'s LLM judge scores every change before it ships. On the organiser\'s ten published example messages, each scored 15 times, its rank correlation with their scores is 0.830. Those scores all sit between 44 and 50, so the check shows agreement on good messages, not that it can tell good from bad.',
+    'On a 100-trigger set generated with the organiser\'s own script, a September 2026 run sent 69 messages and held back 31, and every message carried a fact tied to its trigger. The raw report is not in the repo; CI checks a floor of 55 messages on the template path.',
     'gemini-3.7-flash was measured and rejected: minimal thinking returned HTTP 400 and other settings truncated output.',
   ],
   metrics: [
-    { label: 'judge-replica agreement: its offline judge against the organiser\'s official scores (Spearman, 15 cases)', value: '0.830', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
+    { label: 'rank correlation between its offline judge and the organiser\'s published scores, 10 example messages', value: '0.830', note: 'each scored 15 times; the published scores span only 44 to 50', verifiedAt: '2026-10-08', source: `${GH}/vera-bot` },
     { label: 'test functions across 37 files', value: '1,135', verifiedAt: '2026-09-30', source: `${GH}/vera-bot` },
     { label: 'commits in ten days, CI green on each of the last five runs', value: '97', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
   ],
@@ -236,17 +241,41 @@ export const testCounts: Metric[] = [
 export const retrievalLatency = {
   name: 'Retrieval latency, complaint-intelligence-system',
   repo: `${GH}/complaint-intelligence-system`,
-  // README (commit ea68a72) line 71: "Ran on 200K complaints using a T4 GPU on Google Colab."; the table
-  // starts at line 96: "| Vector (FAISS) | 35 | 41 |". No source size is stated, so none is printed.
+  // data/results/retrieval_benchmark.json (checked 2026-10-08 at 5e608b7): 20 fixed queries, k=5, one run,
+  // p50/p95 35.04/41.23 for vector search, whose times include encoding the query; the 200K run and the T4 are
+  // logged in notebooks/Full_pipeline_output.ipynb. The repo has no relevance labels, so no quality is claimed.
   summary:
-    'Timed on 200K complaints on a T4 GPU in Google Colab, in milliseconds. Vector search answers in tens of milliseconds; BM25, hybrid and reranked search take 0.9 to 1.4 seconds at the 95th percentile.',
-  verifiedAt: '2026-09-30',
+    'Timed on 200K complaints on a T4 GPU in Google Colab: 20 fixed queries, five results each, one run, in milliseconds. Vector search includes encoding the query. There are no relevance labels, so this measures speed, not whether the results are right.',
+  source: `${GH}/complaint-intelligence-system/blob/main/data/results/retrieval_benchmark.json`,
+  verifiedAt: '2026-10-08',
   rows: [
     { method: 'Vector (FAISS)', p50: 35, p95: 41 },
     { method: 'BM25', p50: 589, p95: 929 },
     { method: 'Hybrid (RRF)', p50: 614, p95: 959 },
     { method: 'Reranked hybrid', p50: 911, p95: 1356 },
   ],
+};
+
+/** Complaint Intelligence System: the measured results beyond timing (checked 2026-10-08 at 5e608b7). */
+export const complaintFindings: Metric[] = [
+  // data/results/cluster_comparison.json: BERTopic n_topics 30, n_outliers 110,456 of 199,999.
+  { label: 'topics BERTopic found across the 200K complaints; 55% of them (110,456) fit none', value: '30', verifiedAt: '2026-10-08', source: `${GH}/complaint-intelligence-system/blob/main/data/results/cluster_comparison.json`, evidence: 'results file' },
+  // data/results/embedding_benchmark.json: 374.6 against 59.7 texts per second, first 5,000 texts.
+  { label: 'faster embedding with MiniLM than with BGE: 374.6 against 59.7 texts a second, on 5,000 texts', value: '6.3×', verifiedAt: '2026-10-08', source: `${GH}/complaint-intelligence-system/blob/main/data/results/embedding_benchmark.json`, evidence: 'results file' },
+];
+
+/** Weather transformer, error by field (results/metrics.json; the change against persistence is printed in
+ *  notebooks/03_results_analysis.ipynb, the per-variable chart). Standardised units. */
+export const weatherByField = {
+  rows: [
+    { field: '850 hPa temperature', rmse: '0.084', change: '2.8% worse' },
+    { field: '500 hPa height', rmse: '0.067', change: '1.3% better' },
+    { field: '10 m wind, east–west', rmse: '0.240', change: '20.6% better' },
+    { field: '10 m wind, north–south', rmse: '0.291', change: '32.4% better' },
+    { field: 'All four, pooled', rmse: '0.196', change: '26.9% better' },
+  ],
+  verifiedAt: '2026-10-08',
+  source: `${GH}/weather-transformer-scratch/blob/main/notebooks/03_results_analysis.ipynb`,
 };
 
 export const docathon = {
@@ -300,13 +329,13 @@ export const stations: Station[] = [
     slug: 'weather-transformer-scratch',
     name: 'Weather Transformer from Scratch',
     domain: 'Scientific ML · forecasting',
-    summary: 'Predicts the weather six hours ahead from ERA5 data with a vision transformer. Every block, attention included, is written and unit-tested by hand, with a physics-informed loss.',
+    summary: 'Forecasts four ERA5 weather fields six hours ahead with a vision transformer. Every block, attention included, is written and unit-tested by hand.',
     repo: `${GH}/weather-transformer-scratch`,
     status: { label: 'evaluated', kind: 'plain' },
-    tests: { label: 'unit tests', value: '74', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
+    tests: { label: 'unit tests', value: '74', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/tree/main/tests` },
     metrics: [
-      { label: 'RMSE over persistence', value: '27%', verifiedAt: '2026-07-19', source: `${GH}/weather-transformer-scratch` },
-      { label: 'parameters', value: '4,805,440', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
+      { label: 'RMSE over persistence', value: '27%', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/blob/main/results/metrics.json`, evidence: 'results file' },
+      { label: 'parameters', value: '4,805,440', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/blob/main/notebooks/03_results_analysis.ipynb`, evidence: 'notebook' },
     ],
     stack: ['PyTorch', 'xarray', 'ERA5'],
     links: [repoLink(`${GH}/weather-transformer-scratch`)],
@@ -314,15 +343,16 @@ export const stations: Station[] = [
   {
     slug: 'complaint-intelligence-system',
     name: 'Complaint Intelligence System',
-    domain: 'LLM · retrieval',
-    summary: 'Searches 200K US consumer complaints from the CFPB database and groups them into topics. It compares two embedding models (MiniLM, BGE) and two topic models (KMeans, BERTopic), and times four search methods against each other.',
+    domain: 'NLP · retrieval',
+    summary: 'Benchmarks search and topic discovery over 200K US consumer complaints from the CFPB database: two embedding models (MiniLM, BGE), KMeans clustering against BERTopic, and four search methods timed against each other.',
     repo: `${GH}/complaint-intelligence-system`,
     status: { label: 'benchmarked', kind: 'plain' },
-    // README (commit ea68a72) line 3: "An NLP pipeline that processes 200K consumer complaints from the CFPB database".
-    // The earlier "200K+" and "15M+ source" are not in the repo, so both went on 2026-09-30.
+    // Checked 2026-10-08 at 5e608b7. The 200K run (199,999 complaints sampled from 3.79M, on a Colab T4) is logged in
+    // notebooks/Full_pipeline_output.ipynb. The committed data and the Streamlit demo use a 15K sample, so the site
+    // says "benchmarks", not "searches". No retrieval-quality metric exists in the repo.
     metrics: [
-      { label: 'CFPB complaints processed', value: '200K', verifiedAt: '2026-09-30', source: `${GH}/complaint-intelligence-system#readme` },
-      { label: 'vector search p95', value: '41 ms', verifiedAt: '2026-09-30', source: `${GH}/complaint-intelligence-system#retrieval-latency` },
+      { label: 'CFPB complaints processed', value: '200K', verifiedAt: '2026-10-08', source: `${GH}/complaint-intelligence-system/blob/main/notebooks/Full_pipeline_output.ipynb`, evidence: 'notebook' },
+      { label: 'vector search p95', value: '41 ms', verifiedAt: '2026-10-08', source: `${GH}/complaint-intelligence-system/blob/main/data/results/retrieval_benchmark.json` },
     ],
     stack: ['FAISS', 'Sentence-Transformers', 'BERTopic', 'Streamlit'],
     links: [repoLink(`${GH}/complaint-intelligence-system`)],
@@ -335,9 +365,9 @@ export const stations: Station[] = [
     repo: `${GH}/vera-bot`,
     isPrivate: true,
     status: { label: 'private', kind: 'private' },
-    tests: { label: 'test functions', value: '1,135', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
+    tests: { label: 'test functions', value: '1,135', verifiedAt: '2026-10-08', source: `${GH}/vera-bot` },
     metrics: [
-      { label: 'judge-replica Spearman', value: '0.830', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
+      { label: 'judge-replica Spearman, 10 example messages', value: '0.830', verifiedAt: '2026-10-08', source: `${GH}/vera-bot` },
       { label: 'actions / silences on 100 triggers', value: '69 / 31', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
     ],
     stack: ['Python', 'FastAPI', 'Vertex AI', 'Cloud Run'],
@@ -374,6 +404,33 @@ export const stations: Station[] = [
     links: [repoLink(`${GH}/biodiversity-publication-analyzer`)],
   },
   {
+    slug: 'kmesh-mcp-poc',
+    name: 'kmesh-mcp-poc',
+    domain: 'Agent tooling · service mesh',
+    // Checked 2026-10-08 at 9b7cbd4: 26 Go tests (server 13, stateful 2, trace 4, tracectx 7, README line 444),
+    // CI green, and a second workflow that runs live tests against real Kmesh daemons on a two-node kind cluster.
+    // The README calls it a personal proof of concept, not a proposed change to Kmesh.
+    summary: 'An MCP server in Go that gives AI agents three read-only tools over the Kmesh daemon’s admin API. A personal proof of concept; CI also runs it against real Kmesh daemons on a two-node kind cluster.',
+    repo: `${GH}/kmesh-mcp-poc`,
+    status: { label: 'proof of concept', kind: 'plain' },
+    tests: { label: 'Go tests', value: '26', verifiedAt: '2026-10-08', source: `${GH}/kmesh-mcp-poc` },
+    metrics: [],
+    stack: ['Go', 'MCP', 'Kubernetes'],
+    links: [repoLink(`${GH}/kmesh-mcp-poc`)],
+  },
+  {
+    slug: 'krkn-doc-sync-bot',
+    name: 'krkn-doc-sync-bot',
+    domain: 'Developer tooling',
+    summary: 'Compares the inputs of krkn-hub chaos scenarios with the krkn-chaos docs and drafts the missing pages. An independent proof of concept for krkn-chaos/website#320, installed from source; the docs bot krkn-chaos adopted is a separate project.',
+    repo: `${GH}/krkn-doc-sync-bot`,
+    status: { label: 'proof of concept', kind: 'plain' },
+    tests: { label: 'tests', value: '22', verifiedAt: '2026-10-08', source: `${GH}/krkn-doc-sync-bot/tree/main/tests` },
+    metrics: [],
+    stack: ['Python', 'Markdown'],
+    links: [repoLink(`${GH}/krkn-doc-sync-bot`)],
+  },
+  {
     slug: 'llama-task-agent',
     name: 'llama-task-agent',
     domain: 'LLM fine-tuning · agents',
@@ -388,22 +445,11 @@ export const stations: Station[] = [
     slug: 'mlops-batch-signal-task',
     name: 'mlops-batch-signal-task',
     domain: 'MLOps',
-    summary: 'Minimal reproducible batch job: OHLCV data in, signal out, config-driven, pinned dependencies, metrics.json and a run log.',
+    summary: 'A minimal reproducible batch job: price data in, a signal rate out, driven by a validated config, with pinned dependencies, a metrics file and a run log.',
     repo: `${GH}/mlops-batch-signal-task`,
     status: { label: 'reproducible', kind: 'plain' },
     metrics: [],
     stack: ['Docker', 'Python'],
     links: [repoLink(`${GH}/mlops-batch-signal-task`)],
-  },
-  {
-    slug: 'krkn-doc-sync-bot',
-    name: 'krkn-doc-sync-bot',
-    domain: 'Developer tooling',
-    summary: 'Detects documentation drift against krknctl input schemas and generates Hugo docs for krkn-chaos. pip-installable CLI.',
-    repo: `${GH}/krkn-doc-sync-bot`,
-    status: { label: 'tool', kind: 'plain' },
-    metrics: [],
-    stack: ['Python', 'Hugo'],
-    links: [repoLink(`${GH}/krkn-doc-sync-bot`)],
   },
 ];
