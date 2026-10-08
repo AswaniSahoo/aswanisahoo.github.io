@@ -17,13 +17,12 @@ const current = (href: string, n: SheetId) => (path === href ? 'page' : active =
 <header class="site-header" transition:animate="none">
   <div class="progress" aria-hidden="true"></div>
   <div class="wrap bar">
-    <a class="wordmark mono" href="/" aria-current={path === '/' ? 'page' : undefined}>{profile.domain}</a>
+    <a class="wordmark mono" href="/" aria-current={path === '/' ? 'page' : undefined}>{profile.name}</a>
     <nav class="sheets" aria-label="Sheets">
       <ul>
         {nav.map((s) => (
           <li>
             <a href={s.href} aria-current={current(s.href, s.n)}>
-              <span class="n mono" aria-hidden="true">{s.n}</span>
               <span class="label">{s.label}</span>
               {active === s.n && <span class="rule" transition:name="sheet-rule" aria-hidden="true" />}
             </a>
@@ -92,18 +91,12 @@ const current = (href: string, n: SheetId) => (path === href ? 'page' : active =
     min-height: 56px;
   }
   .wordmark {
-    font-size: 0.85rem;
-    letter-spacing: 0.02em;
+    font-size: var(--fs-small);
+    font-weight: 600;
+    letter-spacing: 0.01em;
     text-decoration: none;
     color: var(--text);
     white-space: nowrap;
-  }
-  .wordmark::before {
-    content: 'L';
-    display: inline-block;
-    font-weight: 700;
-    color: var(--accent);
-    margin-right: 0.5rem;
   }
   .sheets {
     justify-self: end;
@@ -127,24 +120,17 @@ const current = (href: string, n: SheetId) => (path === href ? 'page' : active =
     align-items: baseline;
     gap: 0.4rem;
     padding-block: 1.05rem;
-    font-size: 0.9rem;
+    font-size: var(--fs-small);
     font-weight: 500;
     color: var(--muted);
     text-decoration: none;
     white-space: nowrap;
-  }
-  .sheets .n {
-    font-size: 0.62rem;
-    letter-spacing: 0.06em;
   }
   .sheets a:hover {
     color: var(--text);
   }
   .sheets a[aria-current] {
     color: var(--text);
-  }
-  .sheets a[aria-current] .n {
-    color: var(--accent);
   }
   /* The active sheet: a red rule on the header's bottom line. It slides between sheets. */
   .rule {
@@ -214,7 +200,7 @@ const current = (href: string, n: SheetId) => (path === href ? 'page' : active =
     }
     .sheets a {
       padding-block: 0.6rem;
-      font-size: 0.84rem;
+      font-size: var(--fs-small);
       gap: 0.3rem;
     }
   }

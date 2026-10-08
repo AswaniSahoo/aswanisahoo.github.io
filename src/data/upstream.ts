@@ -34,3 +34,18 @@ export const ledgerVerifiedAt = data.verifiedAt;
 
 /** The id of a project's group in the ledger on the Open source sheet. */
 export const ledgerId = (project: string) => `ledger-${project.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+
+/**
+ * What each project is, printed beside its name wherever the orgs are listed. Contributions
+ * that were documentation only say so: every PyTorch and ExecuTorch merge so far is a docs PR.
+ */
+export const projectNote: Record<string, string> = {
+  graph_weather: 'Open Climate Fix',
+  PyTorch: 'docs',
+  ExecuTorch: 'docs',
+  'krkn-chaos': 'CNCF',
+  MalariaGEN: 'genomics',
+};
+for (const o of mergedByOrg) {
+  if (!projectNote[o.name]) throw new Error(`upstream.ts: ${o.name} has merged PRs but no note in projectNote`);
+}

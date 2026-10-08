@@ -1,42 +1,44 @@
 ---
 import MetricTile from './MetricTile.astro';
 import { profile } from '../data/profile';
-import { docathon } from '../data/projects';
-import { upstreamHeadline, mergedByOrg, ledgerId } from '../data/upstream';
+import { climateRiskAgent, meshSeries } from '../data/projects';
+import { upstreamHeadline, mergedByOrg } from '../data/upstream';
 import { resumeHref } from '../lib/resume';
+import type { Metric } from '../data/types';
 
 // Baliapal, Balasore district. The low rests here when nobody is pointing.
 const home = { lon: 87.1, lat: 21.6 };
 
-// One sentence per line, so a line never ends halfway through an idea.
-const beats = profile.tagline.split(/(?<=\.)\s+/);
-
-const stats = [
+// Three results, each with its baseline in the label and its evidence one click away.
+const inGraphWeather = mergedByOrg.find((o) => o.name === 'graph_weather')?.merged;
+const skill = meshSeries.finding.metric;
+const citations = climateRiskAgent.metrics.find((m) => m.label.startsWith('citation validity'));
+if (!inGraphWeather || !citations) throw new Error('Hero: a headline figure is missing from the data');
+const stats: Metric[] = [
   {
-    metric: {
-      label: `merged upstream PRs across ${upstreamHeadline.orgs} orgs`,
-      value: String(upstreamHeadline.merged),
-      verifiedAt: upstreamHeadline.verifiedAt,
-      source: '/open-source/#ledger',
-      evidence: 'PR ledger',
-    },
+    label: `merged PRs in open source, ${inGraphWeather} in graph_weather`,
+    value: String(upstreamHeadline.merged),
+    verifiedAt: upstreamHeadline.verifiedAt,
+    source: '/open-source/#ledger',
+    evidence: 'PR ledger',
   },
   {
-    metric: {
-      label: 'flagship systems evaluated on held-out sets',
-      value: '2',
-      verifiedAt: '2026-09-30',
-      source: '#work',
-      evidence: 'both reports',
-    },
+    // PR #237: held-out region-weighted MSE 0.206 with the old decoder, 0.171 with the fix:
+    // (0.206 - 0.171) / 0.206 = 17% lower.
+    label: 'lower forecast error on unseen regions after my fix',
+    value: '17%',
+    verifiedAt: skill.verifiedAt,
+    source: skill.source,
+    evidence: 'PR #237',
   },
   {
-    metric: {
-      label: `of 33 contributors, ${docathon.title}, ${docathon.result}`,
-      value: '7th',
-      verifiedAt: docathon.verifiedAt,
-      source: docathon.source,
-    },
+    // 47 of 49 held-out answers; the coverage (how often it refused) is on the project card below.
+    label: "of the climate agent's held-out answers cite the right page",
+    value: citations.value,
+    verifiedAt: citations.verifiedAt,
+    source: citations.source,
+    evidence: 'README',
+    fast: false,
   },
 ];
 ---
@@ -46,7 +48,7 @@ const stats = [
     <canvas class="hero-canvas" data-base aria-hidden="true"></canvas>
     <canvas class="hero-canvas" data-part aria-hidden="true"></canvas>
     <button class="motion mono" type="button" data-motion hidden>Pause</button>
-    <p class="corner bl mono">Surface analysis · Bay of Bengal sheet · synthetic field</p>
+    <p class="corner bl mono">Synthetic weather · Bay of Bengal<span class="hint"> · your cursor is the storm</span></p>
     <p class="corner br mono">{profile.domain}</p>
   </div>
 
@@ -54,16 +56,11 @@ const stats = [
     <div class="wrap">
       <div class="legend card boxed" data-legend>
         <p class="status mono"><span class="dot" aria-hidden="true"></span>{profile.availability.replace(/ · /g, '\u00a0· ')}</p>
-        <p class="eyebrow"><b>{profile.name}</b> · <span class="role">{profile.title}</span></p>
-        <h1>{beats.map((b, i) => <>{i > 0 && ' '}<span class="beat">{b}</span></>)}</h1>
-        <p class="intro">{profile.intro}</p>
+        <h1 class="name">{profile.name}</h1>
+        <p class="pitch">{profile.tagline}</p>
         <div class="stats">
-          {stats.map((s) => <MetricTile metric={s.metric} size="lg" />)}
+          {stats.map((m) => <MetricTile metric={m} size="lg" />)}
         </div>
-        <p class="orgs">
-          <span class="mono">Merged in</span>
-          {mergedByOrg.map((o, i) => <>{i > 0 && <span aria-hidden="true"> · </span>}<a href={`/open-source/#${ledgerId(o.name)}`}>{o.name}</a></>)}
-        </p>
         <div class="cta">
           <a class="btn primary" href="/work/">See the work</a>
           {resumeHref && <a class="btn" href={resumeHref} target="_blank" rel="noopener">Résumé</a>}
@@ -113,7 +110,7 @@ const stats = [
     top: 0.75rem;
     right: 1rem;
     z-index: 2;
-    font-size: 0.62rem;
+    font-size: var(--fs-label);
     line-height: 1.6;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -131,22 +128,31 @@ const stats = [
   .motion[hidden] {
     display: none;
   }
+  /* Captions sit on a backing like a map label, so the station figures never run through them. */
   .corner {
     position: absolute;
     z-index: 2;
-    font-size: 0.62rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: var(--fs-label);
+    letter-spacing: 0.04em;
     color: var(--muted);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    padding: 0.1rem 0.4rem;
     pointer-events: none;
   }
+  /* Only a mouse can steer the storm, so only a mouse is told. */
+  @media (hover: none), (pointer: coarse) {
+    .hint {
+      display: none;
+    }
+  }
+  /* Above the row of longitude labels along the bottom edge. */
   .corner.bl {
     left: 1rem;
-    bottom: 0.75rem;
+    bottom: 1.6rem;
   }
   .corner.br {
     right: 1rem;
-    bottom: 0.75rem;
+    bottom: 1.6rem;
   }
   .overlay {
     position: relative;
@@ -175,17 +181,6 @@ const stats = [
     /* Opaque, so the moving chart never shows through behind the text. */
     background: var(--card);
   }
-  .legend .eyebrow {
-    color: var(--muted);
-  }
-  .legend .eyebrow b {
-    color: var(--text);
-    font-weight: 600;
-  }
-  /* On phones the eyebrow wraps before the title, never inside "ML / AI". */
-  .role {
-    white-space: nowrap;
-  }
   /* Availability, as a tab on the card's top edge, so it adds no height to the card. */
   .status {
     position: absolute;
@@ -197,9 +192,10 @@ const stats = [
     align-items: center;
     gap: 0.5rem;
     padding: 0.2rem 0.6rem;
-    font-size: 0.64rem;
+    font-size: var(--fs-label);
     line-height: 1.5;
-    letter-spacing: 0.1em;
+    /* No extra tracking: the line fits the desktop card in one row. */
+    letter-spacing: 0;
     text-transform: uppercase;
     color: var(--text);
     background: var(--card);
@@ -228,39 +224,21 @@ const stats = [
       box-shadow: 0 0 0 0.5rem transparent;
     }
   }
-  /* The orgs behind the merged count, each linking to its group in the ledger. */
-  .orgs {
-    margin-top: -0.35rem;
-    font-size: 0.84rem;
-    line-height: 1.5;
-    color: var(--muted);
-  }
-  .orgs .mono {
-    margin-right: 0.45rem;
-    font-size: 0.66rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .orgs a {
-    color: var(--text);
-    text-decoration-color: var(--line-strong);
-    white-space: nowrap;
-  }
-  /* One sentence per line. Martian Mono is wide: a 24-character line fits the card only at 6%
-     of the card's width or less, so the size follows the card down to the phone floor. Below
-     the floor, each sentence breaks into an even pair of lines. */
-  .legend h1 {
-    font-size: clamp(1.45rem, 6cqi, 1.95rem);
-    margin-top: -0.35rem;
-  }
-  .beat {
-    display: block;
+  /* The name is the headline. Martian Mono is wide: 18 characters fit one line of the card
+     at 7.8% of its width, so the size follows the card; on a phone it wraps into two lines. */
+  /* One line from a 360px phone up: about 22px there, 39px on the desktop card. */
+  .name {
+    font-size: clamp(1.4rem, 7.8cqi, 3rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
-  .intro {
-    color: var(--muted);
-    font-size: 0.95rem;
-    max-width: 58ch;
+  .pitch {
+    margin-top: -0.25rem;
+    font-size: var(--fs-lede);
+    line-height: 1.45;
+    color: var(--text);
+    text-wrap: balance;
   }
   .stats {
     display: grid;
@@ -273,6 +251,10 @@ const stats = [
   .stats :global(.metric) {
     grid-template-rows: auto 1fr auto;
   }
+  /* The figures stay below the name in weight: the name leads, the proof follows. */
+  .stats :global(.metric--lg .metric-value) {
+    font-size: clamp(1.6rem, 2.6vw, 2rem);
+  }
   /* Five buttons fit one row of the desktop card. */
   .cta {
     display: flex;
@@ -280,38 +262,11 @@ const stats = [
     gap: 0.45rem;
     padding-top: 0.2rem;
   }
-  .btn {
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    text-decoration: none;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--text);
-    color: var(--text);
-    transition: background 200ms var(--ease), color 200ms var(--ease), transform 200ms var(--ease);
-  }
-  .btn:hover {
-    background: var(--text);
-    color: var(--bg);
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .btn:hover {
-      transform: translateY(-1px);
-    }
-  }
-  .btn.primary {
-    background: var(--text);
-    color: var(--bg);
-  }
-  .btn.primary:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-  }
   @media (max-width: 760px) {
+    /* Shorter on phones, so the name and the proof reach the first screen. */
     .chart {
       min-height: 0;
-      height: 320px;
+      height: 200px;
     }
     .overlay {
       position: static;
@@ -348,9 +303,24 @@ const stats = [
     .stats {
       grid-template-columns: 1fr;
     }
-    /* Each sentence takes two lines here; a little air keeps the three pairs apart. */
-    .beat + .beat {
-      margin-top: 0.25em;
+    /* Figure on the left, what it measures and its evidence beside it: three results in
+       half the height, so the buttons reach the first screen. */
+    .stats :global(.metric) {
+      grid-template-columns: 5.5rem minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 0.75rem;
+      align-items: baseline;
+    }
+    .stats :global(.metric-value) {
+      grid-row: 1 / 3;
+      white-space: nowrap;
+    }
+    .pitch {
+      font-size: var(--fs-body);
+    }
+    .stats :global(.metric-label),
+    .stats :global(.receipt) {
+      grid-column: 2;
     }
     /* Too narrow for a tab: the status becomes the card's first line and may wrap. */
     .status {
@@ -358,10 +328,12 @@ const stats = [
       transform: none;
       max-width: none;
       justify-self: start;
-      font-size: 0.6rem;
+      font-size: var(--fs-label);
       letter-spacing: 0.04em;
     }
-    /* The domain repeats the header wordmark and, this narrow, brushes the map's station labels. */
+    /* This narrow, the strip above the card is too short for captions: they would sit on the
+       storm's own labels. The domain also repeats the header wordmark. */
+    .corner.bl,
     .corner.br {
       display: none;
     }
@@ -397,6 +369,15 @@ const stats = [
     } catch {}
     const still = () => reduce || paused;
     const syn = createSynoptic({ base, part, themeRoot: document.documentElement, home, reduce });
+    // Where the card covers the chart (its status tab rises about 20px above its top edge).
+    const keepOut = () => {
+      if (!legend) return null;
+      const r = chart.getBoundingClientRect();
+      const c = legend.getBoundingClientRect();
+      if (c.top >= r.bottom || c.bottom <= r.top) return null;
+      return { x: c.left - r.left, y: c.top - r.top - 20, w: c.width, h: c.height + 20 };
+    };
+    syn.setKeepOut(keepOut());
     syn.resize();
     if (still()) syn.once();
     else syn.start();
@@ -442,6 +423,7 @@ const stats = [
       clearTimeout(rt);
       rt = window.setTimeout(() => {
         size = `${chart.clientWidth}x${chart.clientHeight}`;
+        syn.setKeepOut(keepOut());
         syn.resize();
         if (still()) syn.once();
       }, 120);

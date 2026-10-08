@@ -1,0 +1,90 @@
+---
+/**
+ * Merged PRs per project as bars: each row is that project's share of the largest count,
+ * labelled for what it is (documentation work says so) and linking to its group in the
+ * ledger on the Open source page. The figures are printed at their final value; only the
+ * bars grow in, when the block around them is revealed (global.css, Motion).
+ */
+import { mergedByOrg, ledgerId, projectNote } from '../data/upstream';
+
+interface Props {
+  /** The page holding the ledger: '' when the bars sit on that page. */
+  base?: string;
+}
+const { base = '/open-source/' } = Astro.props;
+// The ledger lists the largest count first.
+const most = mergedByOrg[0]?.merged ?? 1;
+---
+
+<ul class="orgs" aria-label="Merged pull requests by project">
+  {mergedByOrg.map((o, i) => (
+    <li style={`--share: ${(o.merged / most).toFixed(3)}; --i: ${i}`}>
+      <a href={`${base}#${ledgerId(o.name)}`}><span class="org">{o.name}</span> <span class="kind">{projectNote[o.name]}</span></a>
+      <b class="mono">{o.merged}</b>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .orgs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+    width: 100%;
+  }
+  .orgs li {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.45rem 0.7rem;
+    font-size: var(--fs-small);
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+  }
+  /* The bar runs along the row's foot, so it never ends halfway through a name. */
+  .orgs li::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: calc(var(--share) * 100%);
+    background: var(--accent);
+    transform-origin: left center;
+  }
+  .orgs a {
+    text-decoration: none;
+  }
+  .orgs a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .orgs a:hover .org {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+  .org {
+    font-family: var(--font-mono);
+    color: var(--text);
+  }
+  .kind {
+    color: var(--muted);
+  }
+  .orgs b {
+    font-weight: 600;
+  }
+  @media screen and (prefers-reduced-motion: no-preference) {
+    .orgs li::before {
+      transition: transform 1s var(--ease) calc(var(--i) * 90ms + 200ms);
+    }
+    :global(html.js .reveal:not(.is-in)) .orgs li::before {
+      transform: scaleX(0);
+    }
+  }
+</style>

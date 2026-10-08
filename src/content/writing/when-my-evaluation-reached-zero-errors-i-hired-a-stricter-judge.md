@@ -1,7 +1,7 @@
 ---
-title: "When My Evaluation Reached Zero Errors, I Hired a Stricter Judge"
+title: "When my evaluation reached zero errors, I hired a stricter judge"
 date: "2026-07-26"
-summary: "It does not catch a subtler failure: citing the right page while making a claim that page doesn't actually support."
+summary: "A claim-level judge, added next to the citation checker, found the same table-chunking bug a second time. Fixing it took both error cells to zero."
 tags: ["evaluation"]
 series: "Building an evaluated climate-risk agent in public"
 part: 5

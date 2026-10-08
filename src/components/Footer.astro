@@ -1,38 +1,26 @@
 ---
 import { profile } from '../data/profile';
-import ledger from '../data/prs.json';
-import { sheets, sheetById, type SheetId } from '../data/sheets';
+import type { SheetId } from '../data/sheets';
 
 interface Props {
-  /** The sheet this page belongs to, named in the strip. */
+  /** The page this footer closes. Kept for the layout's call; the strip no longer numbers pages. */
   sheet?: SheetId;
-  /** Strip text for pages outside the five sheets (404). */
+  /** Strip text for pages outside the five (404). */
   strip?: string;
 }
-const { sheet, strip = '' } = Astro.props;
-const s = sheet ? sheetById(sheet) : undefined;
-const total = String(sheets.length).padStart(2, '0');
+const { strip } = Astro.props;
 const now = new Date();
 const built = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 ---
 
 <footer class="site-footer">
   <div class="wrap body">
-    <p class="mono note">
-      Every public number links to its evidence: an eval report, a CI run, or the pull request itself; numbers from private repos are marked private. PR ledger regenerated from the GitHub API on {ledger.verifiedAt}. Built {built} with Astro, no client framework.
-    </p>
-    <p class="links">
-      <a href={profile.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
-      <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
-      <a href={profile.links.x} target="_blank" rel="noopener noreferrer">X</a>
-      <a href={profile.links.blog} target="_blank" rel="noopener noreferrer">Blog</a>
-      <a href={`mailto:${profile.email}`}>Email</a>
-    </p>
+    <p class="note">Every number on this site links to its evidence, or says so when the repository is private. Built with Astro, no client framework.</p>
   </div>
   <div class="strip">
     <p class="wrap strip-row mono">
-      <span>{s ? <><b>Sheet {s.n}</b> of {total} · {s.name}</> : strip}</span>
-      <span>{profile.domain}</span>
+      <span>{strip ?? `© ${now.getFullYear()} ${profile.name}`}</span>
+      <span>Updated {built}</span>
     </p>
   </div>
 </footer>
@@ -43,22 +31,11 @@ const built = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0'
     color: var(--muted);
   }
   .body {
-    display: grid;
-    gap: 1rem;
-    padding-block: 2.5rem 2rem;
+    padding-block: 1.5rem;
   }
   .note {
-    font-size: 0.75rem;
+    font-size: var(--fs-small);
     max-width: 80ch;
-  }
-  .links {
-    display: flex;
-    gap: 1.2rem;
-    flex-wrap: wrap;
-    font-size: 0.88rem;
-  }
-  .links a {
-    text-decoration: none;
   }
   .strip {
     border-top: 1px solid var(--line-strong);
@@ -70,12 +47,7 @@ const built = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0'
     gap: 0.5rem 1.5rem;
     flex-wrap: wrap;
     padding-block: 0.8rem;
-    font-size: 0.66rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-  .strip-row b {
-    color: var(--accent);
-    font-weight: 500;
+    font-size: var(--fs-label);
+    letter-spacing: 0.06em;
   }
 </style>

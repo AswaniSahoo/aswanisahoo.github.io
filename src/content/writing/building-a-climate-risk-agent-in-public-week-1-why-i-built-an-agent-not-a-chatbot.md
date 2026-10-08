@@ -1,5 +1,5 @@
 ---
-title: "Building a Climate-Risk Agent in Public, Week 1: Why I Built an Agent, Not a Chatbot"
+title: "Building a climate-risk agent in public, week 1: why I built an agent, not a chatbot"
 date: "2026-07-04"
 summary: "I'm building a climate-risk analyst agent out in the open, one week at a time."
 tags: ["agents"]

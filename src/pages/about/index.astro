@@ -1,15 +1,15 @@
 ---
-/** Sheet 05, About: who, how he works, education, experience, certifications, stack, contact. */
+/** About: who, education and experience, how I work, results that went against me, certifications, stack, contact. */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SheetBanner from '../../components/SheetBanner.astro';
 import MetricTile from '../../components/MetricTile.astro';
 import Receipt from '../../components/Receipt.astro';
 import { profile } from '../../data/profile';
 import { certifications } from '../../data/certs';
-import { instruments, meshSeries } from '../../data/projects';
+import { principles, meshSeries } from '../../data/projects';
 import { negativeResults } from '../../data/negative';
-
-const ext = { target: '_blank', rel: 'noopener noreferrer' };
+import { resumeHref } from '../../lib/resume';
+import { hyphenSafe } from '../../lib/text';
 ---
 
 <BaseLayout
@@ -20,7 +20,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   <SheetBanner sheet="05" parts={['About', profile.location]}>
     <h1>{profile.name}</h1>
     <p class="lede">{profile.origin.line}</p>
-    <p class="prose bio">{profile.intro}</p>
+    <p class="avail mono"><span class="dot" aria-hidden="true"></span>{profile.availability}{resumeHref && <> · <a href={resumeHref} target="_blank" rel="noopener">résumé (PDF)</a></>}</p>
   </SheetBanner>
 
   <section class="wrap cols section-block first" aria-label="Education and experience">
@@ -29,67 +29,8 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
       <h2>{profile.education.degree}</h2>
       <p>{profile.education.school}</p>
       <p class="mono meta">{profile.education.years} · CGPA {profile.education.cgpa}</p>
-      <p class="muted">{profile.education.note}</p>
-    </article>
-    <article class="card fact">
-      <p class="eyebrow">Experience</p>
-      <h2>graph_weather adaptive-mesh mentorship</h2>
-      <p class="mono meta">May 20 to July 20, 2026 · with Jacob Prince-Bieker</p>
-      <p>
-        Worked on implementation of advanced moveable high-resolution graph weather forecasting models in the graph_weather repository: added regional forecasting meshes, debugged and improved the graph representation, and wrote up in-depth analysis and investigations into the internals of the models.
-      </p>
-      <MetricTile metric={meshSeries.metrics[0]} />
-      <p class="refs mono"><a href="/open-source/#graph-weather">the graph_weather story</a></p>
-    </article>
-  </section>
-
-  <section id="how-i-work" class="wrap section-block" aria-labelledby="how-title">
-    <div class="head">
-      <h2 id="how-title">How I work</h2>
-      <p class="prose muted">Every public number links to its evidence: an eval report, a CI run, or the pull request itself. Numbers from private repos are marked private.</p>
-    </div>
-    <div class="panels">
-      {instruments.map((panel, i) => (
-        <article class="card panel reveal" style={`--delay: ${i * 60}ms`}>
-          <p class="eyebrow">{panel.heading}</p>
-          <ul class="readouts">
-            {panel.items.map((it) => (
-              <li>
-                <p>{it.text}</p>
-                <Receipt source={it.source} />
-              </li>
-            ))}
-          </ul>
-        </article>
-      ))}
-    </div>
-  </section>
-
-  <section id="against-me" class="wrap section-block" aria-labelledby="against-title">
-    <div class="head">
-      <h2 id="against-title">Results that went against me</h2>
-      <p class="prose muted">Three findings I published even though each one made my own work look worse. A number nobody is allowed to doubt is worth more than a better number nobody can check.</p>
-    </div>
-    <div class="results">
-      {negativeResults.map((r, i) => (
-        <article class="card result reveal" style={`--delay: ${i * 60}ms`}>
-          <h3>{r.title}</h3>
-          <dl>
-            <dt>Claim tested</dt>
-            <dd>{r.claimTested}</dd>
-            <dt>What happened</dt>
-            <dd>{r.whatHappened}</dd>
-          </dl>
-          <MetricTile metric={r.number} />
-          <p class="why">{r.whyItMatters}</p>
-        </article>
-      ))}
-    </div>
-  </section>
-
-  <section class="wrap cols section-block" aria-label="Certifications and stack">
-    <article class="card fact">
-      <p class="eyebrow">Certifications · official names from Oracle's catalog</p>
+      <p>{profile.education.note}</p>
+      <p class="eyebrow sub">Certifications · Oracle</p>
       <ul class="certs">
         {certifications.map((c) => (
           <li>
@@ -99,40 +40,71 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
         ))}
       </ul>
     </article>
+    <article class="card fact">
+      <p class="eyebrow">Experience</p>
+      <h2>graph_weather adaptive-mesh mentorship</h2>
+      <p class="mono meta">May 20 to July 20, 2026 · with Jacob Prince-Bieker</p>
+      <p>
+        Built regional and stretched-mesh forecasting for graph_weather, and found why its regional forecasts barely beat a no-change forecast. The fix cut forecast error on unseen regions by <span class="nb">17% (<a href={`${meshSeries.repo}/pull/237`} target="_blank" rel="noopener noreferrer">PR #237</a>).</span>
+      </p>
+      <MetricTile metric={meshSeries.metrics[0]} />
+      <p class="refs mono"><a href="/open-source/#graph-weather">the graph_weather story</a></p>
+    </article>
+  </section>
+
+  <section id="how-i-work" class="wrap section-block" aria-labelledby="how-title">
+    <div class="head">
+      <h2 id="how-title">How I work</h2>
+    </div>
+    <ol class="principles">
+      {principles.map((pr, i) => (
+        <li class="reveal" style={`--delay: ${(i % 2) * 60}ms`}>
+          <p>{pr.text}</p>
+          <Receipt source={pr.source} label={pr.label} />
+        </li>
+      ))}
+    </ol>
+  </section>
+
+
+  <section class="wrap section-block" aria-label="Stack">
     <article id="stack" class="card fact">
       <p class="eyebrow">Stack, with the repository that proves each line</p>
       <dl class="stack">
         {profile.stack.map((s) => (
           <div class="row">
             <dt>{s.tool}</dt>
-            <dd class="mono">{s.proof}</dd>
+            <dd>{hyphenSafe(s.proof).map((t) => (t.keep ? <span class="nb">{t.text}</span> : t.text))}</dd>
           </div>
         ))}
       </dl>
     </article>
   </section>
 
-  <section id="contact" class="wrap section-block last" aria-labelledby="contact-title">
-    <div class="contact card boxed">
-      <div>
-        <p class="eyebrow"><b>Contact</b> / {profile.location}</p>
-        <h2 id="contact-title">Write to me</h2>
-      </div>
-      <div class="ways">
-        <a class="mail mono" href={`mailto:${profile.email}`}>{profile.email}</a>
-        <p class="links mono">
-          <a href={profile.links.github} {...ext}>GitHub</a>
-          <a href={profile.links.linkedin} {...ext}>LinkedIn</a>
-          <a href={profile.links.x} {...ext}>X</a>
-        </p>
-      </div>
-    </div>
+  <section id="against-me" class="wrap section-block" aria-labelledby="against-title">
+    <h2 id="against-title">Results that went against me</h2>
+    <p class="prose muted">I publish them with the wins. Each is told on its project page.</p>
+    <ul class="against">
+      {negativeResults.map((r) => <li><a href={r.where}>{r.title}</a></li>)}
+    </ul>
   </section>
+
 </BaseLayout>
 
 <style>
-  .bio {
+  .avail {
+    font-size: var(--fs-label);
+    letter-spacing: 0.04em;
     color: var(--muted);
+  }
+  .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 0.5rem;
+    border-radius: 50%;
+    background: var(--ok);
+    vertical-align: 0.1em;
   }
   .section-block {
     display: grid;
@@ -152,11 +124,23 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     gap: 0.5rem;
   }
   .head h2 {
-    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+    font-size: var(--fs-h3);
   }
   .cols {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
+    align-items: stretch;
+  }
+  .fact .sub {
+    margin-top: 0.8rem;
+    padding-top: 0.9rem;
+    border-top: 1px dashed var(--line);
+    width: 100%;
+  }
+  .fact :global(.metric) {
+    margin-top: 0.4rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--line);
+    width: 100%;
   }
   .fact {
     display: grid;
@@ -166,18 +150,18 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   }
   .fact h2 {
     font-family: var(--font-sans);
-    font-size: 1.15rem;
+    font-size: var(--fs-h3);
     letter-spacing: -0.01em;
   }
   .meta {
-    font-size: 0.74rem;
+    font-size: var(--fs-label);
     color: var(--muted);
   }
   .muted {
     color: var(--muted);
   }
   .refs {
-    font-size: 0.74rem;
+    font-size: var(--fs-label);
   }
   .refs a {
     color: var(--accent);
@@ -189,61 +173,65 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   .refs a:hover {
     text-decoration-color: var(--accent);
   }
-  .panels,
-  .results {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.25rem;
-    align-items: start;
-  }
-  .panel {
-    display: grid;
-    gap: 0.8rem;
-    align-content: start;
-  }
-  .readouts {
+  /* Four lines, two by two, each with its proof under it. */
+  .principles {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 0.9rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 2.5rem;
+    counter-reset: principle;
   }
-  .readouts li {
+  .principles li {
     display: grid;
-    gap: 0.3rem;
-    justify-items: start;
-    padding-left: 0.9rem;
-    border-left: 2px solid var(--accent);
-    font-size: 0.93rem;
-  }
-  .result {
-    display: grid;
-    gap: 0.9rem;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.35rem 0;
     align-content: start;
-    border-top: 3px solid var(--warn);
+    padding-block: 1.1rem;
+    border-top: 1px solid var(--line);
+    counter-increment: principle;
   }
-  .result dl {
-    margin: 0;
-    display: grid;
-    gap: 0.35rem;
-    font-size: 0.93rem;
-  }
-  .result dt {
+  .principles li::before {
+    content: counter(principle, decimal-leading-zero);
+    grid-row: 1 / 3;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-size: var(--fs-label);
     color: var(--muted);
-    margin-top: 0.4rem;
+    padding-top: 0.3rem;
   }
-  .result dd {
+  .principles p {
+    font-size: var(--fs-body);
+    max-width: 52ch;
+  }
+  .principles :global(.receipt) {
+    justify-self: start;
+  }
+  .against {
+    list-style: none;
     margin: 0;
+    padding: 0;
+    display: grid;
+    border-top: 1px solid var(--line);
   }
-  .why {
-    color: var(--muted);
-    font-size: 0.93rem;
-    border-top: 1px dashed var(--line);
-    padding-top: 0.8rem;
+  .against li:last-child {
+    border-bottom: 0;
+  }
+  .against li {
+    padding-block: 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .against a {
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .against a::after {
+    content: '\00a0→';
+    color: var(--accent);
+  }
+  .against a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
   }
   .certs {
     list-style: none;
@@ -255,7 +243,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   .certs li {
     display: grid;
     gap: 0.1rem;
-    font-size: 0.93rem;
+    font-size: var(--fs-text);
   }
   .stack {
     margin: 0;
@@ -268,7 +256,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     gap: 0.8rem;
     padding: 0.3rem 0;
     border-bottom: 1px solid var(--line);
-    font-size: 0.9rem;
+    font-size: var(--fs-text);
   }
   .stack .row:last-child {
     border-bottom: 0;
@@ -279,55 +267,11 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   .stack dd {
     margin: 0;
     color: var(--muted);
-    font-size: 0.78rem;
-  }
-  .contact {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    gap: 1.5rem 2.5rem;
-    align-items: end;
-  }
-  .contact:hover {
-    transform: none;
-  }
-  .contact h2 {
-    margin-top: 0.5rem;
-  }
-  .ways {
-    display: grid;
-    gap: 0.9rem;
-    justify-items: start;
-  }
-  .mail {
-    font-size: clamp(0.95rem, 2.2vw, 1.3rem);
-    font-weight: 500;
-    text-decoration-color: var(--accent);
-    overflow-wrap: anywhere;
-  }
-  .links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 1.4rem;
-    font-size: 0.78rem;
-  }
-  .links a {
-    text-decoration: none;
-  }
-  .links a::before {
-    content: '↗ ';
-    color: var(--accent);
-  }
-  .links a.internal::before {
-    content: '↓ ';
-  }
-  .links a:hover {
-    text-decoration: underline;
+    font-size: var(--fs-small);
   }
   @media (max-width: 960px) {
     .cols,
-    .panels,
-    .results,
-    .contact {
+    .principles {
       grid-template-columns: minmax(0, 1fr);
     }
   }

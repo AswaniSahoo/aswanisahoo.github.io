@@ -1,8 +1,8 @@
 ---
 /**
- * A station report: banner, one-line summary, status stamp, up to five stamped metrics,
- * then Problem, How it works, Evaluation, What failed and what changed, Stack, Links,
- * Related writing. Sections render only when the case has audited material for them.
+ * A case study: banner, one-line summary, status, up to five measured results, then Problem,
+ * How it works, Evaluation, What failed and what changed, Stack, Links, Related writing.
+ * Sections render only when the case has audited material for them.
  */
 import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -10,33 +10,40 @@ import SheetBanner from '../../components/SheetBanner.astro';
 import MetricTile from '../../components/MetricTile.astro';
 import Receipt from '../../components/Receipt.astro';
 import CraFlow from '../../components/CraFlow.astro';
-import ControlLoop from '../../components/ControlLoop.astro';
 import Compare from '../../components/Compare.astro';
 import { comparisons } from '../../data/compare';
 import { cases } from '../../data/cases';
 import { stations } from '../../data/projects';
 import { posts, postHref } from '../../lib/writing';
+import { codeSpans } from '../../lib/text';
 
 export const getStaticPaths = (() => cases.map((c) => ({ params: { slug: c.slug }, props: { c } }))) satisfies GetStaticPaths;
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { c } = Astro.props as Props;
+const live = c.links.find((l) => l.label === 'live app')?.url;
+// Results lead the page; the size of the test suite is engineering detail, listed under Stack.
+const isTests = (m: { label: string }) => /\btests?\b|test functions/i.test(m.label);
+const results = c.metrics.filter((m) => !isTests(m));
+const suites = c.metrics.filter(isTests);
+// The page opens with one result; the supporting figures open the Evaluation section.
+const evalMetrics = [...results.slice(1, 5), ...(c.evaluation?.metrics ?? [])];
+const evaluation = c.evaluation ?? (evalMetrics.length > 0 ? {} : undefined);
 const isPrivate = c.station.isPrivate === true;
 const position = stations.findIndex((s) => s.slug === c.slug) + 1;
-const pad = (n: number) => String(n).padStart(2, '0');
-const diagrams = { 'cra-flow': CraFlow, 'control-loop': ControlLoop };
+const diagrams = { 'cra-flow': CraFlow };
 const Diagram = c.how?.diagram ? diagrams[c.how.diagram] : undefined;
 const pill = c.status.kind === 'live' ? 'merged' : c.status.kind === 'private' ? 'closed' : 'open';
 const ext = { target: '_blank', rel: 'noopener noreferrer' };
 const related = c.relatedSeries ? (await posts()).filter((p) => p.data.series === c.relatedSeries) : [];
 const table = c.evaluation?.table;
-const comparison = comparisons[c.slug];
-const barMax = table && table.barColumn !== undefined ? Math.max(...table.rows.map((r) => Number(r[table.barColumn!]))) : 0;
+const comparison = c.how?.diagram ? undefined : comparisons[c.slug];
+const barMax = table && table.barColumn !== undefined ? (table.barMax ?? Math.max(...table.rows.map((r) => Number(r[table.barColumn!])))) : 0;
 
 const present = {
   problem: Boolean(c.problem?.length),
+  evaluation: Boolean(evaluation),
   how: Boolean(c.how),
-  evaluation: Boolean(c.evaluation),
   changes: Boolean(c.changes?.length),
   stack: true,
   links: true,
@@ -44,22 +51,21 @@ const present = {
 };
 const titles: Record<keyof typeof present, string> = {
   problem: 'Problem',
-  how: 'How it works',
   evaluation: 'Evaluation',
+  how: 'How it works',
   changes: 'What failed and what changed',
   stack: 'Stack',
   links: 'Links',
   related: 'Related writing',
 };
 const sections = (Object.keys(present) as (keyof typeof present)[]).filter((k) => present[k]);
-const num = (id: keyof typeof present) => pad(sections.indexOf(id) + 1);
 const prev = cases[position - 2];
 const next = cases[position];
 ---
 
-<BaseLayout sheet="02" title={`${c.name} · Work · Aswani Kumar Sahoo`} description={`${c.name}, station report. ${c.summary}`} ogType="article">
-  <SheetBanner sheet="02" parts={['Station report', `${pad(position)} of ${pad(stations.length)}`]} seed={position + 5}>
-    <p class="crumbs mono"><a href="/work/">Work</a> <span aria-hidden="true">/</span> {c.name}</p>
+<BaseLayout sheet="02" title={`${c.name} · Aswani Kumar Sahoo`} description={`${c.name}, case study. ${c.summary}`} ogType="article">
+  <SheetBanner sheet="02" parts={[c.station.domain]} seed={position + 5}>
+    <p class="crumbs mono"><a href="/work/">Projects</a> <span aria-hidden="true">/</span> {c.name}</p>
     <h1>{c.name}</h1>
     <p class="lede">{c.summary}</p>
     <div class="status">
@@ -68,11 +74,32 @@ const next = cases[position];
       {c.status.check && <Receipt source={c.status.check.source} label={c.status.check.label} fast verifiedAt={c.status.check.verifiedAt} />}
       {isPrivate && <span class="detail mono">code on request</span>}
     </div>
+    {live && <a class="btn primary" href={live} target="_blank" rel="noopener noreferrer">Try the live app ↗</a>}
   </SheetBanner>
 
-  {c.metrics.length > 0 && (
+  {results.length > 0 && (
     <section class="wrap readings" aria-label="Headline measurements">
-      {c.metrics.slice(0, 5).map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
+      <MetricTile metric={results[0]} size="lg" isPrivate={isPrivate} />
+    </section>
+  )}
+
+  {c.figures && c.figures.length > 0 && (
+    <section class="wrap figures" aria-label="What it looks like">
+      {c.figures.map((f) => (
+        <figure class:list={['shot', 'src' in f && f.size]}>
+          {'code' in f ? (
+            <pre class="output" aria-label={f.label}><code>{f.code.split('\n').map((line) => (
+              <span class="ln" style={`--i: ${line.length - line.trimStart().length}`}>{line.trimStart() || '\u00a0'}</span>
+            ))}</code></pre>
+          ) : (
+            <img src={f.src} width={f.width} height={f.height} alt={f.alt} loading="lazy" decoding="async" />
+          )}
+          <figcaption>
+            <span>{f.caption}</span>
+            <Receipt source={f.source} label="original" />
+          </figcaption>
+        </figure>
+      ))}
     </section>
   )}
 
@@ -85,8 +112,8 @@ const next = cases[position];
   <div class="wrap report">
     <nav class="toc" aria-label="On this page">
       <ol>
-        {sections.map((id, i) => (
-          <li><a href={`#${id}`}><span class="n mono" aria-hidden="true">{pad(i + 1)}</span>{titles[id]}</a></li>
+        {sections.map((id) => (
+          <li><a href={`#${id}`}>{titles[id]}</a></li>
         ))}
       </ol>
     </nav>
@@ -94,39 +121,20 @@ const next = cases[position];
     <div class="content">
       {present.problem && (
         <section id="problem" class="block">
-          <h2><span class="n mono">{num('problem')}</span>Problem</h2>
+          <h2>Problem</h2>
           {c.problem!.map((p) => <p class="prose">{p}</p>)}
         </section>
       )}
 
-      {c.how && (
-        <section id="how" class="block">
-          <h2><span class="n mono">{num('how')}</span>How it works</h2>
-          {c.how.lead && <p class="prose">{c.how.lead}</p>}
-          {Diagram && <Diagram />}
-          {c.how.notes && c.how.notes.length > 0 && (
-            <div class="notes">
-              {c.how.notes.map((n) => (
-                <article class="note">
-                  <h3>{n.title}</h3>
-                  <p>{n.text}</p>
-                  {n.metrics && (
-                    <div class="note-metrics">
-                      {n.metrics.map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
-                    </div>
-                  )}
-                  {n.readout && <Receipt source={n.readout.source} isPrivate={isPrivate} />}
-                </article>
-              ))}
+      {evaluation && (
+        <section id="evaluation" class="block">
+          <h2>Evaluation</h2>
+          {evalMetrics.length > 0 && (
+            <div class="eval-metrics">
+              {evalMetrics.map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
             </div>
           )}
-        </section>
-      )}
-
-      {c.evaluation && (
-        <section id="evaluation" class="block">
-          <h2><span class="n mono">{num('evaluation')}</span>Evaluation</h2>
-          {c.evaluation.text?.map((p) => <p class="prose">{p}</p>)}
+          {evaluation.text?.map((p) => <p class="prose">{p}</p>)}
           {table && (
             <figure class="latency">
               <table class="mono">
@@ -154,28 +162,47 @@ const next = cases[position];
               </figcaption>
             </figure>
           )}
-          {c.evaluation.metrics && c.evaluation.metrics.length > 0 && (
-            <div class="eval-metrics">
-              {c.evaluation.metrics.map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
-            </div>
-          )}
-          {c.evaluation.readouts?.map((r) => (
+          {evaluation.readouts?.map((r) => (
             <div class="readout">
               <p>{r.text}</p>
               <Receipt source={r.source} isPrivate={isPrivate} />
             </div>
           ))}
-          {c.evaluation.artifacts && c.evaluation.artifacts.length > 0 && !isPrivate && (
+          {evaluation.artifacts && evaluation.artifacts.length > 0 && !isPrivate && (
             <p class="refs mono">
-              {c.evaluation.artifacts.map((a) => <a href={a.url} {...ext}>{a.label}</a>)}
+              {evaluation.artifacts.map((a) => <a href={a.url} {...ext}>{a.label}</a>)}
             </p>
+          )}
+        </section>
+      )}
+
+      {c.how && (
+        <section id="how" class="block">
+          <h2>How it works</h2>
+          {c.how.lead && <p class="prose">{c.how.lead}</p>}
+          {Diagram && <Diagram />}
+          {c.how.notes && c.how.notes.length > 0 && (
+            <div class="notes">
+              {c.how.notes.map((n) => (
+                <article class="note">
+                  <h3>{n.title}</h3>
+                  <p>{n.text}</p>
+                  {n.metrics && (
+                    <div class="note-metrics">
+                      {n.metrics.map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
+                    </div>
+                  )}
+                  {n.readout && <Receipt source={n.readout.source} isPrivate={isPrivate} />}
+                </article>
+              ))}
+            </div>
           )}
         </section>
       )}
 
       {present.changes && (
         <section id="changes" class="block">
-          <h2><span class="n mono">{num('changes')}</span>What failed and what changed</h2>
+          <h2>What failed and what changed</h2>
           <ol class="changes">
             {c.changes!.map((ch) => (
               <li class="card change">
@@ -184,7 +211,7 @@ const next = cases[position];
                   {ch.rows.map(([k, v]) => (
                     <>
                       <dt>{k}</dt>
-                      <dd>{v}</dd>
+                      <dd>{codeSpans(v).map((t) => (t.code ? <code>{t.text}</code> : t.text))}</dd>
                     </>
                   ))}
                 </dl>
@@ -197,24 +224,20 @@ const next = cases[position];
       )}
 
       <section id="stack" class="block">
-        <h2><span class="n mono">{num('stack')}</span>Stack</h2>
+        <h2>Stack</h2>
         <ul class="chips">
           {c.stack.chips.map((t) => <li>{t}</li>)}
         </ul>
-        {c.stack.proofs.length > 0 && (
-          <dl class="proofs">
-            {c.stack.proofs.map((p) => (
-              <div class="row">
-                <dt>{p.tool}</dt>
-                <dd class="mono">{p.proof}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
+        {suites.map((m) => (
+          <p class="suite">
+            <b class="mono">{m.value}</b> {m.label}{m.note && <span class="muted"> · {m.note}</span>}
+            <Receipt source={m.source} label={m.evidence} fast verifiedAt={m.verifiedAt} isPrivate={isPrivate} />
+          </p>
+        ))}
       </section>
 
       <section id="links" class="block">
-        <h2><span class="n mono">{num('links')}</span>Links</h2>
+        <h2>Links</h2>
         {isPrivate || c.links.length === 0 ? (
           <p class="prose muted">Private repository, code on request.</p>
         ) : (
@@ -227,7 +250,7 @@ const next = cases[position];
 
       {present.related && (
         <section id="related" class="block">
-          <h2><span class="n mono">{num('related')}</span>Related writing</h2>
+          <h2>Related writing</h2>
           <ol class="related">
             {related.map((p) => (
               <li>
@@ -239,10 +262,9 @@ const next = cases[position];
         </section>
       )}
 
-      <nav class="pager mono" aria-label="Other station reports">
-        {prev ? <a class="prev" href={`/work/${prev.slug}/`}>{prev.name}</a> : <span />}
-        <a class="all" href="/work/">All station reports</a>
-        {next ? <a class="next" href={`/work/${next.slug}/`}>{next.name}</a> : <span />}
+      <nav class="pager mono" aria-label="Other projects">
+        {prev ? <a class="prev" href={`/work/${prev.slug}/`}>{prev.name}</a> : <a class="prev" href="/work/">All projects</a>}
+        {next ? <a class="next" href={`/work/${next.slug}/`}>{next.name}</a> : <a class="next" href="/work/">All projects</a>}
       </nav>
     </div>
   </div>
@@ -250,7 +272,7 @@ const next = cases[position];
 
 <style>
   .crumbs {
-    font-size: 0.72rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.06em;
     color: var(--muted);
   }
@@ -264,20 +286,19 @@ const next = cases[position];
     gap: 0.5rem 0.9rem;
   }
   .detail {
-    font-size: 0.72rem;
+    font-size: var(--fs-label);
     color: var(--muted);
   }
+  /* One lead result under the banner. */
   .readings {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.25rem 1.5rem;
+    gap: 1.25rem;
     margin-top: clamp(2rem, 4vw, 3rem);
     padding-block: 1.5rem;
     border-block: 1px solid var(--line-strong);
   }
-  .readings :global(.metric--md .metric-value) {
-    font-size: 1.3rem;
-    overflow-wrap: anywhere;
+  .readings > :global(.metric) {
+    max-width: 60ch;
   }
   .compare-row {
     padding-top: clamp(1.5rem, 3vw, 2rem);
@@ -303,19 +324,14 @@ const next = cases[position];
     border-left: 1px solid var(--line-strong);
   }
   .toc a {
-    display: flex;
-    gap: 0.6rem;
+    display: block;
     padding: 0.3rem 0 0.3rem 0.8rem;
-    font-size: 0.85rem;
+    font-size: var(--fs-small);
     color: var(--muted);
     text-decoration: none;
   }
   .toc a:hover {
     color: var(--text);
-  }
-  .toc .n {
-    font-size: 0.66rem;
-    padding-top: 0.2rem;
   }
   .content {
     min-width: 0;
@@ -328,24 +344,20 @@ const next = cases[position];
     border-bottom: 1px solid var(--line);
   }
   .block h2 {
-    display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
-    font-size: clamp(1.25rem, 2.2vw, 1.55rem);
-  }
-  .block h2 .n {
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--accent);
-    letter-spacing: 0.06em;
+    font-size: var(--fs-h3);
   }
   .muted {
     color: var(--muted);
   }
+  /* One column: a short note never leaves a hole beside a long one. */
   .notes {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem;
+    max-width: 65ch;
+  }
+  .note p,
+  .eval-metrics :global(.metric-label) {
+    max-width: 65ch;
   }
   .note {
     display: grid;
@@ -353,11 +365,11 @@ const next = cases[position];
     align-content: start;
     justify-items: start;
     padding-left: 0.9rem;
-    border-left: 2px solid var(--accent);
-    font-size: 0.95rem;
+    border-left: 2px solid var(--line-strong);
+    font-size: var(--fs-text);
   }
   .note h3 {
-    font-size: 1rem;
+    font-size: var(--fs-body);
   }
   .note-metrics,
   .eval-metrics {
@@ -366,13 +378,28 @@ const next = cases[position];
     gap: 1rem;
     width: 100%;
   }
+  /* Two to a row, each spanning the same three rows (value, label, evidence), so the evidence
+     links sit level across a row. */
+  .eval-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.3rem 1.5rem;
+  }
+  .eval-metrics > :global(.metric) {
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    margin-bottom: 1rem;
+  }
+  /* A note is half the column: its figures stack rather than squeeze a value onto two lines. */
+  .note-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
   .readout {
     display: grid;
     gap: 0.4rem;
     justify-items: start;
     padding-left: 0.9rem;
-    border-left: 2px solid var(--accent);
-    font-size: 0.95rem;
+    border-left: 2px solid var(--line-strong);
+    font-size: var(--fs-text);
     max-width: 65ch;
   }
   .latency {
@@ -383,7 +410,7 @@ const next = cases[position];
   .latency table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.82rem;
+    font-size: var(--fs-small);
   }
   .latency th,
   .latency td {
@@ -394,11 +421,12 @@ const next = cases[position];
     font-variant-numeric: tabular-nums;
   }
   .latency thead th {
+    white-space: nowrap;
     color: var(--muted);
     font-weight: 500;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    font-size: 0.7rem;
+    font-size: var(--fs-label);
   }
   .latency tbody th {
     font-weight: 500;
@@ -418,7 +446,7 @@ const next = cases[position];
     flex-wrap: wrap;
     align-items: center;
     gap: 0.4rem 0.8rem;
-    font-size: 0.68rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
@@ -427,7 +455,7 @@ const next = cases[position];
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem 1.2rem;
-    font-size: 0.74rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.04em;
   }
   .refs a {
@@ -453,18 +481,18 @@ const next = cases[position];
     border-top: 3px solid var(--warn);
   }
   .change h3 {
-    font-size: 1rem;
+    font-size: var(--fs-body);
   }
   .change dl {
     margin: 0;
     display: grid;
-    grid-template-columns: 8rem minmax(0, 1fr);
+    grid-template-columns: 6.5rem minmax(0, 1fr);
     gap: 0.4rem 1rem;
-    font-size: 0.95rem;
+    font-size: var(--fs-text);
   }
   .change dt {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
@@ -474,28 +502,69 @@ const next = cases[position];
     margin: 0;
     max-width: 65ch;
   }
-  .proofs {
-    margin: 0;
-    display: grid;
-  }
-  .proofs .row {
-    display: grid;
-    grid-template-columns: 13rem minmax(0, 1fr);
-    gap: 0.8rem;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid var(--line);
-    font-size: 0.9rem;
-  }
-  .proofs dt {
-    font-weight: 500;
-  }
-  .proofs dd {
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.78rem;
-  }
   .cmd {
     max-width: 100%;
+  }
+  .suite {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.6rem;
+    font-size: var(--fs-text);
+  }
+  /* What it looks like: real screens and figures from the repository, each linked to its original. */
+  .figures {
+    display: grid;
+    gap: 1.5rem;
+    padding-top: clamp(1.5rem, 3vw, 2rem);
+  }
+  .shot {
+    margin: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line-strong);
+  }
+  /* A tool's output at a reading width; a screen at the full width so its text stays readable;
+     a chart smaller, so a white figure does not take over a dark page. */
+  .shot {
+    max-width: 48rem;
+  }
+  .shot.wide {
+    max-width: none;
+  }
+  .shot.narrow {
+    max-width: 34rem;
+  }
+  /* A tool's output, set as text so it stays readable at any width. */
+  .output {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line-strong);
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  /* A wrapped line hangs under its own first character, not at the left edge. */
+  .output .ln {
+    display: block;
+    padding-left: calc((var(--i) + 2) * 1ch);
+    text-indent: -2ch;
+  }
+  .shot figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    font-size: var(--fs-small);
+    color: var(--muted);
   }
   .related {
     list-style: none;
@@ -504,25 +573,36 @@ const next = cases[position];
     display: grid;
     border-top: 1px solid var(--line);
   }
+  .related li:last-child {
+    border-bottom: 0;
+  }
   .related li {
     display: grid;
     grid-template-columns: 7rem minmax(0, 1fr);
     gap: 1rem;
     padding-block: 0.6rem;
     border-bottom: 1px solid var(--line);
-    font-size: 0.95rem;
+    font-size: var(--fs-text);
   }
   .related time {
-    font-size: 0.74rem;
+    font-size: var(--fs-label);
     color: var(--muted);
     padding-top: 0.2rem;
   }
+  /* Links to other pages read like the post titles on Writing: plain, underlined on hover. */
+  .related a {
+    text-decoration: none;
+  }
+  .related a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
   .pager {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
     padding-top: 2rem;
-    font-size: 0.72rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -561,18 +641,17 @@ const next = cases[position];
     .toc a {
       padding: 0.2rem 0.55rem;
       border: 1px solid var(--line-strong);
-      font-size: 0.78rem;
+      font-size: var(--fs-small);
     }
   }
   @media (max-width: 760px) {
-    .notes {
-      grid-template-columns: minmax(0, 1fr);
-    }
     .block {
       padding-block: 2rem;
     }
+    .eval-metrics {
+      grid-template-columns: minmax(0, 1fr);
+    }
     .change dl,
-    .proofs .row,
     .related li {
       grid-template-columns: minmax(0, 1fr);
       gap: 0.15rem;
@@ -586,6 +665,9 @@ const next = cases[position];
     .latency th,
     .latency td {
       white-space: normal;
+    }
+    .barcol {
+      display: none;
     }
   }
 </style>

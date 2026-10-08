@@ -1,10 +1,11 @@
 // Renders the link preview image (Open Graph and X card), public/og.jpg, from the built home
-// page: the hero chart as a still frame, with the name, title, the three-line tagline and the
-// orgs that merged upstream PRs, all read from the page so the image says what the site says.
+// page: the hero chart as a still frame, with the availability line, the name, the one-line
+// pitch and the projects that merged PRs (documentation work labelled as such), all read from
+// the page so the image says what the site says.
 // No counts go on the image: they change, and an image cannot link to its evidence.
 // 1200x630 at 2x, the 1.91:1 shape LinkedIn, Facebook and X large cards use.
 // Usage (after npm run build): node scripts/og-image.mjs
-// Rerun when the tagline, the title or the set of orgs changes. Set CHROME_PATH if needed.
+// Rerun when the availability, the pitch or the set of projects changes. Set CHROME_PATH if needed.
 
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
@@ -128,12 +129,16 @@ await evaluate(s, 'document.fonts.ready.then(() => true)');
 const facts = await evaluate(s, `(() => {
   const text = (sel) => document.querySelector(sel)?.textContent.trim() ?? '';
   const facts = {
-    name: text('.hero .eyebrow b'),
-    role: text('.hero .eyebrow .role'),
-    beats: [...document.querySelectorAll('.hero h1 .beat')].map((b) => b.textContent.trim()),
-    orgs: [...document.querySelectorAll('#upstream .orgs li span')].map((o) => o.textContent.trim()),
+    status: text('.hero .status'),
+    name: text('.hero .name'),
+    pitch: text('.hero .pitch'),
+    orgs: [...document.querySelectorAll('#upstream .orgs li')].map((li) => {
+      const org = li.querySelector('.org')?.textContent.trim() ?? '';
+      const kind = li.querySelector('.kind')?.textContent.trim() ?? '';
+      return kind ? org + '\u00a0(' + kind + ')' : org;
+    }),
   };
-  if (!facts.name || !facts.role || facts.beats.length !== 3 || !facts.orgs.length) {
+  if (!facts.status || !facts.name || !facts.pitch || !facts.orgs.length || facts.orgs.some((o) => !o)) {
     throw new Error('og-image: the home page no longer has the hero or ledger markup this script reads: ' + JSON.stringify(facts));
   }
   const esc = (t) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
@@ -143,9 +148,10 @@ const facts = await evaluate(s, `(() => {
   const card = document.createElement('div');
   card.className = 'og-card';
   card.innerHTML =
-    '<p class="og-eyebrow"><b>' + esc(facts.name) + '</b> · ' + esc(facts.role) + '</p>' +
-    '<p class="og-h1">' + facts.beats.map((b) => '<span>' + esc(b) + '</span>').join('') + '</p>' +
-    '<p class="og-label">Merged upstream</p>' +
+    '<p class="og-eyebrow"><i></i>' + esc(facts.status) + '</p>' +
+    '<p class="og-h1"><span>' + esc(facts.name) + '</span></p>' +
+    '<p class="og-pitch">' + esc(facts.pitch) + '</p>' +
+    '<p class="og-label">Merged open-source PRs</p>' +
     '<p class="og-orgs">' + facts.orgs.map(esc).join(' · ') + '</p>';
   frame.append(chart, card);
   document.body.replaceChildren(frame);
@@ -158,10 +164,11 @@ const facts = await evaluate(s, `(() => {
     .og-card { position: absolute; left: 56px; top: 50%; transform: translateY(-50%); width: 790px; box-sizing: border-box;
       padding: 40px 44px 38px; background: var(--card); border: 1px solid var(--text); box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.35); }
     .og-card p { margin: 0; }
-    .og-eyebrow { font-family: var(--font-mono); font-size: 17px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-    .og-eyebrow b { color: var(--text); font-weight: 600; }
-    .og-h1 { margin-top: 18px !important; font-family: var(--font-mono); font-weight: 600; font-size: 42px; line-height: 1.14; letter-spacing: -0.02em; color: var(--text); }
+    .og-eyebrow { display: flex; align-items: center; gap: 12px; font-family: var(--font-mono); font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    .og-eyebrow i { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); flex: none; }
+    .og-h1 { margin-top: 20px !important; font-family: var(--font-mono); font-weight: 600; font-size: 54px; line-height: 1.08; letter-spacing: -0.02em; color: var(--text); }
     .og-h1 span { display: block; white-space: nowrap; }
+    .og-pitch { margin-top: 16px !important; font-family: var(--font-sans); font-size: 25px; line-height: 1.4; color: var(--text); }
     .og-label { margin-top: 30px !important; padding-top: 20px; border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
     .og-orgs { margin-top: 8px !important; font-family: var(--font-sans); font-size: 22px; color: var(--text); }
   \`;
@@ -181,7 +188,7 @@ if (fit.widest > fit.cardRight - 40 || fit.cardBottom > H) throw new Error(`og-i
 const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 88, clip: { x: 0, y: 0, width: W, height: H, scale: 1 } }, s);
 writeFileSync(outFile, Buffer.from(shot.data, 'base64'));
 console.log(`${outFile}  ${W * 2}x${H * 2}  ${Math.round(Buffer.from(shot.data, 'base64').length / 1024)} KB`);
-console.log(`name: ${facts.name} · ${facts.role}\ntagline: ${facts.beats.join(' ')}\norgs: ${facts.orgs.join(', ')}`);
+console.log(`status: ${facts.status}\nname: ${facts.name}\npitch: ${facts.pitch}\norgs: ${facts.orgs.join(', ')}`);
 
 await send('Target.closeTarget', { targetId });
 await send('Browser.close').catch(() => {});

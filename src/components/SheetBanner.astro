@@ -1,14 +1,14 @@
 ---
 /**
- * The top of every inner sheet: the static isobar strip, then the sheet banner line
- * ("SHEET 02 · STATION REPORTS · 10 STATIONS") and whatever the page puts under it.
+ * The top of every inner page: the static isobar strip, then a plain label line
+ * ("PROJECTS · 10") and whatever the page puts under it.
  */
 import IsobarStrip from './IsobarStrip.astro';
 import { sheetById, type SheetId } from '../data/sheets';
 
 interface Props {
   sheet: SheetId;
-  /** Banner parts after the sheet number. */
+  /** The label line, joined with middle dots. */
   parts: string[];
   /** Varies the strip's synthetic field between pages. */
   seed?: number;
@@ -18,9 +18,9 @@ const s = sheetById(sheet);
 ---
 
 <header class="banner">
-  <IsobarStrip seed={seed ?? Number(s.n)} label={`Sheet ${s.n} · ${s.name} · synthetic field`} />
+  <IsobarStrip seed={seed ?? Number(s.n)} label="Synthetic weather field" />
   <div class="wrap head">
-    <p class="eyebrow"><b>Sheet {s.n}</b> · {parts.join(' · ')}</p>
+    <p class="eyebrow">{parts.map((part, i) => <>{i > 0 && ' · '}<span class="nb">{part}</span></>)}</p>
     <slot />
   </div>
 </header>

@@ -4,7 +4,7 @@ import '@fontsource-variable/public-sans';
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import { profile } from '../data/profile';
-import { upstreamHeadline } from '../data/upstream';
+import { upstreamHeadline, mergedByOrg } from '../data/upstream';
 
 interface Props {
   title?: string;
@@ -17,7 +17,7 @@ interface Props {
 
 const {
   title = `${profile.name} · ${profile.title}`,
-  description = `${profile.tagline} ${upstreamHeadline.merged} merged upstream pull requests across graph_weather, PyTorch, ExecuTorch, krkn-chaos and MalariaGEN. Two flagships evaluated on held-out sets.`,
+  description = `${profile.tagline} ${upstreamHeadline.merged} merged open-source pull requests, ${mergedByOrg.find((o) => o.name === 'graph_weather')?.merged} of them in Open Climate Fix's graph_weather.`,
   ogType = 'website',
   noindex = false,
 } = Astro.props;

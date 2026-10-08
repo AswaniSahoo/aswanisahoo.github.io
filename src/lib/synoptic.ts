@@ -37,8 +37,17 @@ export interface Synoptic {
   retheme(): void;
   setPointer(x: number, y: number): void;
   clearPointer(): void;
+  /** A rectangle in chart pixels (the legend card) that the high and its label stay out of. */
+  setKeepOut(r: Rect | null): void;
   /** Current position of the low, [lon, lat]. */
   low(): [number, number];
+}
+
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 interface Colors {
@@ -152,7 +161,8 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
   const vel: [number, number] = [0, 0];
   const track: { lon: number; lat: number; t: number }[] = [];
   let hover = false;
-  let hi: [number, number] = [70, 24];
+  let hi: [number, number] = [70, 27];
+  let keepOut: Rect | null = null;
   let lo2: [number, number] = [100, 9];
 
   let raf = 0;
@@ -395,7 +405,6 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
       c.arc(cx + R * bx, cy - R * by, 3.2, 0, TAU);
       c.fillStyle = C.red;
       c.fill();
-      halo(c, `${home[1].toFixed(1)}N ${home[0].toFixed(1)}E`, cx + R * bx, cy - R * by + 12, `9px ${mono}`, C.red);
     }
     halo(c, 'locator', cx, cy + R + 18, `9px ${mono}`, C.muted);
     c.restore();
@@ -404,7 +413,7 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
   function drawBase(tt: number): void {
     const c = ctx;
     if (!c) return;
-    hi = [LONC - lonR * 0.3 + 2 * Math.sin(tt * 0.003), 24 + 1.5 * Math.cos(tt * 0.0025)];
+    hi = [LONC - lonR * 0.3 + 2 * Math.sin(tt * 0.003), 27 + 1.5 * Math.cos(tt * 0.0025)];
     lo2 = [LONC + lonR * 0.36 + 3 * Math.cos(tt * 0.0035), 9.5 + 2 * Math.sin(tt * 0.003)];
 
     c.fillStyle = C.paper;
@@ -431,7 +440,11 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     c.font = `9px ${mono}`;
     c.textBaseline = 'alphabetic';
     c.textAlign = 'center';
-    for (let lon = lonA; lon <= lonB; lon += 10) c.fillText(`${lon}E`, projX(lon), H - 6);
+    // A label that would be cut by the chart's edge is left out.
+    for (let lon = lonA; lon <= lonB; lon += 10) {
+      const x = projX(lon);
+      if (x > 18 && x < W - 18) c.fillText(`${lon}E`, x, H - 6);
+    }
     c.textAlign = 'left';
     for (let lat = 10; lat < 30; lat += 10) c.fillText(`${lat}N`, 6, projY(lat) - 4);
 
@@ -511,7 +524,9 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
       }
     }
     c.stroke();
-    for (const [x, y, L] of labels) halo(c, String(L), x, y, `9.5px ${mono}`, C.ink);
+    // A phone-width strip has no room for chart figures: lines, centres and wind only.
+    const sparse = W < 600;
+    if (!sparse) for (const [x, y, L] of labels) halo(c, String(L), x, y, `9.5px ${mono}`, C.ink);
 
     // Refined patch around the low: aperture-7 rotated fine hexes.
     const rf = r / Math.sqrt(7);
@@ -536,7 +551,7 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     c.arc(lx, ly, PATCH_R + 8, 0, TAU);
     c.stroke();
     c.setLineDash([]);
-    halo(c, 'refined patch', lx, ly + PATCH_R + 22, `8.5px ${mono}`, C.red);
+    if (!sparse) halo(c, 'refined patch', lx, ly + PATCH_R + 22, `8.5px ${mono}`, C.red);
 
     trackAndCone(c, lx, ly, tt);
 
@@ -545,10 +560,13 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     c.save();
     c.globalAlpha = 0.5;
     c.lineWidth = 1.2;
-    for (const [slon, slat] of STATIONS) {
+    for (const [slon, slat] of sparse ? [] : STATIONS) {
       if (!inDomain(slon, slat)) continue;
       const sx = projX(slon);
       const sy = projY(slat);
+      // No plot half under the legend card, where only a stray figure would show.
+      const ko = keepOut;
+      if (ko && sx > ko.x - 36 && sx < ko.x + ko.w + 36 && sy > ko.y - 24 && sy < ko.y + ko.h + 24) continue;
       const [u, v] = wind(slon, slat, tt);
       const spd = Math.hypot(u, v) / 0.05;
       const fx = -u;
@@ -579,9 +597,14 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     }
     c.restore();
 
-    // Pressure centres.
-    halo(c, 'H', projX(hi[0]), projY(hi[1]), `700 26px ${mono}`, C.ink);
-    halo(c, String(Math.round(P(hi[0], hi[1], tt))), projX(hi[0]), projY(hi[1]) + 20, `10px ${mono}`, C.ink);
+    // Pressure centres. The high is furniture: where the legend card would cover it, it is left out.
+    const hx = projX(hi[0]);
+    const hy = projY(hi[1]);
+    const ko = keepOut;
+    if (!ko || hx + 24 < ko.x || hx - 24 > ko.x + ko.w || hy + 30 < ko.y || hy - 24 > ko.y + ko.h) {
+      halo(c, 'H', hx, hy, `700 26px ${mono}`, C.ink);
+      halo(c, String(Math.round(P(hi[0], hi[1], tt))), hx, hy + 20, `10px ${mono}`, C.ink);
+    }
     halo(c, 'L', lx, ly, `700 26px ${mono}`, C.red);
     halo(c, `${Math.round(P(lowPos[0], lowPos[1], tt))} hPa`, lx, ly + 20, `10px ${mono}`, C.red);
     halo(c, `${lowPos[1].toFixed(1)}N ${lowPos[0].toFixed(1)}E`, lx, ly + 32, `8.5px ${mono}`, C.red);
@@ -716,6 +739,9 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     },
     clearPointer() {
       hover = false;
+    },
+    setKeepOut(r) {
+      keepOut = r;
     },
     low() {
       return [lowPos[0], lowPos[1]];

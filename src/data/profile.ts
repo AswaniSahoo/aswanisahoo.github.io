@@ -7,14 +7,13 @@ export const profile = {
   domain: new URL(import.meta.env.SITE).host,
   title: 'ML / AI systems engineer',
   // The status tab on the hero card. Keep it short and true; update it when it changes.
-  availability: 'Open to AI / ML engineer internships · graduating 2027',
+  // The school goes here too: the first screen should say where the degree is from.
+  availability: 'Open to AI / ML engineer internships · NIT Rourkela ’27',
   // Served from public/. The résumé buttons appear only once this file exists (src/lib/resume.ts).
   resume: '/aswani-kumar-sahoo-resume.pdf',
-  // Three sentences, one per hero line (Hero.astro splits on the full stops). In Martian Mono
-  // each is 24 characters, so the three lines form one even block.
-  tagline: 'Weather models upstream. Agents that won\'t guess. Everything instrumented.',
-  intro:
-    'I contribute to weather-forecasting models in the open, build LLM agents that are allowed to say "I don\'t know", and put metrics on all of it. Every public number on this site links to its evidence.',
+  // The hero's one-line pitch under the name, also the start of every page's meta description.
+  // Plain words first: a first-time reader should know what this person does from it alone.
+  tagline: 'ML engineer. I contribute to open-source weather models and build AI agents that say “I don’t know” instead of guessing.',
   location: 'Rourkela, Odisha, India',
   email: 'aswanisahoo227@gmail.com',
   links: {
@@ -41,17 +40,17 @@ export const profile = {
   stack: [
     { tool: 'Python', proof: 'everywhere' },
     { tool: 'PyTorch', proof: 'weather-transformer-scratch, graph_weather' },
-    { tool: 'LangGraph', proof: 'climate-risk-agent' },
-    { tool: 'FastAPI', proof: 'Incident Evidence Compiler, climate-risk-agent' },
+    { tool: 'LangGraph', proof: 'Climate-Risk Agent' },
+    { tool: 'FastAPI', proof: 'Incident Evidence Compiler, Climate-Risk Agent' },
     { tool: 'PostgreSQL', proof: 'Incident Evidence Compiler' },
     { tool: 'FAISS, BM25, rerankers', proof: 'complaint-intelligence-system' },
     { tool: 'xarray, zarr, H3', proof: 'graph_weather, weather-transformer-scratch' },
     { tool: 'PEFT / LoRA', proof: 'llama-task-agent' },
-    { tool: 'Gemini on Vertex AI', proof: 'climate-risk-agent, Incident Evidence Compiler, vera-bot' },
-    { tool: 'MCP', proof: 'climate-risk-agent: 2 servers, registry entry, public container' },
+    { tool: 'Gemini on Vertex AI', proof: 'Climate-Risk Agent, Incident Evidence Compiler, vera-bot' },
+    { tool: 'MCP', proof: 'Climate-Risk Agent: 2 servers, registry entry, public container' },
     { tool: 'Prometheus', proof: 'Incident Evidence Compiler: range-query ingestion and /metrics' },
-    { tool: 'Docker, Cloud Run, GitHub Actions', proof: 'climate-risk-agent, vera-bot, Incident Evidence Compiler' },
-    { tool: 'scipy, extreme-value statistics', proof: 'climate-risk-agent GEV hazard fits' },
+    { tool: 'Docker, Cloud Run, GitHub Actions', proof: 'Climate-Risk Agent, vera-bot, Incident Evidence Compiler' },
+    { tool: 'scipy, extreme-value statistics', proof: 'Climate-Risk Agent GEV hazard fits' },
     { tool: 'Kubernetes (learning)', proof: 'krkn-chaos contributions' },
   ],
   writing: [

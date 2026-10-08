@@ -1,49 +1,15 @@
 ---
 /**
- * Sheet 01, Chart. First impression in twenty seconds, then routes out:
- * hero, three stations, upstream strip, writing, now, contact.
+ * The home page: who this is in a few seconds, then routes out. The hero, four flagship
+ * projects, the open-source record, the latest writing; the contact band comes from the layout.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
 import Section from '../components/Section.astro';
-import FeatureCard from '../components/FeatureCard.astro';
+import FeatureGrid from '../components/FeatureGrid.astro';
 import UpstreamStrip from '../components/UpstreamStrip.astro';
 import LatestWriting from '../components/LatestWriting.astro';
-import NowBlock from '../components/NowBlock.astro';
-import ContactBand from '../components/ContactBand.astro';
-import { meshSeries, stations } from '../data/projects';
-import { now } from '../data/now';
-import { reportHref } from '../data/work';
-import type { Metric, Station } from '../data/types';
-
-const station = (slug: string): Station => {
-  const s = stations.find((x) => x.slug === slug);
-  if (!s) throw new Error(`No station ${slug}`);
-  return s;
-};
-/** Named metrics from a station, so a data edit cannot silently swap which stamps show. */
-const pick = (s: Station, ...prefixes: string[]): Metric[] =>
-  prefixes.map((p) => {
-    const m = [...s.metrics, ...(s.tests ? [s.tests] : [])].find((x) => x.label.startsWith(p));
-    if (!m) throw new Error(`No metric "${p}" on ${s.slug}`);
-    return m;
-  });
-
-const cra = station('climate-risk-agent');
-const iec = station('incident-evidence-compiler');
-
-const featured = [
-  { eyebrow: cra.domain, name: cra.name, summary: cra.summary, metrics: pick(cra, 'recall@3', 'false answers'), href: reportHref(cra.slug) },
-  { eyebrow: iec.domain, name: iec.name, summary: iec.summary, metrics: pick(iec, 'held-out top-1', 'invalid citations'), href: reportHref(iec.slug) },
-  {
-    eyebrow: 'Upstream · Open Climate Fix',
-    name: 'graph_weather regional mesh work',
-    summary:
-      "Open Climate Fix's graph_weather is a graph-neural-network weather model. I picked up its adaptive-mesh thread in May 2026 and shipped it as a series of small upstream PRs.",
-    metrics: [meshSeries.metrics[0], meshSeries.finding.metric],
-    href: '/open-source/#graph-weather',
-  },
-];
+import { stations } from '../data/projects';
 ---
 
 <BaseLayout sheet="01">
@@ -66,46 +32,23 @@ const featured = [
   </script>
   <Hero />
 
-  <Section
-    id="work"
-    index="02"
-    verb="Work"
-    title="Three stations to start with"
-    lede="Two systems I built and evaluated on held-out sets, and my regional mesh work inside Open Climate Fix's graph_weather."
-  >
-    <div class="features">
-      {featured.map((f, i) => (
-        <div class="reveal" style={`--delay: ${i * 60}ms`}>
-          <FeatureCard {...f} />
-        </div>
-      ))}
-    </div>
-    <p class="more mono"><a href="/work/">All {stations.length} station reports</a></p>
+  <Section id="work" label="Projects" title="Selected work">
+    <FeatureGrid />
+    <p class="more mono"><a href="/work/">All {stations.length} projects</a></p>
   </Section>
 
   <UpstreamStrip />
 
-  <Section id="writing" index="04" verb="Writing" title="Latest writing" compact>
+  <Section id="writing" label="Writing" title="Latest writing" compact>
     <LatestWriting />
   </Section>
 
-  <Section id="now" index="Now" verb={`checked ${now.checkedAt}`} title="What is in flight" compact>
-    <NowBlock />
-  </Section>
-
-  <ContactBand />
 </BaseLayout>
 
 <style>
-  .features {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.5rem;
-    align-items: stretch;
-  }
   .more {
     margin-top: 1.75rem;
-    font-size: 0.74rem;
+    font-size: var(--fs-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -118,11 +61,5 @@ const featured = [
   }
   .more a:hover {
     text-decoration: underline;
-  }
-  @media (max-width: 960px) {
-    .features {
-      grid-template-columns: minmax(0, 1fr);
-      max-width: 640px;
-    }
   }
 </style>
