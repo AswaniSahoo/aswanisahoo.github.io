@@ -348,13 +348,15 @@ const wtCase: CaseStudy = {
 };
 
 const cis = station('complaint-intelligence-system');
+// The case opens on the timing result its project card shows; the 200K is in the summary.
+const cisP95 = need(cis.metrics.find((m) => m.label.startsWith('vector search p95')), 'complaint search p95');
 const cisCase: CaseStudy = {
   slug: cis.slug,
   station: cis,
   name: cis.name,
   summary: cis.summary,
   status: { label: cis.status.label, kind: cis.status.kind },
-  metrics: cis.metrics,
+  metrics: [{ ...cisP95, label: '95th-percentile vector search time over 200K complaints' }],
   evaluation: {
     text: [retrievalLatency.summary],
     table: {

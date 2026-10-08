@@ -56,14 +56,13 @@ export const weatherTransformer: Project = {
   repo: `${GH}/weather-transformer-scratch`,
   role: 'Solo',
   summary:
-    'A physics-aware vision transformer for 6-hour ERA5 prediction, with attention written by hand instead of nn.MultiheadAttention, and a physics-informed loss.',
+    'A physics-aware vision transformer with 4.8 million parameters for 6-hour ERA5 prediction, with attention written by hand instead of nn.MultiheadAttention, and a physics-informed loss.',
   bullets: [
     'Every block implemented and unit-tested individually: patch embedding, positional encoding, attention, transformer block, physics loss.',
-    'Evaluated on a 2020 ERA5 test slice against a persistence baseline, the honest floor for short-range forecasts.',
+    'Tested on a held-out 2020 slice of ERA5 against persistence, a forecast that assumes nothing changes in six hours. That is the honest floor for short-range forecasts.',
   ],
   metrics: [
-    { label: 'RMSE improvement over persistence', value: '27%', verifiedAt: '2026-07-19', source: `${GH}/weather-transformer-scratch` },
-    { label: 'parameters', value: '4,805,440', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
+    { label: 'lower error (RMSE) than a no-change forecast, on the 2020 test year', value: '27%', verifiedAt: '2026-07-19', source: `${GH}/weather-transformer-scratch` },
     { label: 'unit tests', value: '74', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
   ],
   stack: ['PyTorch', 'xarray', 'zarr', 'ERA5 / WeatherBench2'],
@@ -240,7 +239,7 @@ export const retrievalLatency = {
   // README (commit ea68a72) line 71: "Ran on 200K complaints using a T4 GPU on Google Colab."; the table
   // starts at line 96: "| Vector (FAISS) | 35 | 41 |". No source size is stated, so none is printed.
   summary:
-    'CFPB consumer complaints, 200K processed. p50 / p95 in milliseconds. Vector search is fast; BM25 and reranking buy quality at real latency cost.',
+    'Timed on 200K complaints on a T4 GPU in Google Colab, in milliseconds. Vector search answers in tens of milliseconds; BM25, hybrid and reranked search take 0.9 to 1.4 seconds at the 95th percentile.',
   verifiedAt: '2026-09-30',
   rows: [
     { method: 'Vector (FAISS)', p50: 35, p95: 41 },
@@ -298,6 +297,37 @@ export const stations: Station[] = [
     links: [repoLink(IEC), { label: 'sealed-run protocol', url: `${IEC}/blob/main/docs/evaluation/re2-tt-sealed-protocol.md` }],
   },
   {
+    slug: 'weather-transformer-scratch',
+    name: 'Weather Transformer from Scratch',
+    domain: 'Scientific ML · forecasting',
+    summary: 'Predicts the weather six hours ahead from ERA5 data with a vision transformer. Every block, attention included, is written and unit-tested by hand, with a physics-informed loss.',
+    repo: `${GH}/weather-transformer-scratch`,
+    status: { label: 'evaluated', kind: 'plain' },
+    tests: { label: 'unit tests', value: '74', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
+    metrics: [
+      { label: 'RMSE over persistence', value: '27%', verifiedAt: '2026-07-19', source: `${GH}/weather-transformer-scratch` },
+      { label: 'parameters', value: '4,805,440', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
+    ],
+    stack: ['PyTorch', 'xarray', 'ERA5'],
+    links: [repoLink(`${GH}/weather-transformer-scratch`)],
+  },
+  {
+    slug: 'complaint-intelligence-system',
+    name: 'Complaint Intelligence System',
+    domain: 'LLM · retrieval',
+    summary: 'Searches 200K US consumer complaints from the CFPB database and groups them into topics. It compares two embedding models (MiniLM, BGE) and two topic models (KMeans, BERTopic), and times four search methods against each other.',
+    repo: `${GH}/complaint-intelligence-system`,
+    status: { label: 'benchmarked', kind: 'plain' },
+    // README (commit ea68a72) line 3: "An NLP pipeline that processes 200K consumer complaints from the CFPB database".
+    // The earlier "200K+" and "15M+ source" are not in the repo, so both went on 2026-09-30.
+    metrics: [
+      { label: 'CFPB complaints processed', value: '200K', verifiedAt: '2026-09-30', source: `${GH}/complaint-intelligence-system#readme` },
+      { label: 'vector search p95', value: '41 ms', verifiedAt: '2026-09-30', source: `${GH}/complaint-intelligence-system#retrieval-latency` },
+    ],
+    stack: ['FAISS', 'Sentence-Transformers', 'BERTopic', 'Streamlit'],
+    links: [repoLink(`${GH}/complaint-intelligence-system`)],
+  },
+  {
     slug: 'vera-bot',
     name: 'vera-bot',
     domain: 'LLM product · messaging',
@@ -342,37 +372,6 @@ export const stations: Station[] = [
     metrics: [],
     stack: ['SciBERT', 'scikit-learn', 'Europe PMC API'],
     links: [repoLink(`${GH}/biodiversity-publication-analyzer`)],
-  },
-  {
-    slug: 'weather-transformer-scratch',
-    name: 'weather-transformer-scratch',
-    domain: 'Scientific ML · forecasting',
-    summary: 'Physics-aware vision transformer for 6-hour ERA5 prediction, every block written and tested by hand.',
-    repo: `${GH}/weather-transformer-scratch`,
-    status: { label: 'evaluated', kind: 'plain' },
-    tests: { label: 'unit tests', value: '74', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
-    metrics: [
-      { label: 'RMSE over persistence', value: '27%', verifiedAt: '2026-07-19', source: `${GH}/weather-transformer-scratch` },
-      { label: 'parameters', value: '4,805,440', verifiedAt: '2026-09-30', source: `${GH}/weather-transformer-scratch` },
-    ],
-    stack: ['PyTorch', 'xarray', 'ERA5'],
-    links: [repoLink(`${GH}/weather-transformer-scratch`)],
-  },
-  {
-    slug: 'complaint-intelligence-system',
-    name: 'complaint-intelligence-system',
-    domain: 'LLM · retrieval',
-    summary: 'RAG and NLP benchmark over CFPB consumer complaints: MiniLM against BGE embeddings, KMeans against BERTopic, and four retrieval modes timed against each other.',
-    repo: `${GH}/complaint-intelligence-system`,
-    status: { label: 'benchmarked', kind: 'plain' },
-    // README (commit ea68a72) line 3: "An NLP pipeline that processes 200K consumer complaints from the CFPB database".
-    // The earlier "200K+" and "15M+ source" are not in the repo, so both went on 2026-09-30.
-    metrics: [
-      { label: 'CFPB complaints processed', value: '200K', verifiedAt: '2026-09-30', source: `${GH}/complaint-intelligence-system#readme` },
-      { label: 'vector search p95', value: '41 ms', verifiedAt: '2026-09-30', source: `${GH}/complaint-intelligence-system#retrieval-latency` },
-    ],
-    stack: ['FAISS', 'Sentence-Transformers', 'BERTopic', 'Streamlit'],
-    links: [repoLink(`${GH}/complaint-intelligence-system`)],
   },
   {
     slug: 'llama-task-agent',
