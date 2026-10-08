@@ -13,7 +13,7 @@ export const profile = {
   resume: '/aswani-kumar-sahoo-resume.pdf',
   // The hero's one-line pitch under the name, also the start of every page's meta description.
   // Plain words first: a first-time reader should know what this person does from it alone.
-  tagline: 'ML engineer. I contribute to open-source weather models and build AI agents that say "I don\'t know" instead of guessing.',
+  tagline: 'ML engineer. I contribute to open-source weather models and build AI agents that say “I don’t know” instead of guessing.',
   location: 'Rourkela, Odisha, India',
   email: 'aswanisahoo227@gmail.com',
   links: {

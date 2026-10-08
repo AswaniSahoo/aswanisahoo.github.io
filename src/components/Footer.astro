@@ -15,13 +15,6 @@ const built = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0'
 
 <footer class="site-footer">
   <div class="wrap body">
-    <p class="links">
-      <a href={profile.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
-      <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
-      <a href={profile.links.x} target="_blank" rel="noopener noreferrer">X</a>
-      <a href={profile.links.blog} target="_blank" rel="noopener noreferrer">Hashnode</a>
-      <a href={`mailto:${profile.email}`}>Email</a>
-    </p>
     <p class="note">Every number on this site links to its evidence, or says so when the repository is private. Built with Astro, no client framework.</p>
   </div>
   <div class="strip">
@@ -38,22 +31,11 @@ const built = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0'
     color: var(--muted);
   }
   .body {
-    display: grid;
-    gap: 1rem;
-    padding-block: 2.5rem 2rem;
+    padding-block: 1.5rem;
   }
   .note {
     font-size: var(--fs-small);
     max-width: 80ch;
-  }
-  .links {
-    display: flex;
-    gap: 1.2rem;
-    flex-wrap: wrap;
-    font-size: var(--fs-small);
-  }
-  .links a {
-    text-decoration: none;
   }
   .strip {
     border-top: 1px solid var(--line-strong);

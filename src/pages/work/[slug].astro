@@ -15,6 +15,7 @@ import { comparisons } from '../../data/compare';
 import { cases } from '../../data/cases';
 import { stations } from '../../data/projects';
 import { posts, postHref } from '../../lib/writing';
+import { codeSpans } from '../../lib/text';
 
 export const getStaticPaths = (() => cases.map((c) => ({ params: { slug: c.slug }, props: { c } }))) satisfies GetStaticPaths;
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
@@ -86,7 +87,11 @@ const next = cases[position];
     <section class:list={['wrap', 'figures', { pair: c.figures.length > 1 }]} aria-label="What it looks like">
       {c.figures.map((f) => (
         <figure class="shot">
-          <img src={f.src} width={f.width} height={f.height} alt={f.alt} loading="lazy" decoding="async" />
+          {'code' in f ? (
+            <pre class="output" aria-label={f.label}><code>{f.code}</code></pre>
+          ) : (
+            <img src={f.src} width={f.width} height={f.height} alt={f.alt} loading="lazy" decoding="async" />
+          )}
           <figcaption>
             <span>{f.caption}</span>
             <Receipt source={f.source} label="original" />
@@ -204,7 +209,7 @@ const next = cases[position];
                   {ch.rows.map(([k, v]) => (
                     <>
                       <dt>{k}</dt>
-                      <dd>{v}</dd>
+                      <dd>{codeSpans(v).map((t) => (t.code ? <code>{t.text}</code> : t.text))}</dd>
                     </>
                   ))}
                 </dl>
@@ -354,10 +359,16 @@ const next = cases[position];
   .muted {
     color: var(--muted);
   }
+  /* Each note only as tall as its text, so the accent rule ends with it. */
   .notes {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem;
+    align-items: start;
+  }
+  .note p,
+  .eval-metrics :global(.metric-label) {
+    max-width: 65ch;
   }
   .note {
     display: grid;
@@ -529,6 +540,18 @@ const next = cases[position];
   .figures:not(.pair) .shot {
     max-width: 34rem;
   }
+  /* A tool's output, set as text so it stays readable at any width. */
+  .output {
+    margin: 0;
+    padding: 1rem 1.1rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line-strong);
+    font-family: var(--font-mono);
+    font-size: var(--fs-small);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
   .shot figcaption {
     display: flex;
     flex-wrap: wrap;
@@ -556,6 +579,14 @@ const next = cases[position];
     font-size: var(--fs-label);
     color: var(--muted);
     padding-top: 0.2rem;
+  }
+  /* Links to other pages read like the post titles on Writing: plain, underlined on hover. */
+  .related a {
+    text-decoration: none;
+  }
+  .related a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
   }
   .pager {
     display: grid;

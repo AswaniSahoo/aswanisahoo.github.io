@@ -72,6 +72,16 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
           <a href={meshSeries.issue} {...ext}>issue #3, the coordination thread</a>
         </p>
       </div>
+      <p class="eyebrow arc-head">The PRs, in order</p>
+      <ol class="arc">
+        {meshSeries.arc.map((a) => (
+          <li>
+            <span class="range mono">{a.range}</span>
+            <span class="when mono">{a.when}</span>
+            <span class="what">{a.what}</span>
+          </li>
+        ))}
+      </ol>
       <div class="against">
         <p class="eyebrow"><b>Then it went against me</b> · issue #238</p>
         <h3>{ablation.title}</h3>
@@ -82,15 +92,6 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
           <p class="prose">{ablation.whatHappened}</p>
         </details>
       </div>
-      <ol class="arc">
-        {meshSeries.arc.map((a) => (
-          <li>
-            <span class="range mono">{a.range}</span>
-            <span class="when mono">{a.when}</span>
-            <span class="what">{a.what}</span>
-          </li>
-        ))}
-      </ol>
     </article>
   </section>
 
@@ -148,7 +149,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   <section id="how" class="wrap section-block last" aria-labelledby="how-title">
     <h2 id="how-title">How this list is built</h2>
     <p class="prose muted">
-      One script, <code>scripts/refresh-prs.mjs</code>, queries every repository through the GitHub CLI and writes the list with the date it ran. A PR counts as merged when the API says so or when it carries a Merged label: PyTorch, ExecuTorch and MalariaGEN merge through bots, which GitHub's own is:merged filter misses. Anything closed without merging stays listed.
+      One script, <code>scripts/refresh-prs.mjs</code>, queries every repository through the GitHub CLI and writes the list with the date it ran. A PR counts as merged when the API says so or when it carries a Merged label: PyTorch, ExecuTorch and MalariaGEN merge through bots, which GitHub's own <code>is:merged</code> filter misses. Anything closed without merging stays listed.
     </p>
   </section>
 </BaseLayout>
@@ -283,6 +284,9 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   }
   .account p {
     margin-top: 0.6rem;
+  }
+  .arc-head {
+    margin-bottom: -0.4rem;
   }
   .arc {
     list-style: none;

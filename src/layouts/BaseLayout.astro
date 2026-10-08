@@ -1,12 +1,13 @@
 ---
 /**
- * Every page: head and scripts from Base, the header,
- * the page, and the footer.
+ * Every page: head and scripts from Base, the header, the page, the contact band (the one place
+ * the email and profiles are listed, at the end of every page), and the footer.
  */
 import type { TransitionDirectionalAnimations } from 'astro';
 import Base from './Base.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ContactBand from '../components/ContactBand.astro';
 import type { SheetId } from '../data/sheets';
 
 interface Props {
@@ -18,8 +19,10 @@ interface Props {
   strip?: string;
   ogType?: 'website' | 'article';
   noindex?: boolean;
+  /** The contact band before the footer. Off for the 404 page. */
+  contact?: boolean;
 }
-const { sheet, strip, title, description, ogType, noindex } = Astro.props;
+const { sheet, strip, title, description, ogType, noindex, contact = true } = Astro.props;
 
 // Between sheets: a short slide plus fade, about 200ms. Keyframes live in global.css.
 // The header does not move; under reduced motion no animation runs at all.
@@ -34,6 +37,7 @@ const sheetSwap: TransitionDirectionalAnimations = {
   <Header active={sheet} />
   <main id="main" transition:animate={sheetSwap}>
     <slot />
+    {contact && <ContactBand />}
   </main>
   <Footer sheet={sheet} strip={strip} />
 </Base>

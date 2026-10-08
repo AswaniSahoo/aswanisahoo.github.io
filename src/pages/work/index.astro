@@ -4,7 +4,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SheetBanner from '../../components/SheetBanner.astro';
 import FeatureGrid from '../../components/FeatureGrid.astro';
 import { stations } from '../../data/projects';
-import { others, reportHref } from '../../data/work';
+import Receipt from '../../components/Receipt.astro';
+import { others, reportHref, listFigure } from '../../data/work';
 
 const n = stations.length;
 ---
@@ -31,6 +32,12 @@ const n = stations.length;
           <a class="name" href={reportHref(s.slug)}>{s.name}</a>
           <div class="text">
             <p class="what">{s.summary}</p>
+            {listFigure[s.slug] && (
+              <p class="fig">
+                <b class="mono">{listFigure[s.slug].value}</b> {listFigure[s.slug].label}
+                <Receipt source={listFigure[s.slug].source} label={listFigure[s.slug].evidence} verifiedAt={listFigure[s.slug].verifiedAt} />
+              </p>
+            )}
             <ul class="chips">{s.stack.slice(0, 3).map((t) => <li>{t}</li>)}</ul>
           </div>
         </li>
@@ -90,6 +97,18 @@ const n = stations.length;
     font-size: var(--fs-text);
     color: var(--muted);
     max-width: 62ch;
+  }
+  .fig {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.5rem;
+    font-size: var(--fs-small);
+  }
+  /* The evidence link sits above the row's own link. */
+  .fig :global(.receipt) {
+    position: relative;
+    z-index: 1;
   }
   .text :global(.chips) {
     margin-top: 0.2rem;

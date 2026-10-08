@@ -40,7 +40,7 @@ export const meshSeries = {
       // and 0.214 for persistence, so it beats persistence by about 20% on unseen regions where the old model
       // managed about 4%." The "about" is kept as ≈.
       value: '≈ 4% → ≈ 20%',
-      note: 'error 0.206 → 0.171, against 0.214 for no change',
+      note: 'error 0.206 → 0.171, 17% lower, against 0.214 for no change',
       verifiedAt: '2026-09-30',
       source: `${GW}/pull/237`,
     } satisfies Metric,

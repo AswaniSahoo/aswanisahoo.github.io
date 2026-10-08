@@ -38,30 +38,36 @@ export const featured: Featured[] = [
   card('climate-risk-agent', {
     name: 'Climate-Risk Agent',
     outcome: 'Answers climate-risk questions for any place with cited reports, and refuses when it cannot check the answer.',
-    metric: figure('climate-risk-agent', 'false answers', 'on 105 held-out questions. It refused all 35 out-of-scope ones, and 21 it could have answered.'),
+    metric: figure('climate-risk-agent', 'false answers', 'on 105 held-out questions; it also refused 21 it could have answered'),
     tags: ['LangGraph', 'MCP', 'Gemini'],
     live: station('climate-risk-agent').links.find((l) => l.label === 'live app')?.url,
   }),
   card('incident-evidence-compiler', {
     name: 'Incident Evidence Compiler',
-    outcome: 'Finds the root cause of an outage. The LLM only proposes, deterministic checks decide, and "unknown" is a valid answer.',
-    metric: figure('incident-evidence-compiler', 'held-out top-1', 'true root cause ranked first, on 90 sealed held-out incidents it had never seen (deterministic engine)'),
+    outcome: 'Finds the root cause of an outage. The LLM only proposes, deterministic checks decide, and “unknown” is a valid answer.',
+    metric: figure('incident-evidence-compiler', 'held-out top-1', 'true root cause ranked first, on 90 incidents it had never seen'),
     tags: ['FastAPI', 'PostgreSQL', 'Prometheus'],
   }),
   card('vera-bot', {
     name: 'vera-bot',
     outcome: 'Merchant-messaging engine for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts.',
-    metric: figure('vera-bot', 'judge-replica', "agreement between its offline judge and the organiser's official scores (Spearman, 15 cases), so every change was scored before it shipped"),
+    metric: figure('vera-bot', 'judge-replica', "agreement of its offline judge with the official scores (Spearman, 15 cases)"),
     tags: ['FastAPI', 'Vertex AI', 'Cloud Run'],
     isPrivate: true,
   }),
   card('fairness-credit-risk', {
     name: 'Fairness-Aware Credit Scoring',
     outcome: 'Credit scoring with standard fairness fixes, each tested against a tuned baseline on identical seeded splits. The result was a null, and I published it.',
-    metric: figure('fairness-credit-risk', 'alternatives beat', 'alternatives, three fairness fixes and a foundation model, beat the tuned baseline by more than noise. With 62 women in the 200-row test set, no interval was narrow enough to tell.'),
+    metric: figure('fairness-credit-risk', 'alternatives beat', 'fairness fixes and models beat the tuned baseline by more than noise'),
     tags: ['AIF360', 'Fairlearn', 'FastAPI'],
   }),
 ];
 
 /** Every other project, listed compactly after the flagships. */
 export const others: Station[] = stations.filter((s) => !featured.some((f) => f.slug === s.slug));
+
+/** The one figure a listed project shows, in plain words, where it has one. */
+export const listFigure: Record<string, Metric> = {
+  'weather-transformer-scratch': figure('weather-transformer-scratch', 'RMSE over persistence', 'lower RMSE than a no-change forecast, on the 2020 test year'),
+  'complaint-intelligence-system': figure('complaint-intelligence-system', 'vector search p95', '95th-percentile vector search time over 200K complaints'),
+};

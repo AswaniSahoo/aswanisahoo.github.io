@@ -23,10 +23,10 @@ const stats: Metric[] = [
     evidence: 'PR ledger',
   },
   {
-    // PR #237: region-weighted MSE 0.171 against 0.214 for persistence (tomorrow = today), about 20%
-    // lower; the old decoder managed about 4% (0.206).
-    label: 'lower error than a no-change forecast on unseen regions, up from ≈\u00a04%',
-    value: '≈ 20%',
+    // PR #237: held-out region-weighted MSE 0.206 with the old decoder, 0.171 with the fix:
+    // (0.206 - 0.171) / 0.206 = 17% lower.
+    label: 'lower forecast error on unseen regions, from a decoder fix I shipped',
+    value: '17%',
     verifiedAt: skill.verifiedAt,
     source: skill.source,
     evidence: 'PR #237',

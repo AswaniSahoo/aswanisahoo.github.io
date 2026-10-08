@@ -5,7 +5,6 @@ import SheetBanner from '../../components/SheetBanner.astro';
 import MetricTile from '../../components/MetricTile.astro';
 import Receipt from '../../components/Receipt.astro';
 import { profile } from '../../data/profile';
-import ContactBand from '../../components/ContactBand.astro';
 import { certifications } from '../../data/certs';
 import { principles, meshSeries } from '../../data/projects';
 import { negativeResults } from '../../data/negative';
@@ -30,7 +29,16 @@ import { hyphenSafe } from '../../lib/text';
       <h2>{profile.education.degree}</h2>
       <p>{profile.education.school}</p>
       <p class="mono meta">{profile.education.years} · CGPA {profile.education.cgpa}</p>
-      <p class="muted">{profile.education.note}</p>
+      <p>{profile.education.note}</p>
+      <p class="eyebrow sub">Certifications · Oracle</p>
+      <ul class="certs">
+        {certifications.map((c) => (
+          <li>
+            <span class="name">{c.name}</span>
+            <span class="mono meta">issued {c.issued} · valid to {c.validTo}</span>
+          </li>
+        ))}
+      </ul>
     </article>
     <article class="card fact">
       <p class="eyebrow">Experience</p>
@@ -73,18 +81,7 @@ import { hyphenSafe } from '../../lib/text';
     </ul>
   </section>
 
-  <section class="wrap section-block" aria-label="Certifications and stack">
-    <article class="card fact">
-      <p class="eyebrow">Certifications · official names from Oracle's catalog</p>
-      <ul class="certs">
-        {certifications.map((c) => (
-          <li>
-            <span class="name">{c.name}</span>
-            <span class="mono meta">issued {c.issued} · valid to {c.validTo}</span>
-          </li>
-        ))}
-      </ul>
-    </article>
+  <section class="wrap section-block" aria-label="Stack">
     <article id="stack" class="card fact">
       <p class="eyebrow">Stack, with the repository that proves each line</p>
       <dl class="stack">
@@ -98,7 +95,6 @@ import { hyphenSafe } from '../../lib/text';
     </article>
   </section>
 
-  <ContactBand />
 </BaseLayout>
 
 <style>
@@ -139,6 +135,12 @@ import { hyphenSafe } from '../../lib/text';
   .cols {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: stretch;
+  }
+  .fact .sub {
+    margin-top: 0.8rem;
+    padding-top: 0.9rem;
+    border-top: 1px dashed var(--line);
+    width: 100%;
   }
   .fact :global(.metric) {
     margin-top: 0.4rem;
@@ -227,12 +229,11 @@ import { hyphenSafe } from '../../lib/text';
   }
   .against a {
     font-weight: 600;
-    text-decoration-color: var(--accent);
-    text-underline-offset: 0.2em;
+    text-decoration: none;
   }
-  .against a::after {
-    content: ' →';
-    color: var(--accent);
+  .against a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
   }
   .against p {
     color: var(--muted);

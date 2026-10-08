@@ -38,15 +38,14 @@ export interface CaseTable {
   source: string;
 }
 
-/** A figure from the project's own repository, shown under the results with a link to the original. */
-export interface CaseFigure {
-  src: string;
-  width: number;
-  height: number;
-  alt: string;
-  caption: string;
-  source: string;
-}
+/**
+ * A figure from the project's own repository, shown under the results with a link to the
+ * original: a screen or a chart as an image, or a tool's output as text (readable at any size).
+ */
+export type CaseFigure = { caption: string; source: string } & (
+  | { src: string; width: number; height: number; alt: string }
+  | { code: string; label: string }
+);
 
 export interface CaseStudy {
   slug: string;
@@ -131,10 +130,9 @@ const climateRiskAgentCase: CaseStudy = {
       source: `${CRA}/blob/main/assets/ui-report.png`,
     },
     {
-      src: '/images/work/climate-risk-agent-refusal.webp',
-      width: 852,
-      height: 288,
-      alt: 'JSON from the answer_ipcc tool: an empty answer, no citations, abstain set to true, and the reason: the excerpts hold nothing specific to Rourkela or a 7-day heatwave forecast.',
+      // Transcribed from assets/mcp-inspector-abstain.png, the answer_ipcc result in the MCP Inspector.
+      label: 'answer_ipcc result',
+      code: '{\n  "answer": "",\n  "citations": [],\n  "abstain": true,\n  "abstain_reason": "The provided excerpts do not contain information specific to Rourkela or short-term forecasts (next 7 days) for heatwaves."\n}',
       caption: 'A refusal from the IPCC tool over MCP: no answer, no citations, and the reason why.',
       source: `${CRA}/blob/main/assets/mcp-inspector-abstain.png`,
     },
@@ -192,7 +190,7 @@ const climateRiskAgentCase: CaseStudy = {
       title: 'MCP servers without credentials',
       rows: [
         ['Failed', 'Servers launched by an MCP client started without credentials.'],
-        ['Changed', 'Fixed with load_dotenv(override=False).'],
+        ['Changed', 'Fixed with `load_dotenv(override=False)`.'],
       ],
     },
   ],
@@ -229,7 +227,7 @@ const iecCase: CaseStudy = {
     // abstention 0.578 (checked 2026-10-07). An abstention counts as a miss.
     table: {
       caption: 'Sealed held-out set, 90 incidents. An abstention counts as a miss.',
-      head: ['arm', 'ranked first (%)', 'in top three (%)', 'abstained (%)'],
+      head: ['arm', 'first (%)', 'top 3 (%)', 'abstained (%)'],
       rows: [
         ['Deterministic engine', 76.7, 87.8, 0],
         ['Gemini, names only', 15.6, 15.6, 57.8],
