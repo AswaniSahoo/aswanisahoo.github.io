@@ -9,6 +9,7 @@ import ledger from '../../data/prs.json';
 import { upstreamHeadline, mergedByOrg, ledgerId } from '../../data/upstream';
 import { docathon, meshSeries } from '../../data/projects';
 import { negativeResults } from '../../data/negative';
+import { hyphenSafe } from '../../lib/text';
 import type { PrLedger, PullRequest } from '../../data/types';
 
 const data = ledger as PrLedger;
@@ -91,7 +92,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
 
   <section id="ledger" class="wrap section-block" aria-labelledby="ledger-title">
     <h2 id="ledger-title">Every PR, by project</h2>
-    <p class="prose muted">Merged and closed PRs per project; open ones are listed after. Regenerated from the GitHub API on {data.verifiedAt}.</p>
+    <p class="prose muted">Merged and closed PRs per project; open ones are listed after. Open a project to see its PRs. Regenerated from the GitHub API on {data.verifiedAt}.</p>
     <div class="groups">
       {groups.map((g, i) => (
         <details id={ledgerId(g.project)} class="group" open={i === 0}>
@@ -132,7 +133,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     <ul class="open-list">
       {open.map((p) => (
         <li>
-          <span class="repo mono">{p.repo}</span>
+          <span class="repo mono">{hyphenSafe(p.repo).map((t) => (t.keep ? <span class="nb">{t.text}</span> : t.text))}</span>
           <a href={p.url} {...ext}><span class="mono">#{p.number}</span> {p.title}</a>
           <span class="opened mono">opened {p.date}</span>
         </li>
@@ -253,10 +254,8 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     grid-template-columns: minmax(0, 1fr);
     gap: 0.7rem;
     justify-items: start;
-    padding: 1rem 1.1rem;
-    border: 1px solid var(--line-strong);
-    border-top: 3px solid var(--warn);
-    background: var(--bg-2);
+    padding-top: 1.1rem;
+    border-top: 2px solid var(--warn);
   }
   .against h3 {
     font-size: var(--fs-body);
@@ -270,7 +269,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   }
   .arc li {
     display: grid;
-    grid-template-columns: 8rem minmax(0, 1fr);
+    grid-template-columns: 10rem minmax(0, 1fr);
     grid-template-areas: 'range when' 'range what';
     column-gap: 0.9rem;
     padding: 0.6rem 0 0.6rem 1rem;
@@ -289,6 +288,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     grid-area: range;
     font-size: var(--fs-small);
     color: var(--accent);
+    white-space: nowrap;
   }
   .when {
     grid-area: when;
@@ -314,6 +314,24 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     gap: 0.4rem 0.9rem;
     padding: 0.75rem 1rem;
     cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  /* A plus that turns into a minus, so each project reads as something to open. */
+  summary::before {
+    content: '+';
+    width: 1ch;
+    font-family: var(--font-mono);
+    color: var(--accent);
+  }
+  .group[open] > summary::before {
+    content: '−';
+  }
+  summary:hover .gname {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
   }
   .gname {
     font-size: var(--fs-text);
@@ -378,7 +396,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   }
   .open-list li {
     display: grid;
-    grid-template-columns: 16rem minmax(0, 1fr) auto;
+    grid-template-columns: 19rem minmax(0, 1fr) auto;
     gap: 0.3rem 1rem;
     align-items: baseline;
     padding-block: 0.6rem;

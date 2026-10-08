@@ -43,7 +43,7 @@
   --fs-text: 0.9375rem;
   --fs-body: 1.0625rem;
   --fs-lede: 1.2rem;
-  --fs-h3: 1.2rem;
+  --fs-h3: 1.3rem;
   --fs-h2: clamp(1.5rem, 2.8vw, 2.1rem);
   --fs-h1: clamp(2rem, 4vw, 2.8rem);
   --fs-display: clamp(2.4rem, 5.4vw, 3.6rem);
@@ -351,10 +351,15 @@ article[id] {
   max-width: 65ch;
 }
 
+/* A hyphenated name kept on one line (src/lib/text.ts). */
+.nb {
+  white-space: nowrap;
+}
+
 /* ------------------------------------------------------------------ */
 /* Flow diagrams: ink boxes on a chart panel, packets travelling the   */
-/* lines, outcomes in coloured boxes. Shared by ControlLoop and the    */
-/* comparison panel on the flagship reports.                           */
+/* lines, outcomes in coloured boxes. Used by the comparison panel on  */
+/* the flagship case studies.                                          */
 /* ------------------------------------------------------------------ */
 
 .flowsvg {

@@ -26,7 +26,10 @@ const { project: p } = Astro.props;
   <ul class="chips">
     {p.tags.map((t) => <li>{t}</li>)}
   </ul>
-  <span class="read mono" aria-hidden="true">Case study</span>
+  <p class="foot mono">
+    <span class="read" aria-hidden="true">Case study</span>
+    {p.live && <a class="live" href={p.live} target="_blank" rel="noopener noreferrer">Try it live</a>}
+  </p>
 </article>
 
 <style>
@@ -78,7 +81,7 @@ const { project: p } = Astro.props;
     transform-origin: left center;
   }
   .value {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1;
@@ -96,17 +99,35 @@ const { project: p } = Astro.props;
     position: relative;
     z-index: 1;
   }
-  .read {
-    justify-self: start;
+  .foot {
     align-self: end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.5rem;
     font-size: var(--fs-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+  .read {
     color: var(--text);
   }
   .read::after {
     content: ' →';
     color: var(--accent);
+  }
+  /* Above the card's own link, like the evidence link. */
+  .live {
+    position: relative;
+    z-index: 1;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .live::after {
+    content: ' ↗';
+  }
+  .live:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
   }
   .feature:hover .read {
     text-decoration: underline;

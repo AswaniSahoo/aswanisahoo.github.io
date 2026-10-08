@@ -5,12 +5,12 @@ import SheetBanner from '../../components/SheetBanner.astro';
 import MetricTile from '../../components/MetricTile.astro';
 import Receipt from '../../components/Receipt.astro';
 import { profile } from '../../data/profile';
+import ContactBand from '../../components/ContactBand.astro';
 import { certifications } from '../../data/certs';
-import { instruments, meshSeries } from '../../data/projects';
+import { principles, meshSeries } from '../../data/projects';
 import { negativeResults } from '../../data/negative';
 import { resumeHref } from '../../lib/resume';
-
-const ext = { target: '_blank', rel: 'noopener noreferrer' };
+import { hyphenSafe } from '../../lib/text';
 ---
 
 <BaseLayout
@@ -47,23 +47,15 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   <section id="how-i-work" class="wrap section-block" aria-labelledby="how-title">
     <div class="head">
       <h2 id="how-title">How I work</h2>
-      <p class="prose muted">Every public number links to its evidence: an eval report, a CI run, or the pull request itself. Numbers from private repos are marked private.</p>
     </div>
-    <div class="panels">
-      {instruments.map((panel, i) => (
-        <article class="card panel reveal" style={`--delay: ${i * 60}ms`}>
-          <p class="eyebrow">{panel.heading}</p>
-          <ul class="readouts">
-            {panel.items.map((it) => (
-              <li>
-                <p>{it.text}</p>
-                <Receipt source={it.source} />
-              </li>
-            ))}
-          </ul>
-        </article>
+    <ol class="principles">
+      {principles.map((pr, i) => (
+        <li class="reveal" style={`--delay: ${(i % 2) * 60}ms`}>
+          <p>{pr.text}</p>
+          <Receipt source={pr.source} label={pr.label} />
+        </li>
       ))}
-    </div>
+    </ol>
   </section>
 
   <section id="against-me" class="wrap section-block" aria-labelledby="against-title">
@@ -90,7 +82,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     </div>
   </section>
 
-  <section class="wrap cols section-block" aria-label="Certifications and stack">
+  <section class="wrap section-block" aria-label="Certifications and stack">
     <article class="card fact">
       <p class="eyebrow">Certifications · official names from Oracle's catalog</p>
       <ul class="certs">
@@ -108,29 +100,14 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
         {profile.stack.map((s) => (
           <div class="row">
             <dt>{s.tool}</dt>
-            <dd class="mono">{s.proof}</dd>
+            <dd>{hyphenSafe(s.proof).map((t) => (t.keep ? <span class="nb">{t.text}</span> : t.text))}</dd>
           </div>
         ))}
       </dl>
     </article>
   </section>
 
-  <section id="contact" class="wrap section-block last" aria-labelledby="contact-title">
-    <div class="contact card boxed">
-      <div>
-        <p class="eyebrow"><b>Contact</b> / {profile.location}</p>
-        <h2 id="contact-title">Write to me</h2>
-      </div>
-      <div class="ways">
-        <a class="mail mono" href={`mailto:${profile.email}`}>{profile.email}</a>
-        <p class="links mono">
-          <a href={profile.links.github} {...ext}>GitHub</a>
-          <a href={profile.links.linkedin} {...ext}>LinkedIn</a>
-          <a href={profile.links.x} {...ext}>X</a>
-        </p>
-      </div>
-    </div>
-  </section>
+  <ContactBand />
 </BaseLayout>
 
 <style>
@@ -203,32 +180,45 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   .refs a:hover {
     text-decoration-color: var(--accent);
   }
-  .panels,
   .results {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1.25rem;
     align-items: start;
   }
-  .panel {
-    display: grid;
-    gap: 0.8rem;
-    align-content: start;
-  }
-  .readouts {
+  /* Four lines, two by two, each with its proof under it. */
+  .principles {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 0.9rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 2.5rem;
+    counter-reset: principle;
   }
-  .readouts li {
+  .principles li {
     display: grid;
-    gap: 0.3rem;
-    justify-items: start;
-    padding-left: 0.9rem;
-    border-left: 2px solid var(--accent);
-    font-size: var(--fs-text);
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.35rem 0;
+    align-content: start;
+    padding-block: 1.1rem;
+    border-top: 1px solid var(--line);
+    counter-increment: principle;
+  }
+  .principles li::before {
+    content: counter(principle, decimal-leading-zero);
+    grid-row: 1 / 3;
+    font-family: var(--font-mono);
+    font-size: var(--fs-label);
+    color: var(--accent);
+    padding-top: 0.3rem;
+  }
+  .principles p {
+    font-size: var(--fs-body);
+    max-width: 52ch;
+  }
+  .principles :global(.receipt) {
+    justify-self: start;
   }
   .result {
     display: grid;
@@ -316,55 +306,12 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   .stack dd {
     margin: 0;
     color: var(--muted);
-    font-size: var(--fs-label);
-  }
-  .contact {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    gap: 1.5rem 2.5rem;
-    align-items: end;
-  }
-  .contact:hover {
-    transform: none;
-  }
-  .contact h2 {
-    margin-top: 0.5rem;
-  }
-  .ways {
-    display: grid;
-    gap: 0.9rem;
-    justify-items: start;
-  }
-  .mail {
-    font-size: clamp(0.95rem, 2.2vw, 1.3rem);
-    font-weight: 500;
-    text-decoration-color: var(--accent);
-    overflow-wrap: anywhere;
-  }
-  .links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 1.4rem;
     font-size: var(--fs-small);
-  }
-  .links a {
-    text-decoration: none;
-  }
-  .links a::before {
-    content: '↗ ';
-    color: var(--accent);
-  }
-  .links a.internal::before {
-    content: '↓ ';
-  }
-  .links a:hover {
-    text-decoration: underline;
   }
   @media (max-width: 960px) {
     .cols,
-    .panels,
     .results,
-    .contact {
+    .principles {
       grid-template-columns: minmax(0, 1fr);
     }
   }

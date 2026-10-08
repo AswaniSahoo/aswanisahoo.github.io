@@ -101,9 +101,8 @@ const n = stations.length;
   .tags span {
     white-space: nowrap;
   }
-  .tags span + span::before {
-    content: '· ';
-    margin-right: 0.15rem;
+  .tags span:not(:last-child)::after {
+    content: ' ·';
   }
   @media (max-width: 860px) {
     .row {

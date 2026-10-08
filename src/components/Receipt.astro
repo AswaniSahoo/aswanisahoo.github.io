@@ -1,8 +1,8 @@
 ---
 /**
  * The trust mechanic of the site: every number links to its evidence, written as a receipt,
- * "↗ eval report", "↗ CI run", "↗ PR #239". Fast-moving numbers add the month they were read.
- * A private source is named as such and not linked.
+ * "↗ eval report", "↗ CI run", "↗ PR #239", in the accent colour like every link to evidence.
+ * Fast-moving numbers add the month they were read. A private source is named, not linked.
  */
 import { evidenceLabel, monthYear } from '../lib/evidence';
 
@@ -38,7 +38,7 @@ const when = fast && verifiedAt ? monthYear(verifiedAt) : undefined;
     font-size: var(--fs-label);
     letter-spacing: 0.02em;
     line-height: 1.5;
-    color: var(--muted);
+    color: var(--accent);
     text-decoration: none;
     /* The underline sweeps in on hover. */
     background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
@@ -49,10 +49,11 @@ const when = fast && verifiedAt ? monthYear(verifiedAt) : undefined;
   }
   a.receipt:hover,
   a.receipt:focus-visible {
-    color: var(--text);
     background-size: 100% 1px;
   }
+  /* Named, not linked: plain muted text. */
   .private {
+    color: var(--muted);
     background: none;
   }
 </style>

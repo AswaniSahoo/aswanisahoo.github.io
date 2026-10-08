@@ -6,8 +6,8 @@ export const reportHref = (slug: string): string => `/work/${slug}/`;
 
 /**
  * The four flagships, shown first on the home page and the Projects page. Each card says what
- * the thing does in one plain sentence and carries one result. The figures come from the
- * station data, so a number changes in one place; only the label is reworded for a newcomer.
+ * the thing does in one plain sentence and carries one result. The figures and the eyebrow come
+ * from the station data, so they change in one place; only the label is reworded for a newcomer.
  */
 export interface Featured {
   slug: string;
@@ -17,6 +17,8 @@ export interface Featured {
   metric: Metric;
   tags: string[];
   isPrivate?: boolean;
+  /** A public demo, linked from the card beside the case study. */
+  live?: string;
 }
 
 const station = (slug: string): Station => {
@@ -24,48 +26,41 @@ const station = (slug: string): Station => {
   if (!s) throw new Error(`work.ts: no station ${slug}`);
   return s;
 };
-/** A station figure under a plainer label. `value` may restate it in another unit, never change it. */
-const figure = (slug: string, startsWith: string, label: string, value?: string): Metric => {
+/** A station figure under a plainer label. */
+const figure = (slug: string, startsWith: string, label: string): Metric => {
   const m = station(slug).metrics.find((x) => x.label.startsWith(startsWith));
   if (!m) throw new Error(`work.ts: no metric "${startsWith}" on ${slug}`);
-  return { ...m, label, value: value ?? m.value, note: undefined };
+  return { ...m, label, note: undefined };
 };
+const card = (slug: string, rest: Omit<Featured, 'slug' | 'eyebrow'>): Featured => ({ slug, eyebrow: station(slug).domain, ...rest });
 
 export const featured: Featured[] = [
-  {
-    slug: 'climate-risk-agent',
+  card('climate-risk-agent', {
     name: 'Climate-Risk Agent',
-    eyebrow: 'AI agent · climate risk',
     outcome: 'Answers climate-risk questions for any place with cited reports, and refuses when it cannot check the answer.',
-    metric: figure('climate-risk-agent', 'citation validity', 'of citations valid against their source page, held-out set'),
+    metric: figure('climate-risk-agent', 'false answers', 'held-out questions answered falsely. It refused all 35 it should have, and 21 it could have answered.'),
     tags: ['LangGraph', 'MCP', 'Gemini', 'FastAPI'],
-  },
-  {
-    slug: 'incident-evidence-compiler',
+    live: station('climate-risk-agent').links.find((l) => l.label === 'live app')?.url,
+  }),
+  card('incident-evidence-compiler', {
     name: 'Incident Evidence Compiler',
-    eyebrow: 'AI systems · incident response',
     outcome: 'Finds the root cause of an outage. The LLM only proposes, deterministic checks decide, and "unknown" is a valid answer.',
-    // 0.767 in the evaluation file, as a percentage.
-    metric: figure('incident-evidence-compiler', 'held-out top-1', 'root cause ranked first, on 90 sealed held-out incidents', '76.7%'),
+    metric: figure('incident-evidence-compiler', 'held-out top-1', 'root cause ranked first by the deterministic engine, on 90 sealed held-out incidents'),
     tags: ['FastAPI', 'PostgreSQL', 'Prometheus', 'Gemini'],
-  },
-  {
-    slug: 'vera-bot',
+  }),
+  card('vera-bot', {
     name: 'vera-bot',
-    eyebrow: 'LLM product · messaging',
     outcome: 'Merchant-messaging engine for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts.',
-    metric: figure('vera-bot', 'judge-replica', "rank agreement with the organiser's judge (Spearman, 15 cases)"),
+    metric: figure('vera-bot', 'judge-replica', "agreement between its local copy of the organiser's LLM judge and the official scores (Spearman, 15 cases)"),
     tags: ['FastAPI', 'Vertex AI', 'Cloud Run', 'mypy'],
     isPrivate: true,
-  },
-  {
-    slug: 'fairness-credit-risk',
+  }),
+  card('fairness-credit-risk', {
     name: 'fairness-credit-risk',
-    eyebrow: 'Responsible AI · credit risk',
-    outcome: 'Fairness interventions tested on identical seeded splits. None improved disparate impact, and I published the null result.',
-    metric: figure('fairness-credit-risk', 'German Credit', 'baseline disparate impact (the four-fifths rule asks for 0.8); no intervention improved it'),
+    outcome: 'Credit scoring with standard fairness fixes, each tested against a tuned baseline on identical seeded splits. The result was a null, and I published it.',
+    metric: figure('fairness-credit-risk', 'fairness treatments', 'treatments that beat the tuned baseline beyond noise: reweighing, ExponentiatedGradient, group thresholds, a tabular foundation model'),
     tags: ['AIF360', 'Fairlearn', 'FastAPI', 'Docker'],
-  },
+  }),
 ];
 
 /** Every other project, listed compactly after the flagships. */

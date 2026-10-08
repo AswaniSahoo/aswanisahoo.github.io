@@ -12,7 +12,13 @@ import { now } from '../data/now';
           {l.rows.map((parts) => (
             <p>
               {parts.map((p) =>
-                typeof p === 'string' ? p : <a class="mono" href={p.url} target="_blank" rel="noopener noreferrer">{p.label}</a>,
+                typeof p === 'string' ? (
+                  p
+                ) : p.url.startsWith('/') ? (
+                  <a class="internal" href={p.url}>{p.label}</a>
+                ) : (
+                  <a class="mono" href={p.url} target="_blank" rel="noopener noreferrer">{p.label}</a>
+                ),
               )}
             </p>
           ))}
@@ -60,6 +66,16 @@ import { now } from '../data/now';
     font-size: 0.86em;
     color: var(--accent);
     text-decoration-color: transparent;
+    white-space: nowrap;
+  }
+  dd a.internal {
+    font-size: 1em;
+    color: var(--text);
+    text-decoration-color: var(--accent);
+  }
+  dd a.internal::after {
+    content: ' →';
+    color: var(--accent);
   }
   dd a:hover {
     text-decoration-color: var(--accent);

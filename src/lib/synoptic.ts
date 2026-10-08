@@ -405,7 +405,6 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
       c.arc(cx + R * bx, cy - R * by, 3.2, 0, TAU);
       c.fillStyle = C.red;
       c.fill();
-      halo(c, `${home[1].toFixed(1)}N ${home[0].toFixed(1)}E`, cx + R * bx, cy - R * by + 12, `9px ${mono}`, C.red);
     }
     halo(c, 'locator', cx, cy + R + 18, `9px ${mono}`, C.muted);
     c.restore();
@@ -441,7 +440,11 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
     c.font = `9px ${mono}`;
     c.textBaseline = 'alphabetic';
     c.textAlign = 'center';
-    for (let lon = lonA; lon <= lonB; lon += 10) c.fillText(`${lon}E`, projX(lon), H - 6);
+    // A label that would be cut by the chart's edge is left out.
+    for (let lon = lonA; lon <= lonB; lon += 10) {
+      const x = projX(lon);
+      if (x > 18 && x < W - 18) c.fillText(`${lon}E`, x, H - 6);
+    }
     c.textAlign = 'left';
     for (let lat = 10; lat < 30; lat += 10) c.fillText(`${lat}N`, 6, projY(lat) - 4);
 
@@ -561,6 +564,9 @@ export function createSynoptic(opts: SynopticOptions): Synoptic {
       if (!inDomain(slon, slat)) continue;
       const sx = projX(slon);
       const sy = projY(slat);
+      // No plot half under the legend card, where only a stray figure would show.
+      const ko = keepOut;
+      if (ko && sx > ko.x - 36 && sx < ko.x + ko.w + 36 && sy > ko.y - 24 && sy < ko.y + ko.h + 24) continue;
       const [u, v] = wind(slon, slat, tt);
       const spd = Math.hypot(u, v) / 0.05;
       const fx = -u;

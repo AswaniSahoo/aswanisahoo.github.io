@@ -10,12 +10,12 @@ import SheetBanner from '../../components/SheetBanner.astro';
 import MetricTile from '../../components/MetricTile.astro';
 import Receipt from '../../components/Receipt.astro';
 import CraFlow from '../../components/CraFlow.astro';
-import ControlLoop from '../../components/ControlLoop.astro';
 import Compare from '../../components/Compare.astro';
 import { comparisons } from '../../data/compare';
 import { cases } from '../../data/cases';
 import { stations } from '../../data/projects';
 import { posts, postHref } from '../../lib/writing';
+import { hyphenSafe } from '../../lib/text';
 
 export const getStaticPaths = (() => cases.map((c) => ({ params: { slug: c.slug }, props: { c } }))) satisfies GetStaticPaths;
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
@@ -23,7 +23,7 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const { c } = Astro.props as Props;
 const isPrivate = c.station.isPrivate === true;
 const position = stations.findIndex((s) => s.slug === c.slug) + 1;
-const diagrams = { 'cra-flow': CraFlow, 'control-loop': ControlLoop };
+const diagrams = { 'cra-flow': CraFlow };
 const Diagram = c.how?.diagram ? diagrams[c.how.diagram] : undefined;
 const pill = c.status.kind === 'live' ? 'merged' : c.status.kind === 'private' ? 'closed' : 'open';
 const ext = { target: '_blank', rel: 'noopener noreferrer' };
@@ -70,7 +70,12 @@ const next = cases[position];
 
   {c.metrics.length > 0 && (
     <section class="wrap readings" aria-label="Headline measurements">
-      {c.metrics.slice(0, 5).map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
+      <MetricTile metric={c.metrics[0]} size="lg" isPrivate={isPrivate} />
+      {c.metrics.length > 1 && (
+        <div class="rest">
+          {c.metrics.slice(1, 5).map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
+        </div>
+      )}
     </section>
   )}
 
@@ -204,7 +209,7 @@ const next = cases[position];
             {c.stack.proofs.map((p) => (
               <div class="row">
                 <dt>{p.tool}</dt>
-                <dd class="mono">{p.proof}</dd>
+                <dd>{hyphenSafe(p.proof).map((t) => (t.keep ? <span class="nb">{t.text}</span> : t.text))}</dd>
               </div>
             ))}
           </dl>
@@ -265,15 +270,25 @@ const next = cases[position];
     font-size: var(--fs-label);
     color: var(--muted);
   }
+  /* One lead result, then the supporting figures in a row under it. */
   .readings {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.25rem 1.5rem;
+    gap: 1.25rem;
     margin-top: clamp(2rem, 4vw, 3rem);
     padding-block: 1.5rem;
     border-block: 1px solid var(--line-strong);
   }
-  .readings :global(.metric--md .metric-value) {
+  .readings > :global(.metric) {
+    max-width: 60ch;
+  }
+  .rest {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px dashed var(--line);
+  }
+  .rest :global(.metric--md .metric-value) {
     font-size: 1.3rem;
     overflow-wrap: anywhere;
   }
@@ -342,6 +357,10 @@ const next = cases[position];
   }
   .note h3 {
     font-size: var(--fs-body);
+  }
+  /* An odd last note takes the full row instead of leaving a hole beside it. */
+  .note:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
   .note-metrics,
   .eval-metrics {
@@ -446,7 +465,7 @@ const next = cases[position];
   .change dl {
     margin: 0;
     display: grid;
-    grid-template-columns: 8rem minmax(0, 1fr);
+    grid-template-columns: 9.5rem minmax(0, 1fr);
     gap: 0.4rem 1rem;
     font-size: var(--fs-text);
   }
@@ -480,7 +499,7 @@ const next = cases[position];
   .proofs dd {
     margin: 0;
     color: var(--muted);
-    font-size: var(--fs-label);
+    font-size: var(--fs-small);
   }
   .cmd {
     max-width: 100%;

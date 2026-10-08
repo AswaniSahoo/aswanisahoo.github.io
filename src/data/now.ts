@@ -22,13 +22,14 @@ export const now: { checkedAt: string; lines: NowLine[] } = {
       rows: [
         ['Merged 2026-09-29: ', { label: 'krkn-ai #481', url: pr('krkn-chaos/krkn-ai', 481) }, '.'],
         [
-          'Open: ',
+          'Open, newest first: ',
           { label: 'solar-consumer #256', url: pr('openclimatefix/solar-consumer', 256) },
           ' (awaiting first review), ',
           { label: 'krkn-ai #389', url: pr('krkn-chaos/krkn-ai', 389) },
-          ' and ',
+          ', ',
           { label: 'malariagen-data-python #1310', url: pr('malariagen/malariagen-data-python', 1310) },
-          '.',
+          '. ',
+          { label: 'All open PRs', url: '/open-source/#open' },
         ],
       ],
     },

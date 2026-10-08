@@ -55,7 +55,7 @@ export interface CaseStudy {
   /** At most five, stamped, under the banner. */
   metrics: Metric[];
   problem?: string[];
-  how?: { diagram?: 'cra-flow' | 'control-loop'; lead?: string; notes?: CaseNote[] };
+  how?: { diagram?: 'cra-flow'; lead?: string; notes?: CaseNote[] };
   evaluation?: { text?: string[]; metrics?: Metric[]; readouts?: Readout[]; table?: CaseTable; artifacts?: Link[] };
   changes?: CaseBlock[];
   stack: { chips: string[]; proofs: { tool: string; proof: string }[] };
@@ -130,7 +130,7 @@ const climateRiskAgentCase: CaseStudy = {
         metrics: [metric(hazardStats.metrics, 'Berlin'), metric(hazardStats.metrics, 'Delhi')],
       },
       { title: 'Two MCP servers', text: need(climateRiskAgent.bullets[1], 'CRA MCP bullet') },
-      { title: 'Operations', text: readout('Climate-Risk Agent records').text, readout: readout('Climate-Risk Agent records') },
+      { title: 'Operations', text: readout('Records per-request').text, readout: readout('Records per-request') },
     ],
   },
   evaluation: {
@@ -170,7 +170,7 @@ const climateRiskAgentCase: CaseStudy = {
       ],
     },
   ],
-  stack: { chips: climateRiskAgent.stack, proofs: proofs(/climate-risk-agent/i) },
+  stack: { chips: climateRiskAgent.stack, proofs: proofs(/Climate-Risk Agent/) },
   links: [repoLink(CRA), ...(climateRiskAgent.links ?? [])],
   command: climateRiskAgent.command,
   relatedSeries: 'Building an evaluated climate-risk agent in public',
@@ -190,17 +190,15 @@ const iecCase: CaseStudy = {
   status: { label: iecStation.status.label, kind: iecStation.status.kind, detail: iec.role },
   metrics: iec.metrics,
   how: {
-    diagram: 'control-loop',
     lead: iec.summary,
     notes: [
-      { title: 'Telemetry', text: readout('Incident Evidence Compiler reads').text, readout: readout('Incident Evidence Compiler reads') },
-      { title: 'Hostile input', text: readout('Incident Evidence Compiler: 3,000').text, readout: readout('Incident Evidence Compiler: 3,000') },
+      { title: 'Telemetry', text: readout('Reads a real Prometheus').text, readout: readout('Reads a real Prometheus') },
+      { title: 'Hostile input', text: readout('3,000 generated').text, readout: readout('3,000 generated') },
       { title: 'Architecture', text: need(iec.bullets[2], 'IEC architecture bullet') },
     ],
   },
   evaluation: {
-    text: [need(iec.bullets[0], 'IEC evaluation bullet')],
-    readouts: [readout('Incident Evidence Compiler: the held-out split')],
+    text: [need(iec.bullets[0], 'IEC evaluation bullet'), need(iec.bullets[3], 'IEC Gemini arm bullet')],
     artifacts: iec.links ?? [],
   },
   changes: [negative('The held-out number is lower, on purpose')],

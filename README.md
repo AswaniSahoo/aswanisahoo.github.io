@@ -22,7 +22,7 @@ src/
   layouts/     Base.astro: head, theme, view transitions (ClientRouter), reveal and scroll-progress scripts
                BaseLayout.astro: Base plus header, footer strip, per-page meta
   components/  one component per section; Receipt and MetricTile render evidence links,
-               Compare and ControlLoop draw the comparison panels
+               Compare draws the comparison panel, CraFlow the climate agent's flow
   content/     writing/*.md, one file per post (schema in src/content.config.ts)
   data/        audited content: profile, projects, cases, compare, negative results, certifications,
                prs.json, now.ts (the Now block), upstream.ts (the frozen upstream headline),

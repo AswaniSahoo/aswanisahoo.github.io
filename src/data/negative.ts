@@ -17,15 +17,15 @@ export const negativeResults: NegativeResult[] = [
     claimTested: 'That standard bias-mitigation methods reduce disparate impact in credit scoring.',
     whatHappened:
       'On German Credit the baseline disparate impact was 0.7263 and every confidence interval spanned the 0.8 four-fifths line; the 200-row test block, with 62 women, was underpowered. On the Taiwan set the baseline was already 0.9767; reweighing and ExponentiatedGradient moved it by under 0.004, and group-specific thresholds made it worse. The README says it in four words.',
-    number: { label: 'German Credit baseline disparate impact', value: '0.7263', note: 'all CIs span 0.8', verifiedAt: '2026-08-11', source: `${GH}/fairness-credit-risk` },
+    number: { label: 'fairness treatments that beat the tuned baseline beyond noise', value: '0 of 4', note: 'reweighing, ExponentiatedGradient, group thresholds, a tabular foundation model', verifiedAt: '2026-10-07', source: `${GH}/fairness-credit-risk#readme`, evidence: 'README' },
     whyItMatters: 'Many published fairness improvements rest on samples too small to support them. Reporting the null result is the finding.',
   },
   {
     title: 'The held-out number is lower, on purpose',
     claimTested: 'That Incident Evidence Compiler\'s dev-split accuracy would hold on a sealed split.',
     whatHappened:
-      'Dev split RE2-OB: top-1 0.932. Sealed split RE2-TT, opened once against a frozen commit: top-1 0.767. Both are published side by side, with the protocol.',
-    number: { label: 'dev to held-out top-1', value: '0.932 → 0.767', verifiedAt: '2026-08-18', source: `${GH}/Incident-evidence-compiler` },
+      'Dev split RE2-OB: top-1 93.2%. Sealed split RE2-TT, opened once against a frozen commit: top-1 76.7%. Both are published side by side, with the protocol.',
+    number: { label: 'dev to held-out top-1', value: '93.2% → 76.7%', verifiedAt: '2026-08-18', source: `${GH}/Incident-evidence-compiler` },
     whyItMatters: 'Publishing the drop is what makes either number believable.',
   },
 ];
