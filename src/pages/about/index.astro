@@ -67,17 +67,10 @@ import { hyphenSafe } from '../../lib/text';
   </section>
 
   <section id="against-me" class="wrap section-block" aria-labelledby="against-title">
-    <div class="head">
-      <h2 id="against-title">Results that went against me</h2>
-      <p class="prose muted">Three findings I published even though each one made my own work look worse. Each is told in full on its project page.</p>
-    </div>
+    <h2 id="against-title">Results that went against me</h2>
+    <p class="prose muted">I publish them with the wins. Each is told on its project page.</p>
     <ul class="against">
-      {negativeResults.map((r) => (
-        <li>
-          <a href={r.where}>{r.title}</a>
-          <p>{r.whyItMatters}</p>
-        </li>
-      ))}
+      {negativeResults.map((r) => <li><a href={r.where}>{r.title}</a></li>)}
     </ul>
   </section>
 
@@ -224,10 +217,7 @@ import { hyphenSafe } from '../../lib/text';
     border-bottom: 0;
   }
   .against li {
-    display: grid;
-    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
-    gap: 0.3rem 2rem;
-    padding-block: 1rem;
+    padding-block: 0.6rem;
     border-bottom: 1px solid var(--line);
   }
   .against a {
@@ -237,11 +227,6 @@ import { hyphenSafe } from '../../lib/text';
   .against a:hover {
     text-decoration: underline;
     text-decoration-color: var(--accent);
-  }
-  .against p {
-    color: var(--muted);
-    font-size: var(--fs-text);
-    max-width: 62ch;
   }
   .certs {
     list-style: none;
@@ -281,8 +266,7 @@ import { hyphenSafe } from '../../lib/text';
   }
   @media (max-width: 960px) {
     .cols,
-    .principles,
-    .against li {
+    .principles {
       grid-template-columns: minmax(0, 1fr);
     }
   }

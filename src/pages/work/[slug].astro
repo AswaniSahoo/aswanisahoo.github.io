@@ -36,13 +36,13 @@ const pill = c.status.kind === 'live' ? 'merged' : c.status.kind === 'private' ?
 const ext = { target: '_blank', rel: 'noopener noreferrer' };
 const related = c.relatedSeries ? (await posts()).filter((p) => p.data.series === c.relatedSeries) : [];
 const table = c.evaluation?.table;
-const comparison = comparisons[c.slug];
+const comparison = c.how?.diagram ? undefined : comparisons[c.slug];
 const barMax = table && table.barColumn !== undefined ? (table.barMax ?? Math.max(...table.rows.map((r) => Number(r[table.barColumn!])))) : 0;
 
 const present = {
   problem: Boolean(c.problem?.length),
-  how: Boolean(c.how),
   evaluation: Boolean(evaluation),
+  how: Boolean(c.how),
   changes: Boolean(c.changes?.length),
   stack: true,
   links: true,
@@ -50,8 +50,8 @@ const present = {
 };
 const titles: Record<keyof typeof present, string> = {
   problem: 'Problem',
-  how: 'How it works',
   evaluation: 'Evaluation',
+  how: 'How it works',
   changes: 'What failed and what changed',
   stack: 'Stack',
   links: 'Links',
@@ -124,30 +124,6 @@ const next = cases[position];
         </section>
       )}
 
-      {c.how && (
-        <section id="how" class="block">
-          <h2>How it works</h2>
-          {c.how.lead && <p class="prose">{c.how.lead}</p>}
-          {Diagram && <Diagram />}
-          {c.how.notes && c.how.notes.length > 0 && (
-            <div class="notes">
-              {c.how.notes.map((n) => (
-                <article class="note">
-                  <h3>{n.title}</h3>
-                  <p>{n.text}</p>
-                  {n.metrics && (
-                    <div class="note-metrics">
-                      {n.metrics.map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
-                    </div>
-                  )}
-                  {n.readout && <Receipt source={n.readout.source} isPrivate={isPrivate} />}
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
       {evaluation && (
         <section id="evaluation" class="block">
           <h2>Evaluation</h2>
@@ -194,6 +170,30 @@ const next = cases[position];
             <p class="refs mono">
               {evaluation.artifacts.map((a) => <a href={a.url} {...ext}>{a.label}</a>)}
             </p>
+          )}
+        </section>
+      )}
+
+      {c.how && (
+        <section id="how" class="block">
+          <h2>How it works</h2>
+          {c.how.lead && <p class="prose">{c.how.lead}</p>}
+          {Diagram && <Diagram />}
+          {c.how.notes && c.how.notes.length > 0 && (
+            <div class="notes">
+              {c.how.notes.map((n) => (
+                <article class="note">
+                  <h3>{n.title}</h3>
+                  <p>{n.text}</p>
+                  {n.metrics && (
+                    <div class="note-metrics">
+                      {n.metrics.map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
+                    </div>
+                  )}
+                  {n.readout && <Receipt source={n.readout.source} isPrivate={isPrivate} />}
+                </article>
+              ))}
+            </div>
           )}
         </section>
       )}
@@ -376,10 +376,16 @@ const next = cases[position];
     gap: 1rem;
     width: 100%;
   }
-  /* Two to a row in the text column, so no figure sits alone on a row of three. */
+  /* Two to a row, each spanning the same three rows (value, label, evidence), so the evidence
+     links sit level across a row. */
   .eval-metrics {
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: 1.25rem 1.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.3rem 1.5rem;
+  }
+  .eval-metrics > :global(.metric) {
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    margin-bottom: 1rem;
   }
   /* A note is half the column: its figures stack rather than squeeze a value onto two lines. */
   .note-metrics {
@@ -639,6 +645,9 @@ const next = cases[position];
   @media (max-width: 760px) {
     .block {
       padding-block: 2rem;
+    }
+    .eval-metrics {
+      grid-template-columns: minmax(0, 1fr);
     }
     .change dl,
     .related li {

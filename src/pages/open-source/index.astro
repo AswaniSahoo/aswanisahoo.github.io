@@ -59,7 +59,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
 
   <section id="graph-weather" class="wrap section-block" aria-labelledby="story-title">
     <article class="card boxed story">
-      <p class="eyebrow"><b>Featured</b> · Open Climate Fix · graph_weather</p>
+      <p class="eyebrow"><b>Featured</b> <span class="nb">· Open Climate Fix</span> <span class="nb">· graph_weather</span></p>
       <h2 id="story-title">The decoder was forecasting persistence</h2>
       <p class="prose">{meshSeries.summary}</p>
       <div class="finding">
@@ -74,16 +74,6 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
           <a href={meshSeries.issue} {...ext}>issue #3, the coordination thread</a>
         </p>
       </div>
-      <p class="eyebrow arc-head">The PRs, in order</p>
-      <ol class="arc">
-        {meshSeries.arc.map((a) => (
-          <li>
-            <span class="range mono">{a.range}</span>
-            <span class="when mono">{a.when}</span>
-            <span class="what">{a.what}</span>
-          </li>
-        ))}
-      </ol>
       <div class="against">
         <p class="eyebrow"><b>Follow-up</b> · issue #238</p>
         <h3>{ablation.title}</h3>
@@ -287,48 +277,6 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   .account p {
     margin-top: 0.6rem;
   }
-  .arc-head {
-    margin-bottom: -0.4rem;
-  }
-  .arc {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    border-left: 1px solid var(--line-strong);
-  }
-  .arc li {
-    display: grid;
-    grid-template-columns: 10rem minmax(0, 1fr);
-    grid-template-areas: 'range when' 'range what';
-    column-gap: 0.9rem;
-    padding: 0.6rem 0 0.6rem 1rem;
-    position: relative;
-  }
-  .arc li::before {
-    content: '';
-    position: absolute;
-    left: -4px;
-    top: 0.95rem;
-    width: 7px;
-    height: 7px;
-    background: var(--accent);
-  }
-  .range {
-    grid-area: range;
-    font-size: var(--fs-small);
-    color: var(--text);
-    white-space: nowrap;
-  }
-  .when {
-    grid-area: when;
-    font-size: var(--fs-label);
-    color: var(--muted);
-  }
-  .what {
-    grid-area: what;
-    font-size: var(--fs-text);
-  }
   .groups {
     display: grid;
     gap: 0.6rem;
@@ -476,15 +424,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     .date {
       display: none;
     }
-    .arc li {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-areas: 'range' 'when' 'what';
-    }
-    .gcounts {
-      margin-left: 0;
-    }
-  }
-</style>
+  </style>
 
 <script>
   // A link to one org's group (#ledger-...) opens that group, from this sheet or from another.

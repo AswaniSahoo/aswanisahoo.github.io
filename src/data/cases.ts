@@ -126,10 +126,10 @@ const climateRiskAgentCase: CaseStudy = {
     {
       src: '/images/work/climate-risk-agent-report.webp',
       width: 1410,
-      height: 713,
+      height: 466,
       size: 'wide',
-      alt: 'A report from the live app: LOW extreme rainfall risk in Mumbai over 7 days, with the reasoning, confidence 36%, the risk drivers, and five IPCC AR6 citations, each to a page.',
-      caption: 'An answer from the live app: Mumbai, extreme rainfall, 7 days. Each IPCC citation is checked against its page.',
+      alt: 'Part of a report from the live app for extreme rainfall in Mumbai over 7 days: confidence 36%, a 7-day horizon, four risk drivers with their numbers, and five IPCC AR6 citations, each to a page.',
+      caption: 'An answer from the live app: extreme rainfall in Mumbai over 7 days, rated low. Each IPCC citation is checked against its page.',
       source: `${CRA}/blob/main/assets/ui-report-details.png`,
     },
     {

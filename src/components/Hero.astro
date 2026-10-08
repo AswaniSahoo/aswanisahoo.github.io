@@ -16,7 +16,7 @@ const citations = climateRiskAgent.metrics.find((m) => m.label.startsWith('citat
 if (!inGraphWeather || !citations) throw new Error('Hero: a headline figure is missing from the data');
 const stats: Metric[] = [
   {
-    label: `merged open-source PRs, ${inGraphWeather} in graph_weather`,
+    label: `merged PRs in open source, ${inGraphWeather} in graph_weather`,
     value: String(upstreamHeadline.merged),
     verifiedAt: upstreamHeadline.verifiedAt,
     source: '/open-source/#ledger',

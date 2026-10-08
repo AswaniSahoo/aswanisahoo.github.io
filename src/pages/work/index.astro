@@ -29,7 +29,7 @@ const n = stations.length;
     <ul class="list">
       {others.map((s, i) => (
         <li class="row reveal" style={`--delay: ${(i % 3) * 40}ms`}>
-          <a class="name" href={reportHref(s.slug)}>{s.name}</a>
+          <a class="name" href={reportHref(s.slug)}><span>{s.name}</span></a>
           <div class="text">
             <p class="what">{s.summary}</p>
             {listFigure[s.slug] && (
@@ -77,6 +77,10 @@ const n = stations.length;
     font-weight: 600;
     text-decoration: none;
     overflow-wrap: anywhere;
+  }
+  .name span::after {
+    content: ' →';
+    color: var(--accent);
   }
   .name::after {
     content: '';

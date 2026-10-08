@@ -26,11 +26,11 @@ const station = (slug: string): Station => {
   if (!s) throw new Error(`work.ts: no station ${slug}`);
   return s;
 };
-/** A station figure under a plainer label. */
-const figure = (slug: string, startsWith: string, label: string): Metric => {
+/** A station figure under a plainer label. `value` may restate the same finding from its other side. */
+const figure = (slug: string, startsWith: string, label: string, value?: string): Metric => {
   const m = station(slug).metrics.find((x) => x.label.startsWith(startsWith));
   if (!m) throw new Error(`work.ts: no metric "${startsWith}" on ${slug}`);
-  return { ...m, label, note: undefined };
+  return { ...m, label, value: value ?? m.value, note: undefined };
 };
 const card = (slug: string, rest: Omit<Featured, 'slug' | 'eyebrow'>): Featured => ({ slug, eyebrow: station(slug).domain, ...rest });
 
@@ -45,20 +45,21 @@ export const featured: Featured[] = [
   card('incident-evidence-compiler', {
     name: 'Incident Evidence Compiler',
     outcome: 'Finds the root cause of an outage. The LLM only proposes, deterministic checks decide, and “unknown” is a valid answer.',
-    metric: figure('incident-evidence-compiler', 'held-out top-1', 'root cause ranked first on 90 unseen incidents'),
+    metric: figure('incident-evidence-compiler', 'held-out top-1', 'root cause ranked first on 90 unseen incidents, by the deterministic engine'),
     tags: ['FastAPI', 'PostgreSQL', 'Prometheus'],
   }),
   card('vera-bot', {
     name: 'vera-bot',
     outcome: 'Merchant-messaging engine for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts.',
-    metric: figure('vera-bot', 'judge-replica', "its offline judge against the contest's official scores, 15 cases"),
+    metric: figure('vera-bot', 'judge-replica', "correlation of its offline judge with the contest's official scores, 15 cases"),
     tags: ['FastAPI', 'Vertex AI', 'Cloud Run'],
     isPrivate: true,
   }),
   card('fairness-credit-risk', {
     name: 'Fairness-Aware Credit Scoring',
     outcome: 'Credit scoring with standard fairness fixes, each tested against a tuned baseline on identical seeded splits. The result was a null, and I published it.',
-    metric: figure('fairness-credit-risk', 'alternatives beat', 'fixes beat the tuned baseline beyond noise'),
+    // The same finding as "0 of 4", led by what was done: four methods, none better than the baseline.
+    metric: figure('fairness-credit-risk', 'alternatives beat', 'tested on identical seeded splits; none beat the tuned baseline beyond noise', '4 methods'),
     tags: ['AIF360', 'Fairlearn', 'FastAPI'],
   }),
 ];
