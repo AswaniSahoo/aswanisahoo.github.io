@@ -5,7 +5,7 @@
  */
 import Receipt from './Receipt.astro';
 import OrgBars from './OrgBars.astro';
-import { meshSeries } from '../data/projects';
+import { docathon, meshSeries } from '../data/projects';
 
 const gw = meshSeries.metrics[0];
 const pr = (n: number) => `${meshSeries.repo}/pull/${n}`;
@@ -24,6 +24,10 @@ const pr = (n: number) => `${meshSeries.repo}/pull/${n}`;
 
     <div class="side reveal" style="--delay: 60ms">
       <OrgBars />
+      <p class="honor">
+        <b>{docathon.title}</b><span>· {docathon.result.toLowerCase()}</span>
+        <Receipt source={docathon.source} label="leaderboard" verifiedAt={docathon.verifiedAt} />
+      </p>
       <p class="more mono"><a href="/open-source/">Every PR, by project</a></p>
     </div>
   </div>
@@ -50,6 +54,19 @@ const pr = (n: number) => `${meshSeries.repo}/pull/${n}`;
     font-size: var(--fs-text);
     color: var(--muted);
     max-width: 60ch;
+  }
+  .honor {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.6rem;
+    margin-top: 1rem;
+    font-size: var(--fs-small);
+    color: var(--muted);
+  }
+  .honor b {
+    color: var(--text);
+    font-weight: 600;
   }
   .more {
     margin-top: 1rem;

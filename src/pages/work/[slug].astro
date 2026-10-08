@@ -21,6 +21,7 @@ export const getStaticPaths = (() => cases.map((c) => ({ params: { slug: c.slug 
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { c } = Astro.props as Props;
+const live = c.links.find((l) => l.label === 'live app')?.url;
 // Results lead the page; the size of the test suite is engineering detail, listed under Stack.
 const isTests = (m: { label: string }) => /\btests?\b|test functions/i.test(m.label);
 const results = c.metrics.filter((m) => !isTests(m));
@@ -63,7 +64,7 @@ const next = cases[position];
 ---
 
 <BaseLayout sheet="02" title={`${c.name} · Aswani Kumar Sahoo`} description={`${c.name}, case study. ${c.summary}`} ogType="article">
-  <SheetBanner sheet="02" parts={['Case study', c.station.domain]} seed={position + 5}>
+  <SheetBanner sheet="02" parts={[c.station.domain]} seed={position + 5}>
     <p class="crumbs mono"><a href="/work/">Projects</a> <span aria-hidden="true">/</span> {c.name}</p>
     <h1>{c.name}</h1>
     <p class="lede">{c.summary}</p>
@@ -73,6 +74,7 @@ const next = cases[position];
       {c.status.check && <Receipt source={c.status.check.source} label={c.status.check.label} fast verifiedAt={c.status.check.verifiedAt} />}
       {isPrivate && <span class="detail mono">code on request</span>}
     </div>
+    {live && <a class="btn primary" href={live} target="_blank" rel="noopener noreferrer">Try the live app ↗</a>}
   </SheetBanner>
 
   {results.length > 0 && (

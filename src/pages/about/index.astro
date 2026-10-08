@@ -66,13 +66,6 @@ import { hyphenSafe } from '../../lib/text';
     </ol>
   </section>
 
-  <section id="against-me" class="wrap section-block" aria-labelledby="against-title">
-    <h2 id="against-title">Results that went against me</h2>
-    <p class="prose muted">I publish them with the wins. Each is told on its project page.</p>
-    <ul class="against">
-      {negativeResults.map((r) => <li><a href={r.where}>{r.title}</a></li>)}
-    </ul>
-  </section>
 
   <section class="wrap section-block" aria-label="Stack">
     <article id="stack" class="card fact">
@@ -86,6 +79,14 @@ import { hyphenSafe } from '../../lib/text';
         ))}
       </dl>
     </article>
+  </section>
+
+  <section id="against-me" class="wrap section-block" aria-labelledby="against-title">
+    <h2 id="against-title">Results that went against me</h2>
+    <p class="prose muted">I publish them with the wins. Each is told on its project page.</p>
+    <ul class="against">
+      {negativeResults.map((r) => <li><a href={r.where}>{r.title}</a></li>)}
+    </ul>
   </section>
 
 </BaseLayout>
@@ -223,6 +224,10 @@ import { hyphenSafe } from '../../lib/text';
   .against a {
     font-weight: 600;
     text-decoration: none;
+  }
+  .against a::after {
+    content: '\00a0→';
+    color: var(--accent);
   }
   .against a:hover {
     text-decoration: underline;

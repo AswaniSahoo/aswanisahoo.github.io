@@ -364,6 +364,37 @@ article[id] {
   max-width: 65ch;
 }
 
+/* Buttons: the hero's actions, the live demo on a flagship card and on its case study. */
+.btn {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--text);
+  color: var(--text);
+  transition: background 200ms var(--ease), color 200ms var(--ease), transform 200ms var(--ease);
+}
+.btn:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+}
+.btn.primary {
+  background: var(--text);
+  color: var(--bg);
+}
+.btn.primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 /* A hyphenated name kept on one line (src/lib/text.ts). */
 .nb {
   white-space: nowrap;

@@ -262,34 +262,6 @@ const stats: Metric[] = [
     gap: 0.45rem;
     padding-top: 0.2rem;
   }
-  .btn {
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    text-decoration: none;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--text);
-    color: var(--text);
-    transition: background 200ms var(--ease), color 200ms var(--ease), transform 200ms var(--ease);
-  }
-  .btn:hover {
-    background: var(--text);
-    color: var(--bg);
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .btn:hover {
-      transform: translateY(-1px);
-    }
-  }
-  .btn.primary {
-    background: var(--text);
-    color: var(--bg);
-  }
-  .btn.primary:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-  }
   @media (max-width: 760px) {
     /* Shorter on phones, so the name and the proof reach the first screen. */
     .chart {
