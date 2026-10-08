@@ -35,12 +35,12 @@ export const meshSeries = {
     text:
       'Regional forecasts stalled at the level of a no-change forecast (persistence) no matter the processor depth. The decoder seeded its observation nodes with zeros and threw away the per-observation features the encoder had just computed, so an observation\'s own values reached the output only through the fixed residual. The fix is a zero-parameter skip connection, shipped in #237 for the stretched model and #239 for the regional one.',
     metric: {
-      label: 'lower error than a no-change forecast on unseen regions, before and after the fix',
+      label: 'lower forecast error on unseen regions after the fix',
       // PR #237 body: "the fix reaches 0.171 held-out region-weighted MSE against 0.206 for the old zeros seed
       // and 0.214 for persistence, so it beats persistence by about 20% on unseen regions where the old model
       // managed about 4%." The "about" is kept as ≈.
-      value: '≈ 4% → ≈ 20%',
-      note: 'error 0.206 → 0.171, 17% lower, against 0.214 for no change',
+      value: '17%',
+      note: 'error 0.206 → 0.171; a no-change forecast scores 0.214',
       verifiedAt: '2026-09-30',
       source: `${GW}/pull/237`,
     } satisfies Metric,
@@ -75,11 +75,11 @@ export const hazardStats = {
   summary:
     'Inside the Climate-Risk Agent: 60+ years of ERA5 fitted with stationary and non-stationary GEV distributions, a likelihood-ratio trend test, and 90% bootstrap confidence intervals. Since September the agent also measures its own forecast skill per lead day and weights report confidence by it.',
   metrics: [
-    { label: 'Berlin warming trend (non-stationary GEV)', value: '+0.76 °C / decade', note: 'p < 0.0001', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
+    { label: 'Berlin warming trend (non-stationary GEV)', value: '+0.76 °C / decade', note: 'p\u00a0<\u00a00.0001', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
     { label: 'Delhi trend test', value: 'stationary', note: 'p = 0.56', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
     // README (commit 7816673) line 140: "| Hazard | MAE, day 1 | MAE, day 7 | Extreme days caught, day 1 → day 7 |"
     // and line 142: "| Daily max temperature | 0.70 °C | 1.93 °C | 85% → 47% |". 85% → 47% is extreme days caught.
-    { label: 'daily max temperature forecast MAE, day 1 → day 7', value: '0.70 → 1.93 °C', note: 'extreme days caught, day 1 → day 7: 85% → 47%; 13 cities, about 9,200 city-days per lead day', verifiedAt: '2026-09-30', source: `${CRA}#forecast-skill` },
+    { label: 'max-temperature forecast error, day 1 → day 7', value: '0.70 → 1.93\u00a0°C', note: '13 cities', verifiedAt: '2026-09-30', source: `${CRA}#forecast-skill` },
   ] satisfies Metric[],
 };
 
@@ -107,7 +107,6 @@ export const iec: Project = {
     { label: 'true root cause ranked first, on 90 sealed held-out incidents (deterministic engine)', value: '76.7%', note: 'in the top three: 87.8%', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-tt-baseline.json`, evidence: 'eval report' },
     { label: 'the same on the 88 development incidents', value: '93.2%', note: 'in the top three: 98.9%', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-ob-baseline.json`, evidence: 'eval report' },
     { label: 'invalid evidence citations across 178 evaluated cases and two model generations', value: '0', verifiedAt: '2026-09-19', source: `${IEC}#readme` },
-    { label: 'held-out incidents the Gemini arm answered, seeing signal names only; it ranked the cause first on 36.8% of those', value: '38 of 90', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-tt-gemini.json`, evidence: 'eval report' },
     { label: 'tests run by the CI gate, no DB, network or credentials', value: '363', note: '10 skipped', verifiedAt: '2026-09-19', source: IEC_CI_RUN },
   ],
   stack: ['Python 3.12', 'FastAPI', 'PostgreSQL', 'Prometheus', 'Gemini', 'unittest', 'mypy --strict'],
@@ -134,13 +133,13 @@ export const climateRiskAgent: Project = {
   metrics: [
     // e2e-test-gemini-2.5-flash-2026-07-22.json, the run behind the README's held-out citation validity
     // (47/49): correct_answer 49, correct_refuse 35, false_refuse 21, no false_answer cell (checked 2026-10-07).
-    { label: 'on 105 held-out questions', value: '0 false answers', note: 'it refused all 35 out-of-scope ones, and 21 it could have answered', verifiedAt: '2026-10-07', source: `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-07-22.json`, evidence: 'held-out run' },
-    { label: 'citation validity: held-out answers that cite the right source pages', value: '96%', note: '47 of 49', verifiedAt: '2026-10-07', source: `${CRA}#readme` },
+    { label: 'on 105 held-out questions', value: '0 false answers', note: 'all 35 out-of-scope questions refused; 21 answerable ones refused too', verifiedAt: '2026-10-07', source: `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-07-22.json`, evidence: 'held-out run' },
+    { label: 'citation validity: held-out answers citing the right page', value: '96%', note: '47 of 49', verifiedAt: '2026-10-07', source: `${CRA}#readme` },
     // README (commit 7816673) line 98: "Held-out results (second exposure, on the exact configuration deployed):".
     // The cited JSON's HEADLINE (answer) row: n 70, recall@3 0.8714, @5 0.9143, @10 0.9571.
-    { label: 'answerable held-out questions with the right page retrieved in the top 3 / 5 / 10', value: '87 / 91 / 96%', note: '70 questions', verifiedAt: '2026-09-30', source: `${CRA}/blob/main/evals/results/retrieval-test-2026-09-07.json` },
+    { label: 'right page retrieved in the top 3 / 5 / 10', value: '87 / 91 / 96%', note: '70 questions', verifiedAt: '2026-09-30', source: `${CRA}/blob/main/evals/results/retrieval-test-2026-09-07.json` },
     { label: 'test functions in the suite, 48 files', value: '490', verifiedAt: '2026-09-19', source: `${CRA}/tree/main/tests` },
-    { label: 'cost per question on the held-out run, with a median answer time of 3.9 s', value: '≈ $0.003', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
+    { label: 'per question; median answer in 3.9 s', value: '≈ $0.003', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
   ],
   stack: ['LangGraph', 'Gemini', 'FastAPI', 'MCP', 'scipy', 'Docker', 'Cloud Run'],
   command: `docker pull ${CRA_IMAGE}`,

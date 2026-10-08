@@ -82,12 +82,12 @@ const next = cases[position];
   )}
 
   {c.figures && c.figures.length > 0 && (
-    <section class:list={['wrap', 'figures', { pair: c.figures.length > 1 }]} aria-label="What it looks like">
+    <section class="wrap figures" aria-label="What it looks like">
       {c.figures.map((f) => (
-        <figure class="shot">
+        <figure class:list={['shot', 'src' in f && f.size]}>
           {'code' in f ? (
             <pre class="output" aria-label={f.label}><code>{f.code.split('\n').map((line) => (
-              <span class="ln" style={`--i: ${line.length - line.trimStart().length}`}>{line.trimStart()}</span>
+              <span class="ln" style={`--i: ${line.length - line.trimStart().length}`}>{line.trimStart() || '\u00a0'}</span>
             ))}</code></pre>
           ) : (
             <img src={f.src} width={f.width} height={f.height} alt={f.alt} loading="lazy" decoding="async" />
@@ -261,9 +261,8 @@ const next = cases[position];
       )}
 
       <nav class="pager mono" aria-label="Other projects">
-        {prev ? <a class="prev" href={`/work/${prev.slug}/`}>{prev.name}</a> : <span />}
-        <a class="all" href="/work/">All projects</a>
-        {next ? <a class="next" href={`/work/${next.slug}/`}>{next.name}</a> : <span />}
+        {prev ? <a class="prev" href={`/work/${prev.slug}/`}>{prev.name}</a> : <a class="prev" href="/work/">All projects</a>}
+        {next ? <a class="next" href={`/work/${next.slug}/`}>{next.name}</a> : <a class="next" href="/work/">All projects</a>}
       </nav>
     </div>
   </div>
@@ -377,6 +376,11 @@ const next = cases[position];
     gap: 1rem;
     width: 100%;
   }
+  /* Two to a row in the text column, so no figure sits alone on a row of three. */
+  .eval-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1.25rem 1.5rem;
+  }
   /* A note is half the column: its figures stack rather than squeeze a value onto two lines. */
   .note-metrics {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
@@ -409,6 +413,7 @@ const next = cases[position];
     font-variant-numeric: tabular-nums;
   }
   .latency thead th {
+    white-space: nowrap;
     color: var(--muted);
     font-weight: 500;
     letter-spacing: 0.06em;
@@ -473,7 +478,7 @@ const next = cases[position];
   .change dl {
     margin: 0;
     display: grid;
-    grid-template-columns: 9.5rem minmax(0, 1fr);
+    grid-template-columns: 6.5rem minmax(0, 1fr);
     gap: 0.4rem 1rem;
     font-size: var(--fs-text);
   }
@@ -505,10 +510,6 @@ const next = cases[position];
     gap: 1.5rem;
     padding-top: clamp(1.5rem, 3vw, 2rem);
   }
-  .figures.pair {
-    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
-    align-items: start;
-  }
   .shot {
     margin: 0;
     display: grid;
@@ -520,8 +521,15 @@ const next = cases[position];
     height: auto;
     border: 1px solid var(--line-strong);
   }
-  /* A lone figure keeps a readable size instead of filling the page. */
-  .figures:not(.pair) .shot {
+  /* A tool's output at a reading width; a screen at the full width so its text stays readable;
+     a chart smaller, so a white figure does not take over a dark page. */
+  .shot {
+    max-width: 48rem;
+  }
+  .shot.wide {
+    max-width: none;
+  }
+  .shot.narrow {
     max-width: 34rem;
   }
   /* A tool's output, set as text so it stays readable at any width. */
@@ -557,6 +565,9 @@ const next = cases[position];
     display: grid;
     border-top: 1px solid var(--line);
   }
+  .related li:last-child {
+    border-bottom: 0;
+  }
   .related li {
     display: grid;
     grid-template-columns: 7rem minmax(0, 1fr);
@@ -580,7 +591,7 @@ const next = cases[position];
   }
   .pager {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
     padding-top: 2rem;
     font-size: var(--fs-label);
@@ -626,9 +637,6 @@ const next = cases[position];
     }
   }
   @media (max-width: 760px) {
-    .figures.pair {
-      grid-template-columns: minmax(0, 1fr);
-    }
     .block {
       padding-block: 2rem;
     }

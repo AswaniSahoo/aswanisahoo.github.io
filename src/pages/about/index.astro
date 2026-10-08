@@ -45,7 +45,7 @@ import { hyphenSafe } from '../../lib/text';
       <h2>graph_weather adaptive-mesh mentorship</h2>
       <p class="mono meta">May 20 to July 20, 2026 · with Jacob Prince-Bieker</p>
       <p>
-        Built regional and stretched-mesh forecasting for graph_weather, and found why its regional forecasts barely beat a no-change forecast. The fix cut forecast error on unseen regions by 17% (<a href={`${meshSeries.repo}/pull/237`} target="_blank" rel="noopener noreferrer">PR #237</a>).
+        Built regional and stretched-mesh forecasting for graph_weather, and found why its regional forecasts barely beat a no-change forecast. The fix cut forecast error on unseen regions by <span class="nb">17% (<a href={`${meshSeries.repo}/pull/237`} target="_blank" rel="noopener noreferrer">PR #237</a>).</span>
       </p>
       <MetricTile metric={meshSeries.metrics[0]} />
       <p class="refs mono"><a href="/open-source/#graph-weather">the graph_weather story</a></p>
@@ -219,6 +219,9 @@ import { hyphenSafe } from '../../lib/text';
     padding: 0;
     display: grid;
     border-top: 1px solid var(--line);
+  }
+  .against li:last-child {
+    border-bottom: 0;
   }
   .against li {
     display: grid;

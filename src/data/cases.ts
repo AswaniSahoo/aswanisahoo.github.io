@@ -45,7 +45,7 @@ export interface CaseTable {
  * original: a screen or a chart as an image, or a tool's output as text (readable at any size).
  */
 export type CaseFigure = { caption: string; source: string } & (
-  | { src: string; width: number; height: number; alt: string }
+  | { src: string; width: number; height: number; alt: string; size?: 'wide' | 'narrow' }
   | { code: string; label: string }
 );
 
@@ -93,9 +93,9 @@ const negative = (title: string): CaseBlock => {
   return {
     title: r.title,
     rows: [
-      ['Claim tested', r.claimTested],
-      ['What happened', r.whatHappened],
-      ['Why it matters', r.whyItMatters],
+      ['Tested', r.claimTested],
+      ['Result', r.whatHappened],
+      ['Lesson', r.whyItMatters],
     ],
   };
 };
@@ -107,7 +107,7 @@ const negative = (title: string): CaseBlock => {
 const craStation = station('climate-risk-agent');
 const CRA = climateRiskAgent.repo;
 const craLive = need(craStation.links.find((l) => l.label === 'live app'), 'CRA live app link');
-const craRecall = metric(climateRiskAgent.metrics, 'answerable held-out questions');
+const craRecall = metric(climateRiskAgent.metrics, 'right page retrieved');
 
 const climateRiskAgentCase: CaseStudy = {
   slug: 'climate-risk-agent',
@@ -124,12 +124,13 @@ const climateRiskAgentCase: CaseStudy = {
   metrics: climateRiskAgent.metrics,
   figures: [
     {
-      src: '/images/work/climate-risk-agent-app.webp',
-      width: 1440,
-      height: 728,
-      alt: 'The Climate-Risk Agent web app: preset places and controls on the left, a box for a question in plain language, suggested questions including one meant to be refused, and a map of the chosen place.',
-      caption: 'The live app: a question in plain language, answered with a cited report or refused.',
-      source: `${CRA}/blob/main/assets/ui-report.png`,
+      src: '/images/work/climate-risk-agent-report.webp',
+      width: 1410,
+      height: 713,
+      size: 'wide',
+      alt: 'A report from the live app: LOW extreme rainfall risk in Mumbai over 7 days, with the reasoning, confidence 36%, the risk drivers, and five IPCC AR6 citations, each to a page.',
+      caption: 'An answer from the live app: Mumbai, extreme rainfall, 7 days. Each IPCC citation is checked against its page.',
+      source: `${CRA}/blob/main/assets/ui-report-details.png`,
     },
     {
       // Transcribed from assets/mcp-inspector-abstain.png, the answer_ipcc result in the MCP Inspector.
@@ -165,7 +166,7 @@ const climateRiskAgentCase: CaseStudy = {
       'Refusals are scored with the answers: correct answer, correct refusal, false refusal, false answer. Any false answer fails the build.',
       'The agent also measures its own forecast skill per lead day and weights the confidence of every report by it.',
     ],
-    metrics: [metric(hazardStats.metrics, 'daily max temperature forecast MAE')],
+    metrics: [metric(hazardStats.metrics, 'max-temperature forecast error')],
     artifacts: [
       { label: 'held-out retrieval run, 2026-09-07 (JSON)', url: craRecall.source },
       { label: 'evaluation section of the README', url: `${CRA}#evaluation` },
@@ -175,7 +176,7 @@ const climateRiskAgentCase: CaseStudy = {
     {
       title: 'Rerankers and query rewriting',
       rows: [
-        ['Failed', 'Two rerankers and a query rewriter were measured on the dev set. They cost 4 to 38 seconds per query, and none beat the baseline at any k.'],
+        ['Result', 'Two rerankers and a query rewriter were measured on the dev set. They cost 4 to 38 seconds per query, and none beat the baseline at any k.'],
         ['Changed', 'Both stay wired in the code and ship switched off.'],
       ],
       source: { label: 'README', url: `${CRA}#evaluation` },
@@ -183,7 +184,7 @@ const climateRiskAgentCase: CaseStudy = {
     {
       title: 'Forecast confidence',
       rows: [
-        ['Failed', "A forecast peak far out is a weaker claim than tomorrow's, and the error grows with lead time (see Evaluation)."],
+        ['Result', "A forecast peak far out is a weaker claim than tomorrow's, and the error grows with lead time (see Evaluation)."],
         ['Changed', 'Report confidence is weighted by the measured skill at the lead day asked about.'],
       ],
       source: { label: 'README', url: `${CRA}#forecast-skill` },
@@ -191,7 +192,7 @@ const climateRiskAgentCase: CaseStudy = {
     {
       title: 'MCP servers without credentials',
       rows: [
-        ['Failed', 'Servers launched by an MCP client started without credentials.'],
+        ['Result', 'Servers launched by an MCP client started without credentials.'],
         ['Changed', 'Fixed with `load_dotenv(override=False)`.'],
       ],
     },
@@ -215,6 +216,15 @@ const iecCase: CaseStudy = {
   summary: iecStation.summary,
   status: { label: iecStation.status.label, kind: iecStation.status.kind, detail: iec.role },
   metrics: iec.metrics,
+  figures: [
+    {
+      // README, "The hermetic run": the real API, worker, ledger and verifier on committed synthetic telemetry.
+      label: 'verdict and ranking from a run of the real service',
+      code: 'verdict: supported\n  p1: supported observed=increase supporting=1 contradicting=0\n\nbaseline ranking (deterministic, no model): kind=ranking minimum_score=1.00\n  1. cpu       suspicion=31.11  direction=increase\n  2. latency   suspicion=1.90   direction=increase',
+      caption: 'One run of the real service on committed synthetic telemetry: the verdict on the hypothesis, with its evidence count, and the engine’s own ranking beside it.',
+      source: `${iec.repo}#the-hermetic-run-no-docker-no-credentials`,
+    },
+  ],
   how: {
     lead: iec.summary,
     notes: [
@@ -234,8 +244,6 @@ const iecCase: CaseStudy = {
         ['Deterministic engine', 76.7, 87.8, 0],
         ['Gemini, names only', 15.6, 15.6, 57.8],
       ],
-      barColumn: 1,
-      barMax: 100,
       verifiedAt: '2026-10-07',
       source: `${iec.repo}#held-out-sealed-re2-tt`,
     },
@@ -266,7 +274,7 @@ const veraCase: CaseStudy = {
   evaluation: {
     text: [need(veraBot.bullets[1], 'vera-bot judge bullet'), need(veraBot.bullets[2], 'vera-bot trigger bullet')],
   },
-  changes: [{ title: 'gemini-3.7-flash', rows: [['Measured', need(veraBot.bullets[3], 'vera-bot model bullet')]] }],
+  changes: [{ title: 'gemini-3.7-flash', rows: [['Result', need(veraBot.bullets[3], 'vera-bot model bullet')]] }],
   stack: { chips: veraBot.stack },
   links: [],
 };
@@ -289,6 +297,7 @@ const fairnessCase: CaseStudy = {
       src: '/images/work/fairness-disparate-impact.webp',
       width: 760,
       height: 548,
+      size: 'narrow',
       alt: 'Disparate impact with confidence intervals for five tracks, T0 to T4, on German Credit. Every interval crosses the dashed line at 0.8.',
       caption: 'Disparate impact on German Credit, with intervals. T0 is the tuned baseline, T1 to T3 are reweighing, ExponentiatedGradient and group thresholds, T4 is a tabular foundation model. Every interval crosses the 0.8 line.',
       source: `${fairness.repo}/blob/main/reports/figures/intervals_german_credit.png`,
@@ -300,8 +309,8 @@ const fairnessCase: CaseStudy = {
     {
       title: fairnessResult.title,
       rows: [
-        ['Why it matters', fairnessResult.whyItMatters],
-        ['Also measured', 'A 1.6B tabular foundation model did not distinguishably beat a tuned GBDT.'],
+        ['Result', 'A 1.6B tabular foundation model did not distinguishably beat a tuned GBDT either.'],
+        ['Lesson', fairnessResult.whyItMatters],
       ],
     },
   ],

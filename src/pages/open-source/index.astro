@@ -23,7 +23,9 @@ const order = [...mergedByOrg.map((o) => o.name), ...Object.keys(data.byProject)
 const groups = order.map((project) => {
   const prs = data.prs.filter((pr) => pr.project === project && pr.status !== 'open');
   const any = data.prs.find((pr) => pr.project === project);
-  return { project, org: any?.org ?? '', counts: data.byProject[project], prs, manyRepos: new Set(prs.map((pr) => pr.repo)).size > 1 };
+  // "CNCF krkn-chaos" beside "krkn-chaos" reads as a repeat: keep only what the name does not say.
+  const org = (any?.org ?? '').replace(project, '').trim();
+  return { project, org, counts: data.byProject[project], prs, manyRepos: new Set(prs.map((pr) => pr.repo)).size > 1 };
 });
 const open: PullRequest[] = data.prs.filter((pr) => pr.status === 'open');
 const pr = (n: number) => `${meshSeries.repo}/pull/${n}`;
@@ -103,7 +105,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
         <details id={ledgerId(g.project)} class="group" open={i === 0}>
           <summary>
             <span class="gname mono">{g.project}</span>
-            {g.org && g.org !== g.project && <span class="gorg">{g.org}</span>}
+            {g.org && <span class="gorg">{g.org}</span>}
             <span class="gcounts">
               {g.counts.merged > 0 && <span class="pill merged">{g.counts.merged} merged</span>}
               {g.counts.closed > 0 && <span class="pill closed">{g.counts.closed} closed</span>}
@@ -432,6 +434,9 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     padding-block: 0.6rem;
     border-bottom: 1px solid var(--line);
     font-size: var(--fs-text);
+  }
+  .open-list li:last-child {
+    border-bottom: 0;
   }
   .open-list a {
     text-decoration: none;

@@ -184,6 +184,11 @@ pre,
   font-variant-numeric: tabular-nums;
 }
 
+/* Inline code in running text: the mono face sets larger, so it steps down to sit with the sans. */
+:where(p, li, dd, td) > code {
+  font-size: 0.86em;
+}
+
 .num {
   font-variant-numeric: tabular-nums;
 }
