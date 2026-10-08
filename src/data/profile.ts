@@ -7,7 +7,8 @@ export const profile = {
   domain: new URL(import.meta.env.SITE).host,
   title: 'ML / AI systems engineer',
   // The status tab on the hero card. Keep it short and true; update it when it changes.
-  availability: 'Open to AI / ML engineer internships · graduating 2027',
+  // The school goes here too: the first screen should say where the degree is from.
+  availability: 'Open to AI / ML engineer internships · NIT Rourkela ’27',
   // Served from public/. The résumé buttons appear only once this file exists (src/lib/resume.ts).
   resume: '/aswani-kumar-sahoo-resume.pdf',
   // The hero's one-line pitch under the name, also the start of every page's meta description.

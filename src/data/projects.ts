@@ -33,14 +33,14 @@ export const meshSeries = {
   finding: {
     title: 'the decoder was forecasting persistence',
     text:
-      'Regional forecasts stalled at the persistence baseline no matter the processor depth. The decoder seeded its observation nodes with zeros and threw away the per-observation features the encoder had just computed, so an observation\'s own values reached the output only through the fixed residual. The fix is a zero-parameter skip connection, shipped in #237 for the stretched model and #239 for the regional one.',
+      'Regional forecasts stalled at the level of a no-change forecast (persistence) no matter the processor depth. The decoder seeded its observation nodes with zeros and threw away the per-observation features the encoder had just computed, so an observation\'s own values reached the output only through the fixed residual. The fix is a zero-parameter skip connection, shipped in #237 for the stretched model and #239 for the regional one.',
     metric: {
-      label: 'held-out skill over persistence on unseen regions, before and after the fix',
+      label: 'lower error than a no-change forecast on unseen regions, before and after the fix',
       // PR #237 body: "the fix reaches 0.171 held-out region-weighted MSE against 0.206 for the old zeros seed
       // and 0.214 for persistence, so it beats persistence by about 20% on unseen regions where the old model
       // managed about 4%." The "about" is kept as ≈.
       value: '≈ 4% → ≈ 20%',
-      note: 'region-weighted MSE 0.206 → 0.171 against 0.214 for persistence',
+      note: 'error 0.206 → 0.171, against 0.214 for no change',
       verifiedAt: '2026-09-30',
       source: `${GW}/pull/237`,
     } satisfies Metric,
@@ -93,21 +93,21 @@ export const iec: Project = {
   repo: IEC,
   role: 'Solo, Apache-2.0',
   summary:
-    'Gemini may only hypothesise over an allow-list of signals. A verifier then returns SUPPORTED, REFUTED or UNKNOWN against a content-addressed evidence ledger, and UNKNOWN is a real answer.',
+    'Gemini proposes hypotheses over an allow-list of signals. A verifier tests each one against a content-addressed evidence ledger and returns SUPPORTED, REFUTED or UNKNOWN.',
   bullets: [
-    'Two-arm A/B design: deterministic baseline versus verifier-gated Gemini, on two RCAEval splits. The held-out split RE2-TT was sealed and opened exactly once, on 2026-07-19, against a frozen commit. No tuning after.',
+    'Two arms on the same incidents from the public RCAEval benchmark: the deterministic engine alone, and Gemini behind the verifier. The held-out set was sealed and opened exactly once, on 2026-07-19, against a frozen commit. No tuning after.',
     'Telemetry arrives through a bounded range-query client against a real Prometheus v3.6.0; five iec_* metrics leave through a dependency-free /metrics endpoint. Every abstention still returns a deterministic ranking.',
     'Hexagonal architecture, PostgreSQL with SKIP LOCKED, mypy strict, 19 ADRs. Untrusted input is capped at 65,536 characters and 32 predicates before it is parsed.',
     // README, Results: "Read those rows as a bracket, not a race"; re2-tt-gemini.json: answered_count 38,
     // top1_accuracy_answered 0.368421, invalid_evidence_id_count 0 (checked 2026-10-07).
-    'The Gemini arm is a stress test of the verification gate, not a race with the engine: it sees signal names only, never values, so it is choosing among about 72 signals. On the sealed split it answered 38 of 90 cases, 36.8% top-1 on those, abstained on the rest, and cited no invalid evidence.',
+    'The Gemini arm is a stress test of the verification gate, not a race with the engine: it sees signal names only, never values, so it is choosing among about 72 signals. On the held-out set it answered 38 of 90 incidents and ranked the cause first on 36.8% of those; it abstained on the rest and cited no invalid evidence.',
   ],
   metrics: [
     // Top-1 and top-3 as percentages of the evaluation files' 0.767 / 0.878 and 0.932 / 0.989.
-    { label: 'root cause ranked first by the deterministic engine, sealed held-out set (90 incidents)', value: '76.7%', note: 'top-3 87.8%, MRR 0.833', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-tt-baseline.json`, evidence: 'eval report' },
-    { label: 'the same on the development set (88 incidents)', value: '93.2%', note: 'top-3 98.9%, MRR 0.959', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-ob-baseline.json`, evidence: 'eval report' },
+    { label: 'true root cause ranked first, on 90 sealed held-out incidents (deterministic engine)', value: '76.7%', note: 'in the top three: 87.8%', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-tt-baseline.json`, evidence: 'eval report' },
+    { label: 'the same on the 88 development incidents', value: '93.2%', note: 'in the top three: 98.9%', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-ob-baseline.json`, evidence: 'eval report' },
     { label: 'invalid evidence citations across 178 evaluated cases and two model generations', value: '0', verifiedAt: '2026-09-19', source: `${IEC}#readme` },
-    { label: 'held-out cases the Gemini arm answered, given signal names only; 36.8% top-1 on those', value: '38 of 90', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-tt-gemini.json`, evidence: 'eval report' },
+    { label: 'held-out incidents the Gemini arm answered, seeing signal names only; it ranked the cause first on 36.8% of those', value: '38 of 90', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-tt-gemini.json`, evidence: 'eval report' },
     { label: 'tests run by the CI gate, no DB, network or credentials', value: '363', note: '10 skipped', verifiedAt: '2026-09-19', source: IEC_CI_RUN },
   ],
   stack: ['Python 3.12', 'FastAPI', 'PostgreSQL', 'Prometheus', 'Gemini', 'unittest', 'mypy --strict'],
@@ -134,13 +134,13 @@ export const climateRiskAgent: Project = {
   metrics: [
     // e2e-test-gemini-2.5-flash-2026-07-22.json, the run behind the README's held-out citation validity
     // (47/49): correct_answer 49, correct_refuse 35, false_refuse 21, no false_answer cell (checked 2026-10-07).
-    { label: 'false answers on 105 held-out questions', value: '0 of 105', note: 'all 35 out-of-scope questions refused; 49 of 70 answerable answered', verifiedAt: '2026-10-07', source: `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-07-22.json`, evidence: 'held-out run' },
-    { label: 'citation validity, held-out', value: '96%', note: '47 of 49 answers', verifiedAt: '2026-10-07', source: `${CRA}#readme` },
+    { label: 'on 105 held-out questions', value: '0 false answers', note: 'it refused all 35 out-of-scope ones, and 21 it could have answered', verifiedAt: '2026-10-07', source: `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-07-22.json`, evidence: 'held-out run' },
+    { label: 'citation validity: held-out answers that cite the right source pages', value: '96%', note: '47 of 49', verifiedAt: '2026-10-07', source: `${CRA}#readme` },
     // README (commit 7816673) line 98: "Held-out results (second exposure, on the exact configuration deployed):".
     // The cited JSON's HEADLINE (answer) row: n 70, recall@3 0.8714, @5 0.9143, @10 0.9571.
-    { label: 'recall@3 / @5 / @10, held-out, second exposure', value: '87 / 91 / 96%', note: 'n = 70 answerable', verifiedAt: '2026-09-30', source: `${CRA}/blob/main/evals/results/retrieval-test-2026-09-07.json` },
+    { label: 'answerable held-out questions with the right page retrieved in the top 3 / 5 / 10', value: '87 / 91 / 96%', note: '70 questions', verifiedAt: '2026-09-30', source: `${CRA}/blob/main/evals/results/retrieval-test-2026-09-07.json` },
     { label: 'test functions in the suite, 48 files', value: '490', verifiedAt: '2026-09-19', source: `${CRA}/tree/main/tests` },
-    { label: 'cost per question, held-out run', value: '≈ $0.003', note: 'p50 latency 3.9 s', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
+    { label: 'cost per question on the held-out run, with a median answer time of 3.9 s', value: '≈ $0.003', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
   ],
   stack: ['LangGraph', 'Gemini', 'FastAPI', 'MCP', 'scipy', 'Docker', 'Cloud Run'],
   command: `docker pull ${CRA_IMAGE}`,
@@ -166,7 +166,7 @@ export const veraBot: Project = {
     'gemini-3.7-flash was measured and rejected: minimal thinking returned HTTP 400 and other settings truncated output.',
   ],
   metrics: [
-    { label: 'judge-replica agreement with the organiser\'s anchors, Spearman on totals', value: '0.830', note: 'residual MAE 0.763, n = 15, 150 calls', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
+    { label: 'judge-replica agreement: its offline judge against the organiser\'s official scores (Spearman, 15 cases)', value: '0.830', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
     { label: 'test functions across 37 files', value: '1,135', verifiedAt: '2026-09-30', source: `${GH}/vera-bot` },
     { label: 'commits in ten days, CI green on each of the last five runs', value: '97', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
   ],
@@ -270,14 +270,14 @@ export const stations: Station[] = [
     slug: 'climate-risk-agent',
     name: 'Climate-Risk Agent',
     domain: 'AI agent · climate risk',
-    summary: 'Cited, typed climate-risk reports or an explicit refusal, for any location. LangGraph, hybrid IPCC retrieval, two MCP servers, frozen evals.',
+    summary: 'Ask about heat, rain or wind risk for any place on Earth. It answers with a report that cites its sources, or refuses when the evidence is not there.',
     repo: CRA,
     status: { label: 'live', kind: 'live' },
     tests: { label: 'test functions', value: '490', verifiedAt: '2026-09-19', source: `${CRA}/tree/main/tests` },
     metrics: [
       { label: 'recall@3 held-out', value: '87%', verifiedAt: '2026-09-19', source: `${CRA}/blob/main/evals/results/retrieval-test-2026-09-07.json` },
       { label: 'citation validity', value: '96%', note: '47 of 49 answers', verifiedAt: '2026-10-07', source: `${CRA}#readme` },
-      { label: 'false answers on 105 held-out questions', value: '0 of 105', verifiedAt: '2026-10-07', source: `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-07-22.json`, evidence: 'held-out run' },
+      { label: 'false answers on 105 held-out questions', value: '0 false answers', verifiedAt: '2026-10-07', source: `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-07-22.json`, evidence: 'held-out run' },
     ],
     stack: ['LangGraph', 'Gemini', 'MCP', 'FastAPI', 'Cloud Run'],
     links: [repoLink(CRA), { label: 'live app', url: CRA_LIVE }, { label: 'container', url: CRA_IMAGE_PAGE }, { label: 'MCP registry', url: CRA_REGISTRY }],
@@ -286,7 +286,7 @@ export const stations: Station[] = [
     slug: 'incident-evidence-compiler',
     name: 'Incident Evidence Compiler',
     domain: 'AI systems · incident response',
-    summary: 'Incident root cause where the LLM proposes and deterministic code decides. Content-addressed evidence, allow-listed hypotheses, sealed RCAEval evaluation.',
+    summary: 'Finds the root cause of an outage from its metrics. The LLM may only propose causes; deterministic code checks each one against recorded evidence, and UNKNOWN is an allowed answer.',
     repo: IEC,
     status: { label: 'evaluated', kind: 'plain' },
     tests: { label: 'tests in the CI gate', value: '363', verifiedAt: '2026-09-19', source: IEC_CI_RUN },
@@ -302,7 +302,7 @@ export const stations: Station[] = [
     slug: 'vera-bot',
     name: 'vera-bot',
     domain: 'LLM product · messaging',
-    summary: 'Merchant-messaging engine for the magicpin Vera AI Challenge. A resolver decides what is true, a validator gates every body, the LLM only rewrites resolved facts.',
+    summary: 'A merchant-messaging bot for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts, and is skipped when it is too slow.',
     repo: `${GH}/vera-bot`,
     isPrivate: true,
     status: { label: 'private', kind: 'private' },
@@ -316,9 +316,9 @@ export const stations: Station[] = [
   },
   {
     slug: 'fairness-credit-risk',
-    name: 'fairness-credit-risk',
+    name: 'Fairness-Aware Credit Scoring',
     domain: 'Responsible AI · credit risk',
-    summary: 'Five tracks that differ only in the intervention, on shared seeded splits. The published result is a null: no intervention improved disparate impact, and a 1.6B tabular foundation model did not distinguishably beat a tuned GBDT.',
+    summary: 'Tests whether standard fairness fixes make a credit-scoring model fairer, each against a tuned baseline on identical seeded splits. None did by more than noise, and the null result is published.',
     repo: `${GH}/fairness-credit-risk`,
     status: { label: 'negative result, published', kind: 'plain' },
     tests: { label: 'tests', value: '235', verifiedAt: '2026-10-04', source: FCR_CI_RUN },
@@ -326,8 +326,8 @@ export const stations: Station[] = [
       // README, What this measures: T1 reweighing, T2 ExponentiatedGradient, T3 group thresholds, T4 a tabular
       // foundation model, against a tuned control; "No intervention improved fairness", and T4 is "not
       // distinguishable from the tuned baseline" (checked 2026-10-07).
-      { label: 'fairness treatments that beat the tuned baseline beyond noise', value: '0 of 4', note: 'reweighing, ExponentiatedGradient, group thresholds, a tabular foundation model', verifiedAt: '2026-10-07', source: `${GH}/fairness-credit-risk#readme`, evidence: 'README' },
-      { label: 'German Credit baseline disparate impact', value: '0.7263', note: 'all CIs span the 0.8 line', verifiedAt: '2026-08-11', source: `${GH}/fairness-credit-risk` },
+      { label: 'alternatives beat the tuned baseline by more than noise', value: '0 of 4', note: 'three fairness fixes (reweighing, ExponentiatedGradient, group thresholds) and a tabular foundation model', verifiedAt: '2026-10-07', source: `${GH}/fairness-credit-risk#readme`, evidence: 'README' },
+      { label: 'baseline disparate impact on German Credit; its interval crosses the 0.8 fairness line', value: '0.7263', verifiedAt: '2026-08-11', source: `${GH}/fairness-credit-risk` },
     ],
     stack: ['AIF360', 'Fairlearn', 'FastAPI', 'Docker', 'Streamlit'],
     links: [repoLink(`${GH}/fairness-credit-risk`)],

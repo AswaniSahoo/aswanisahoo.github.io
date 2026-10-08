@@ -59,6 +59,8 @@ export interface NegativeResult {
   whatHappened: string;
   number: Metric;
   whyItMatters: string;
+  /** The page that tells it in full. About lists these and links here. */
+  where: string;
 }
 
 export interface Certification {

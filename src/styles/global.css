@@ -144,9 +144,16 @@ h4 {
   font-weight: 600;
 }
 
-h1,
-h2 {
+/* Mono for the page's one title; section headings in the sans, so the mono stays an accent. */
+h1 {
   font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+h2 {
+  font-family: var(--font-sans);
+  font-weight: 650;
   letter-spacing: -0.02em;
   text-wrap: balance;
 }

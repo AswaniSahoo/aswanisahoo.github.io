@@ -6,7 +6,6 @@
 import type { Link, Metric, Station } from './types';
 import { climateRiskAgent, hazardStats, iec, instruments, llamaTaskAgent, retrievalLatency, stations, veraBot, weatherTransformer } from './projects';
 import { negativeResults } from './negative';
-import { profile } from './profile';
 
 export interface Readout {
   text: string;
@@ -39,6 +38,16 @@ export interface CaseTable {
   source: string;
 }
 
+/** A figure from the project's own repository, shown under the results with a link to the original. */
+export interface CaseFigure {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  caption: string;
+  source: string;
+}
+
 export interface CaseStudy {
   slug: string;
   station: Station;
@@ -54,11 +63,12 @@ export interface CaseStudy {
   };
   /** At most five, stamped, under the banner. */
   metrics: Metric[];
+  figures?: CaseFigure[];
   problem?: string[];
   how?: { diagram?: 'cra-flow'; lead?: string; notes?: CaseNote[] };
   evaluation?: { text?: string[]; metrics?: Metric[]; readouts?: Readout[]; table?: CaseTable; artifacts?: Link[] };
   changes?: CaseBlock[];
-  stack: { chips: string[]; proofs: { tool: string; proof: string }[] };
+  stack: { chips: string[] };
   links: Link[];
   command?: string;
   /** Posts in this series are listed under Related writing. */
@@ -73,7 +83,6 @@ const metric = (list: Metric[], prefix: string) => need(list.find((m) => m.label
 const station = (slug: string) => need(stations.find((s) => s.slug === slug), `station ${slug}`);
 const readout = (prefix: string): Readout =>
   need(instruments.flatMap((p) => p.items).find((i) => i.text.startsWith(prefix)), `readout "${prefix}"`);
-const proofs = (pattern: RegExp) => profile.stack.filter((s) => pattern.test(s.proof)).map((s) => ({ tool: s.tool, proof: s.proof }));
 const repoLink = (url: string): Link => ({ label: 'repository', url });
 
 /** Negative results render as a block: the claim, what happened, why it matters. The numbers
@@ -97,13 +106,13 @@ const negative = (title: string): CaseBlock => {
 const craStation = station('climate-risk-agent');
 const CRA = climateRiskAgent.repo;
 const craLive = need(craStation.links.find((l) => l.label === 'live app'), 'CRA live app link');
-const craRecall = metric(climateRiskAgent.metrics, 'recall@3');
+const craRecall = metric(climateRiskAgent.metrics, 'answerable held-out questions');
 
 const climateRiskAgentCase: CaseStudy = {
   slug: 'climate-risk-agent',
   station: craStation,
   name: climateRiskAgent.name,
-  summary: 'Cited, typed climate-risk reports or an explicit refusal, for any location.',
+  summary: craStation.summary,
   status: {
     label: craStation.status.label,
     kind: craStation.status.kind,
@@ -112,9 +121,26 @@ const climateRiskAgentCase: CaseStudy = {
     check: { label: 'live app', verifiedAt: '2026-09-29', source: craLive.url },
   },
   metrics: climateRiskAgent.metrics,
+  figures: [
+    {
+      src: '/images/work/climate-risk-agent-app.webp',
+      width: 1440,
+      height: 728,
+      alt: 'The Climate-Risk Agent web app: preset places and controls on the left, a box for a question in plain language, suggested questions including one meant to be refused, and a map of the chosen place.',
+      caption: 'The live app: a question in plain language, answered with a cited report or refused.',
+      source: `${CRA}/blob/main/assets/ui-report.png`,
+    },
+    {
+      src: '/images/work/climate-risk-agent-refusal.webp',
+      width: 852,
+      height: 288,
+      alt: 'JSON from the answer_ipcc tool: an empty answer, no citations, abstain set to true, and the reason: the excerpts hold nothing specific to Rourkela or a 7-day heatwave forecast.',
+      caption: 'A refusal from the IPCC tool over MCP: no answer, no citations, and the reason why.',
+      source: `${CRA}/blob/main/assets/mcp-inspector-abstain.png`,
+    },
+  ],
   problem: [
     'A question about heat, extreme rain or wind at one place needs three kinds of evidence at once: a live forecast, the local record of extremes from ERA5, and what IPCC AR6 assesses for that region.',
-    'The agent returns a typed report whose citations are validated against the page they came from, or an explicit refusal. A question it cannot check gets the refusal, not a guess.',
   ],
   how: {
     diagram: 'cra-flow',
@@ -170,7 +196,7 @@ const climateRiskAgentCase: CaseStudy = {
       ],
     },
   ],
-  stack: { chips: climateRiskAgent.stack, proofs: proofs(/Climate-Risk Agent/) },
+  stack: { chips: climateRiskAgent.stack },
   links: [repoLink(CRA), ...(climateRiskAgent.links ?? [])],
   command: climateRiskAgent.command,
   relatedSeries: 'Building an evaluated climate-risk agent in public',
@@ -199,10 +225,23 @@ const iecCase: CaseStudy = {
   },
   evaluation: {
     text: [need(iec.bullets[0], 'IEC evaluation bullet'), need(iec.bullets[3], 'IEC Gemini arm bullet')],
+    // README, Held-out (sealed RE2-TT): baseline 0.767 / 0.878, abstention 0.000; Gemini 0.156 / 0.156,
+    // abstention 0.578 (checked 2026-10-07). An abstention counts as a miss.
+    table: {
+      caption: 'Sealed held-out set, 90 incidents. An abstention counts as a miss.',
+      head: ['arm', 'ranked first (%)', 'in top three (%)', 'abstained (%)'],
+      rows: [
+        ['Deterministic engine', 76.7, 87.8, 0],
+        ['Gemini, names only', 15.6, 15.6, 57.8],
+      ],
+      barColumn: 1,
+      verifiedAt: '2026-10-07',
+      source: `${iec.repo}#held-out-sealed-re2-tt`,
+    },
     artifacts: iec.links ?? [],
   },
   changes: [negative('The held-out number is lower, on purpose')],
-  stack: { chips: iec.stack, proofs: proofs(/Incident Evidence Compiler/) },
+  stack: { chips: iec.stack },
   links: [repoLink(iec.repo), ...(iec.links ?? [])],
 };
 
@@ -227,7 +266,7 @@ const veraCase: CaseStudy = {
     text: [need(veraBot.bullets[1], 'vera-bot judge bullet'), need(veraBot.bullets[2], 'vera-bot trigger bullet')],
   },
   changes: [{ title: 'gemini-3.7-flash', rows: [['Measured', need(veraBot.bullets[3], 'vera-bot model bullet')]] }],
-  stack: { chips: veraBot.stack, proofs: proofs(/vera-bot/) },
+  stack: { chips: veraBot.stack },
   links: [],
 };
 
@@ -244,6 +283,16 @@ const fairnessCase: CaseStudy = {
   summary: fairness.summary,
   status: { label: fairness.status.label, kind: fairness.status.kind },
   metrics: [...fairness.metrics, ...(fairness.tests ? [fairness.tests] : [])],
+  figures: [
+    {
+      src: '/images/work/fairness-disparate-impact.webp',
+      width: 760,
+      height: 548,
+      alt: 'Disparate impact with confidence intervals for five tracks, T0 to T4, on German Credit. Every interval crosses the dashed line at 0.8.',
+      caption: 'Disparate impact on German Credit, with intervals. T0 is the tuned baseline, T1 to T3 are reweighing, ExponentiatedGradient and group thresholds, T4 is a tabular foundation model. Every interval crosses the 0.8 line.',
+      source: `${fairness.repo}/blob/main/reports/figures/intervals_german_credit.png`,
+    },
+  ],
   problem: [`Claim tested: ${fairnessResult.claimTested.charAt(0).toLowerCase()}${fairnessResult.claimTested.slice(1)}`],
   evaluation: { text: [fairnessResult.whatHappened] },
   changes: [
@@ -255,7 +304,7 @@ const fairnessCase: CaseStudy = {
       ],
     },
   ],
-  stack: { chips: fairness.stack, proofs: [] },
+  stack: { chips: fairness.stack },
   links: fairness.links,
 };
 
@@ -267,7 +316,7 @@ const bioCase: CaseStudy = {
   summary: bio.summary,
   status: { label: bio.status.label, kind: bio.status.kind },
   metrics: [...bio.metrics, ...(bio.tests ? [bio.tests] : [])],
-  stack: { chips: bio.stack, proofs: [] },
+  stack: { chips: bio.stack },
   links: bio.links,
 };
 
@@ -284,7 +333,7 @@ const wtCase: CaseStudy = {
     notes: [{ title: 'Built block by block', text: need(weatherTransformer.bullets[0], 'transformer blocks bullet') }],
   },
   evaluation: { text: [need(weatherTransformer.bullets[1], 'transformer evaluation bullet')] },
-  stack: { chips: weatherTransformer.stack, proofs: proofs(/weather-transformer-scratch/) },
+  stack: { chips: weatherTransformer.stack },
   links: wt.links,
 };
 
@@ -307,7 +356,7 @@ const cisCase: CaseStudy = {
       source: `${retrievalLatency.repo}#retrieval-latency`,
     },
   },
-  stack: { chips: cis.stack, proofs: proofs(/complaint-intelligence-system/) },
+  stack: { chips: cis.stack },
   links: cis.links,
 };
 
@@ -320,7 +369,7 @@ const llamaCase: CaseStudy = {
   status: { label: llama.status.label, kind: llama.status.kind, detail: llamaTaskAgent.role },
   metrics: [],
   how: { lead: llamaTaskAgent.summary },
-  stack: { chips: llamaTaskAgent.stack, proofs: proofs(/llama-task-agent/) },
+  stack: { chips: llamaTaskAgent.stack },
   links: llama.links,
 };
 
@@ -333,7 +382,7 @@ const plain = (slug: string): CaseStudy => {
     summary: s.summary,
     status: { label: s.status.label, kind: s.status.kind },
     metrics: [...s.metrics, ...(s.tests ? [s.tests] : [])],
-    stack: { chips: s.stack, proofs: [] },
+    stack: { chips: s.stack },
     links: s.links,
   };
 };

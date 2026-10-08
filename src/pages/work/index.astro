@@ -31,7 +31,7 @@ const n = stations.length;
           <a class="name" href={reportHref(s.slug)}>{s.name}</a>
           <div class="text">
             <p class="what">{s.summary}</p>
-            <p class="tags mono">{s.stack.slice(0, 3).map((t) => <span>{t}</span>)}</p>
+            <ul class="chips">{s.stack.slice(0, 3).map((t) => <li>{t}</li>)}</ul>
           </div>
         </li>
       ))}
@@ -91,18 +91,8 @@ const n = stations.length;
     color: var(--muted);
     max-width: 62ch;
   }
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.2rem 0.6rem;
-    font-size: var(--fs-label);
-    color: var(--muted);
-  }
-  .tags span {
-    white-space: nowrap;
-  }
-  .tags span:not(:last-child)::after {
-    content: ' ·';
+  .text :global(.chips) {
+    margin-top: 0.2rem;
   }
   @media (max-width: 860px) {
     .row {

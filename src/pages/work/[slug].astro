@@ -15,12 +15,15 @@ import { comparisons } from '../../data/compare';
 import { cases } from '../../data/cases';
 import { stations } from '../../data/projects';
 import { posts, postHref } from '../../lib/writing';
-import { hyphenSafe } from '../../lib/text';
 
 export const getStaticPaths = (() => cases.map((c) => ({ params: { slug: c.slug }, props: { c } }))) satisfies GetStaticPaths;
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { c } = Astro.props as Props;
+// Results lead the page; the size of the test suite is engineering detail, listed under Stack.
+const isTests = (m: { label: string }) => /\btests?\b|test functions/i.test(m.label);
+const results = c.metrics.filter((m) => !isTests(m));
+const suites = c.metrics.filter(isTests);
 const isPrivate = c.station.isPrivate === true;
 const position = stations.findIndex((s) => s.slug === c.slug) + 1;
 const diagrams = { 'cra-flow': CraFlow };
@@ -68,14 +71,28 @@ const next = cases[position];
     </div>
   </SheetBanner>
 
-  {c.metrics.length > 0 && (
+  {results.length > 0 && (
     <section class="wrap readings" aria-label="Headline measurements">
-      <MetricTile metric={c.metrics[0]} size="lg" isPrivate={isPrivate} />
-      {c.metrics.length > 1 && (
+      <MetricTile metric={results[0]} size="lg" isPrivate={isPrivate} />
+      {results.length > 1 && (
         <div class="rest">
-          {c.metrics.slice(1, 5).map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
+          {results.slice(1, 5).map((m) => <MetricTile metric={m} isPrivate={isPrivate} />)}
         </div>
       )}
+    </section>
+  )}
+
+  {c.figures && c.figures.length > 0 && (
+    <section class:list={['wrap', 'figures', { pair: c.figures.length > 1 }]} aria-label="What it looks like">
+      {c.figures.map((f) => (
+        <figure class="shot">
+          <img src={f.src} width={f.width} height={f.height} alt={f.alt} loading="lazy" decoding="async" />
+          <figcaption>
+            <span>{f.caption}</span>
+            <Receipt source={f.source} label="original" />
+          </figcaption>
+        </figure>
+      ))}
     </section>
   )}
 
@@ -204,16 +221,12 @@ const next = cases[position];
         <ul class="chips">
           {c.stack.chips.map((t) => <li>{t}</li>)}
         </ul>
-        {c.stack.proofs.length > 0 && (
-          <dl class="proofs">
-            {c.stack.proofs.map((p) => (
-              <div class="row">
-                <dt>{p.tool}</dt>
-                <dd>{hyphenSafe(p.proof).map((t) => (t.keep ? <span class="nb">{t.text}</span> : t.text))}</dd>
-              </div>
-            ))}
-          </dl>
-        )}
+        {suites.map((m) => (
+          <p class="suite">
+            <b class="mono">{m.value}</b> {m.label}{m.note && <span class="muted"> · {m.note}</span>}
+            <Receipt source={m.source} label={m.evidence} fast verifiedAt={m.verifiedAt} isPrivate={isPrivate} />
+          </p>
+        ))}
       </section>
 
       <section id="links" class="block">
@@ -481,28 +494,48 @@ const next = cases[position];
     margin: 0;
     max-width: 65ch;
   }
-  .proofs {
-    margin: 0;
-    display: grid;
-  }
-  .proofs .row {
-    display: grid;
-    grid-template-columns: 13rem minmax(0, 1fr);
-    gap: 0.8rem;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid var(--line);
-    font-size: var(--fs-text);
-  }
-  .proofs dt {
-    font-weight: 500;
-  }
-  .proofs dd {
-    margin: 0;
-    color: var(--muted);
-    font-size: var(--fs-small);
-  }
   .cmd {
     max-width: 100%;
+  }
+  .suite {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.6rem;
+    font-size: var(--fs-text);
+  }
+  /* What it looks like: real screens and figures from the repository, each linked to its original. */
+  .figures {
+    display: grid;
+    gap: 1.5rem;
+    padding-top: clamp(1.5rem, 3vw, 2rem);
+  }
+  .figures.pair {
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .shot {
+    margin: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line-strong);
+  }
+  /* A lone figure keeps a readable size instead of filling the page. */
+  .figures:not(.pair) .shot {
+    max-width: 34rem;
+  }
+  .shot figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    font-size: var(--fs-small);
+    color: var(--muted);
   }
   .related {
     list-style: none;
@@ -572,14 +605,14 @@ const next = cases[position];
     }
   }
   @media (max-width: 760px) {
-    .notes {
+    .notes,
+    .figures.pair {
       grid-template-columns: minmax(0, 1fr);
     }
     .block {
       padding-block: 2rem;
     }
     .change dl,
-    .proofs .row,
     .related li {
       grid-template-columns: minmax(0, 1fr);
       gap: 0.15rem;

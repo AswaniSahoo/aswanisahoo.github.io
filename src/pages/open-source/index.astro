@@ -23,7 +23,7 @@ const order = [...mergedByOrg.map((o) => o.name), ...Object.keys(data.byProject)
 const groups = order.map((project) => {
   const prs = data.prs.filter((pr) => pr.project === project && pr.status !== 'open');
   const any = data.prs.find((pr) => pr.project === project);
-  return { project, org: any?.org ?? '', counts: data.byProject[project], prs };
+  return { project, org: any?.org ?? '', counts: data.byProject[project], prs, manyRepos: new Set(prs.map((pr) => pr.repo)).size > 1 };
 });
 const open: PullRequest[] = data.prs.filter((pr) => pr.status === 'open');
 const pr = (n: number) => `${meshSeries.repo}/pull/${n}`;
@@ -76,7 +76,11 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
         <p class="eyebrow"><b>Then it went against me</b> · issue #238</p>
         <h3>{ablation.title}</h3>
         <MetricTile metric={ablation.number} />
-        <p class="prose muted">{ablation.whyItMatters} <a href="/about/#against-me">The full account is on About.</a></p>
+        <p class="prose muted">{ablation.whyItMatters}</p>
+        <details class="account">
+          <summary class="mono">What happened</summary>
+          <p class="prose">{ablation.whatHappened}</p>
+        </details>
       </div>
       <ol class="arc">
         {meshSeries.arc.map((a) => (
@@ -113,7 +117,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
                   <tr>
                     <td class="prnum mono"><a href={p.url} {...ext}>#{p.number}</a></td>
                     <td class="title"><a href={p.url} {...ext}>{p.title}</a></td>
-                    <td class="repo mono">{p.repo}</td>
+                    {g.manyRepos && <td class="repo mono">{p.repo}</td>}
                     <td class="date mono">{p.date}</td>
                     <td class="status"><span class:list={['pill', p.status]}>{p.status}</span></td>
                   </tr>
@@ -260,6 +264,26 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   .against h3 {
     font-size: var(--fs-body);
   }
+  .account summary {
+    cursor: pointer;
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    list-style: none;
+  }
+  .account summary::-webkit-details-marker {
+    display: none;
+  }
+  .account summary::before {
+    content: '+ ';
+    color: var(--accent);
+  }
+  .account[open] summary::before {
+    content: '− ';
+  }
+  .account p {
+    margin-top: 0.6rem;
+  }
   .arc {
     list-style: none;
     margin: 0;
@@ -379,9 +403,11 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     font-size: var(--fs-label);
     white-space: nowrap;
   }
+  /* Right edge matches the summary's, so row badges sit under the header's. */
   .status {
     width: 5.5rem;
     text-align: right;
+    padding-right: 1rem;
   }
   .none {
     padding: 0 1rem 0.9rem;

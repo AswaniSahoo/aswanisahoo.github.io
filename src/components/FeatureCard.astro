@@ -46,6 +46,9 @@ const { project: p } = Astro.props;
   .feature:focus-within {
     border-color: var(--text);
   }
+  h3 {
+    font-size: 1.45rem;
+  }
   h3 a {
     text-decoration: none;
   }
@@ -60,13 +63,11 @@ const { project: p } = Astro.props;
     color: var(--muted);
     max-width: 52ch;
   }
-  /* One result: the figure, then what it measures and where it is proven. */
+  /* One result: the figure, then what it measures and where it is proven, under it. */
   .result {
     position: relative;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.4rem 1rem;
-    align-items: baseline;
+    gap: 0.35rem;
     align-content: start;
     padding-top: 0.9rem;
   }
@@ -81,10 +82,10 @@ const { project: p } = Astro.props;
     transform-origin: left center;
   }
   .value {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 600;
     letter-spacing: -0.02em;
-    line-height: 1;
+    line-height: 1.1;
     color: var(--text);
   }
   .what {
@@ -92,8 +93,9 @@ const { project: p } = Astro.props;
     gap: 0.25rem;
     justify-items: start;
     font-size: var(--fs-small);
-    line-height: 1.4;
-    color: var(--muted);
+    line-height: 1.45;
+    color: var(--text);
+    max-width: 52ch;
   }
   .what :global(.receipt) {
     position: relative;

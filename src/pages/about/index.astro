@@ -61,25 +61,16 @@ import { hyphenSafe } from '../../lib/text';
   <section id="against-me" class="wrap section-block" aria-labelledby="against-title">
     <div class="head">
       <h2 id="against-title">Results that went against me</h2>
-      <p class="prose muted">Three findings I published even though each one made my own work look worse. A number nobody is allowed to doubt is worth more than a better number nobody can check.</p>
+      <p class="prose muted">Three findings I published even though each one made my own work look worse. Each is told in full on its project page.</p>
     </div>
-    <div class="results">
-      {negativeResults.map((r, i) => (
-        <article class="card result reveal" style={`--delay: ${i * 60}ms`}>
-          <h3>{r.title}</h3>
-          <dl>
-            <dt>Claim tested</dt>
-            <dd>{r.claimTested}</dd>
-          </dl>
-          <MetricTile metric={r.number} />
-          <p class="why">{r.whyItMatters}</p>
-          <details class="detail">
-            <summary class="mono">What happened</summary>
-            <p>{r.whatHappened}</p>
-          </details>
-        </article>
+    <ul class="against">
+      {negativeResults.map((r) => (
+        <li>
+          <a href={r.where}>{r.title}</a>
+          <p>{r.whyItMatters}</p>
+        </li>
       ))}
-    </div>
+    </ul>
   </section>
 
   <section class="wrap section-block" aria-label="Certifications and stack">
@@ -147,7 +138,13 @@ import { hyphenSafe } from '../../lib/text';
   }
   .cols {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
+    align-items: stretch;
+  }
+  .fact :global(.metric) {
+    margin-top: 0.4rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--line);
+    width: 100%;
   }
   .fact {
     display: grid;
@@ -179,12 +176,6 @@ import { hyphenSafe } from '../../lib/text';
   }
   .refs a:hover {
     text-decoration-color: var(--accent);
-  }
-  .results {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.25rem;
-    align-items: start;
   }
   /* Four lines, two by two, each with its proof under it. */
   .principles {
@@ -220,57 +211,33 @@ import { hyphenSafe } from '../../lib/text';
   .principles :global(.receipt) {
     justify-self: start;
   }
-  .result {
-    display: grid;
-    gap: 0.9rem;
-    align-content: start;
-    border-top: 3px solid var(--warn);
-  }
-  .result dl {
-    margin: 0;
-    display: grid;
-    gap: 0.35rem;
-    font-size: var(--fs-text);
-  }
-  .result dt {
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-top: 0.4rem;
-  }
-  .result dd {
-    margin: 0;
-  }
-  .why {
-    color: var(--muted);
-    font-size: var(--fs-text);
-    border-top: 1px dashed var(--line);
-    padding-top: 0.8rem;
-  }
-  /* The full account, one click away, so the three cards read at a glance. */
-  .detail summary {
-    cursor: pointer;
-    font-size: var(--fs-label);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text);
+  .against {
     list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    border-top: 1px solid var(--line);
   }
-  .detail summary::-webkit-details-marker {
-    display: none;
+  .against li {
+    display: grid;
+    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+    gap: 0.3rem 2rem;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--line);
   }
-  .detail summary::before {
-    content: '+ ';
+  .against a {
+    font-weight: 600;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.2em;
+  }
+  .against a::after {
+    content: ' →';
     color: var(--accent);
   }
-  .detail[open] summary::before {
-    content: '− ';
-  }
-  .detail p {
-    margin-top: 0.6rem;
+  .against p {
+    color: var(--muted);
     font-size: var(--fs-text);
+    max-width: 62ch;
   }
   .certs {
     list-style: none;
@@ -310,8 +277,8 @@ import { hyphenSafe } from '../../lib/text';
   }
   @media (max-width: 960px) {
     .cols,
-    .results,
-    .principles {
+    .principles,
+    .against li {
       grid-template-columns: minmax(0, 1fr);
     }
   }

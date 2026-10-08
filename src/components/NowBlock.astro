@@ -12,13 +12,7 @@ import { now } from '../data/now';
           {l.rows.map((parts) => (
             <p>
               {parts.map((p) =>
-                typeof p === 'string' ? (
-                  p
-                ) : p.url.startsWith('/') ? (
-                  <a class="internal" href={p.url}>{p.label}</a>
-                ) : (
-                  <a class="mono" href={p.url} target="_blank" rel="noopener noreferrer">{p.label}</a>
-                ),
+                typeof p === 'string' ? p : <a class="mono" href={p.url} target="_blank" rel="noopener noreferrer">{p.label}</a>,
               )}
             </p>
           ))}
@@ -27,6 +21,7 @@ import { now } from '../data/now';
     ))}
   </dl>
 </div>
+<p class="more mono"><a href="/open-source/#open">All open PRs</a></p>
 
 <style>
   .now {
@@ -68,17 +63,25 @@ import { now } from '../data/now';
     text-decoration-color: transparent;
     white-space: nowrap;
   }
-  dd a.internal {
-    font-size: 1em;
-    color: var(--text);
+
+  dd a:hover {
     text-decoration-color: var(--accent);
   }
-  dd a.internal::after {
+  .more {
+    margin-top: 1.25rem;
+    font-size: var(--fs-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .more a {
+    text-decoration: none;
+  }
+  .more a::after {
     content: ' →';
     color: var(--accent);
   }
-  dd a:hover {
-    text-decoration-color: var(--accent);
+  .more a:hover {
+    text-decoration: underline;
   }
   @media (max-width: 600px) {
     .row {

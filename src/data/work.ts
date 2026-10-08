@@ -38,28 +38,28 @@ export const featured: Featured[] = [
   card('climate-risk-agent', {
     name: 'Climate-Risk Agent',
     outcome: 'Answers climate-risk questions for any place with cited reports, and refuses when it cannot check the answer.',
-    metric: figure('climate-risk-agent', 'false answers', 'held-out questions answered falsely. It refused all 35 it should have, and 21 it could have answered.'),
-    tags: ['LangGraph', 'MCP', 'Gemini', 'FastAPI'],
+    metric: figure('climate-risk-agent', 'false answers', 'on 105 held-out questions. It refused all 35 out-of-scope ones, and 21 it could have answered.'),
+    tags: ['LangGraph', 'MCP', 'Gemini'],
     live: station('climate-risk-agent').links.find((l) => l.label === 'live app')?.url,
   }),
   card('incident-evidence-compiler', {
     name: 'Incident Evidence Compiler',
     outcome: 'Finds the root cause of an outage. The LLM only proposes, deterministic checks decide, and "unknown" is a valid answer.',
-    metric: figure('incident-evidence-compiler', 'held-out top-1', 'root cause ranked first by the deterministic engine, on 90 sealed held-out incidents'),
-    tags: ['FastAPI', 'PostgreSQL', 'Prometheus', 'Gemini'],
+    metric: figure('incident-evidence-compiler', 'held-out top-1', 'true root cause ranked first, on 90 sealed held-out incidents it had never seen (deterministic engine)'),
+    tags: ['FastAPI', 'PostgreSQL', 'Prometheus'],
   }),
   card('vera-bot', {
     name: 'vera-bot',
     outcome: 'Merchant-messaging engine for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts.',
-    metric: figure('vera-bot', 'judge-replica', "agreement between its local copy of the organiser's LLM judge and the official scores (Spearman, 15 cases)"),
-    tags: ['FastAPI', 'Vertex AI', 'Cloud Run', 'mypy'],
+    metric: figure('vera-bot', 'judge-replica', "agreement between its offline judge and the organiser's official scores (Spearman, 15 cases), so every change was scored before it shipped"),
+    tags: ['FastAPI', 'Vertex AI', 'Cloud Run'],
     isPrivate: true,
   }),
   card('fairness-credit-risk', {
-    name: 'fairness-credit-risk',
+    name: 'Fairness-Aware Credit Scoring',
     outcome: 'Credit scoring with standard fairness fixes, each tested against a tuned baseline on identical seeded splits. The result was a null, and I published it.',
-    metric: figure('fairness-credit-risk', 'fairness treatments', 'treatments that beat the tuned baseline beyond noise: reweighing, ExponentiatedGradient, group thresholds, a tabular foundation model'),
-    tags: ['AIF360', 'Fairlearn', 'FastAPI', 'Docker'],
+    metric: figure('fairness-credit-risk', 'alternatives beat', 'alternatives, three fairness fixes and a foundation model, beat the tuned baseline by more than noise. With 62 women in the 200-row test set, no interval was narrow enough to tell.'),
+    tags: ['AIF360', 'Fairlearn', 'FastAPI'],
   }),
 ];
 
