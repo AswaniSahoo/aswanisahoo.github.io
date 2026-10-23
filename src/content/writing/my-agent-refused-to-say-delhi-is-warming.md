@@ -51,9 +51,9 @@ If $p < 0.05$, report the return level effective at the latest year ("today's 10
 
 ## What it said about two cities
 
-Berlin: +0.76 °C per decade, p < 0.0001. Unambiguous. The report switches to effective-at-2022 return levels and states the trend in the summary.
+Berlin: +0.75 °C per decade, p < 0.0001. Unambiguous. The report switches to effective-at-2022 return levels and states the trend in the summary.
 
-Delhi: p = 0.56. Not significant, by the same test, on the same kind of data, at the same significance threshold. The report keeps the stationary fit and says the climate signal there wasn't statistically distinguishable from noise over the observed record.
+Delhi: p = 0.46 at the app's preset Delhi point, and p = 0.84 at the geocoded city point about 5 km away. Not significant, by the same test, on the same kind of data, at the same significance threshold. The report keeps the stationary fit and says the climate signal there wasn't statistically distinguishable from noise over the observed record.
 
 That split isn't an assumption I hardcoded. It's the same likelihood-ratio test applied identically to two different daily temperature series, landing on two different answers because the underlying data actually differ. And it happens to match a real result in the published climate literature: European heat trends show up cleanly in station records, while South Asian heat trends are partly masked by regional aerosol pollution, a well-documented effect that dampens the warming signal a naive trend line would otherwise show. My test didn't know that literature existed. It just measured the two series and got the same shape of answer anyway.
 
@@ -97,5 +97,7 @@ Warm-starting each bootstrap refit at the parent fit's MLE parameters brought 30
 Repo and the trend-fitting code are public: github.com/AswaniSahoo/climate-risk-agent
 
 Next: I write 105 new benchmark questions specifically so they can't be tuned to, and two of my own subagents burn a quarter-million tokens each trying to avoid actually writing them.
+
+*Correction, 23 October 2026: a clean re-fit on ERA5 1960 to 2022 (`scripts/measure_warming_trend.py`, artifact `evals/results/warming-trend-2026-10-21.json`) gives Berlin +0.75 °C per decade and Delhi p = 0.46 at the app's preset point. This post first said +0.76 and p = 0.56. The conclusion is unchanged: Berlin's trend is significant, Delhi's is not.*
 
 *Part of the series "Building an evaluated climate-risk agent in public."*
