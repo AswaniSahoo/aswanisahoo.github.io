@@ -79,7 +79,7 @@ After the fixes, gate 1 read: 51 correct answers, 35 correct refusals, 0 false a
 
 ## The number I haven't fixed
 
-The run my README quotes today is a later one, on 22 July with gemini-2.5-flash: 49 correct answers, 35 correct refusals, 0 false answers, 21 false refusals, and 96% citation validity (47 of 49). The agent still refuses 21 of the 70 questions it should answer. That is the price of the zero, and I haven't paid it down yet.
+The run my README quoted when I wrote this is a later one, on 22 July with gemini-2.5-flash: 49 correct answers, 35 correct refusals, 0 false answers, 21 false refusals, and 96% citation validity (47 of 49). The agent still refuses 21 of the 70 questions it should answer. That is the price of the zero, and I haven't paid it down yet.
 
 ## What I'd tell you to steal
 

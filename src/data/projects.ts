@@ -4,7 +4,7 @@ const GH = 'https://github.com/AswaniSahoo';
 const GW = 'https://github.com/openclimatefix/graph_weather';
 const CRA = `${GH}/climate-risk-agent`;
 const IEC = `${GH}/Incident-evidence-compiler`;
-const IEC_CI_RUN = `${IEC}/actions/runs/33744139090`;
+const IEC_CI_RUN = `${IEC}/actions/runs/39837548228`;
 // Latest CI run on main (2026-08-10), pytest summary line: "235 passed, 2 skipped".
 const FCR_CI_RUN = `${GH}/fairness-credit-risk/actions/runs/31434373846`;
 const CRA_LIVE = 'https://climate-risk-agent-714882950125.us-central1.run.app/';
@@ -84,8 +84,8 @@ export const hazardStats = {
   summary:
     'Inside the Climate-Risk Agent: 60+ years of ERA5 fitted with stationary and non-stationary GEV distributions, a likelihood-ratio trend test, and 90% bootstrap confidence intervals. Since September the agent also measures its own forecast skill per lead day and weights report confidence by it.',
   metrics: [
-    { label: 'Berlin warming trend (non-stationary GEV)', value: '+0.76 °C / decade', note: 'p\u00a0<\u00a00.0001', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
-    { label: 'Delhi trend test', value: 'stationary', note: 'p = 0.56', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
+    { label: 'Berlin warming trend (non-stationary GEV)', value: '+0.75 °C / decade', note: 'p\u00a0<\u00a00.0001', verifiedAt: '2026-11-18', source: `${CRA}#readme` },
+    { label: 'Delhi trend test', value: 'stationary', note: 'p = 0.46 at the preset point, 0.84 at the city point', verifiedAt: '2026-11-18', source: `${CRA}#readme` },
     // README (commit 7816673) line 140: "| Hazard | MAE, day 1 | MAE, day 7 | Extreme days caught, day 1 → day 7 |"
     // and line 142: "| Daily max temperature | 0.70 °C | 1.93 °C | 85% → 47% |". 85% → 47% is extreme days caught.
     { label: 'max-temperature forecast error, day 1 → day 7', value: '0.70 → 1.93\u00a0°C', note: '13 cities', verifiedAt: '2026-09-30', source: `${CRA}#forecast-skill` },
@@ -116,7 +116,7 @@ export const iec: Project = {
     { label: 'true root cause ranked first, on 90 sealed held-out incidents (deterministic engine)', value: '76.7%', note: 'in the top three: 87.8%', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-tt-baseline.json`, evidence: 'eval report' },
     { label: 'root cause ranked first on the 88 development incidents', value: '93.2%', note: 'in the top three: 98.9%', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-ob-baseline.json`, evidence: 'eval report' },
     { label: 'invalid evidence citations across 178 evaluated cases and two model generations', value: '0', verifiedAt: '2026-09-19', source: `${IEC}#readme` },
-    { label: 'tests run by the CI gate, no DB, network or credentials', value: '363', note: '10 skipped', verifiedAt: '2026-09-19', source: IEC_CI_RUN },
+    { label: 'tests run by the CI gate, no DB, network or credentials', value: '363', note: '2 skipped', verifiedAt: '2026-11-18', source: IEC_CI_RUN },
   ],
   stack: ['Python 3.12', 'FastAPI', 'PostgreSQL', 'Prometheus', 'Gemini', 'unittest', 'mypy --strict'],
   links: [
@@ -318,7 +318,7 @@ export const stations: Station[] = [
     summary: 'Finds the root cause of an outage from its metrics. The LLM may only propose causes; deterministic code checks each one against recorded evidence, and UNKNOWN is an allowed answer.',
     repo: IEC,
     status: { label: 'evaluated', kind: 'plain' },
-    tests: { label: 'tests in the CI gate', value: '363', verifiedAt: '2026-09-19', source: IEC_CI_RUN },
+    tests: { label: 'tests in the CI gate', value: '363', verifiedAt: '2026-11-18', source: IEC_CI_RUN },
     metrics: [
       { label: 'held-out top-1', value: '76.7%', verifiedAt: '2026-10-07', source: `${IEC}/blob/main/docs/evaluation/re2-tt-baseline.json`, evidence: 'eval report' },
       { label: 'invalid citations, 178 cases', value: '0', verifiedAt: '2026-09-19', source: `${IEC}#readme` },
