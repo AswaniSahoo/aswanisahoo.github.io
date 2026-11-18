@@ -27,7 +27,7 @@ const REPOS = [
   { slug: 'brightbandtech/ExtremeWeatherBench', org: 'Brightband', project: 'ExtremeWeatherBench', domain: 'weather' },
 ];
 
-const FIELDS = 'number,title,url,state,mergedAt,closedAt,createdAt,labels';
+const FIELDS = 'number,title,url,state,mergedAt,closedAt,createdAt,updatedAt,labels';
 
 function pull(slug) {
   const out = execFileSync(
@@ -55,6 +55,9 @@ for (const repo of REPOS) {
       url: p.url,
       status,
       date: (p.mergedAt || p.closedAt || p.createdAt).slice(0, 10),
+      // Open PRs only: the day of the last activity of any kind. The Open PRs list leaves out
+      // ones idle for more than 90 days; the counts keep them.
+      ...(status === 'open' ? { updated: p.updatedAt.slice(0, 10) } : {}),
       mergedVia: merged && !p.mergedAt ? 'label' : merged ? 'api' : null,
     });
   }

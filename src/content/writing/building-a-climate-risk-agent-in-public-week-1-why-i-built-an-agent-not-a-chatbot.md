@@ -86,9 +86,10 @@ Week 2 is the Model Context Protocol. I'll figure out what MCP actually is from 
 
 The repo is public and built in the open. Follow along.
 
-GitHub:
-[GitHub: https://github.com/AswaniSahoo/climate-risk-agent]
+GitHub: [AswaniSahoo/climate-risk-agent](https://github.com/AswaniSahoo/climate-risk-agent)
 
 I'm documenting every mistake, design choice, and improvement weekly.
 
 Week 2 → Model Context Protocol (MCP)
+
+*Added later: part 2 ended up being mostly about the hazard numbers, with MCP in a few paragraphs: [My hazard numbers passed every test and were still wrong](/writing/unit-tests-vs-scientific-correctness/).*

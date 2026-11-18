@@ -9,7 +9,9 @@ export const negativeResults: NegativeResult[] = [
     claimTested: 'That message passing over the mesh adds forecasting skill beyond what the encoder, decoder and per-cell embeddings already provide.',
     whatHappened:
       'My first test compared the mesh with a graph-free per-node MLP. In issue #238 I retracted it myself: the MLP was never a valid control, I had picked the best of about 11 held-out evaluations, and my train and eval windows touched. The fixed test changes only the graph: the same model and 2,267,775 parameters, the latent graph either full (about 35k cell-to-cell edges) or cut to self-loops, 5 seeds, final epoch, an 8-sample buffer on each side of the eval window. Message passing added no measurable skill; both arms still beat persistence by about 22%. The maintainer called it "really nice and helpful" and chose the next step: rework how observations couple to the mesh.',
-    number: { label: 'held-out loss with the full graph against no graph at all; the seeds alone vary by 0.0006', value: '0.1662 vs 0.1658', verifiedAt: '2026-09-30', source: 'https://github.com/openclimatefix/graph_weather/issues/238#issuecomment-5150272270' },
+    // Issue #238 comment: "120 training samples, 8 held out, 5 seeds, 40 epochs"; full latent graph
+    // 0.1662 +/- 0.0006, self loops only 0.1658 +/- 0.0006 (checked 2026-11-18).
+    number: { label: 'held-out loss with the full graph against self-loops only, 8 held-out samples, 5 seeds; the seeds alone vary by 0.0006', value: '0.1662 vs 0.1658', verifiedAt: '2026-11-18', source: 'https://github.com/openclimatefix/graph_weather/issues/238#issuecomment-5150272270' },
     whyItMatters: 'An architecture claim that has not survived a proper control is a guess, even when the guess is mine. I retracted the flawed test in public and replaced it with one that isolates the graph.',
     where: '/open-source/#graph-weather',
   },

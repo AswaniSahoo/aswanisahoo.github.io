@@ -2,7 +2,7 @@
 
 Personal site of Aswani Kumar Sahoo. Static, built with [Astro](https://astro.build), no client-side framework.
 
-The one rule of this site: every number links to its evidence, an eval report, a CI run, or the pull request itself. If a figure cannot be sourced, it does not go on the page. `MetricTile` stops the build when a metric has no source.
+The one rule of this site: every headline number links to its evidence, an eval report, a CI run, or the pull request itself. If a figure cannot be sourced, it does not go on the page. `MetricTile` stops the build when a metric has no source.
 
 ## Structure
 

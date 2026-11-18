@@ -111,12 +111,15 @@ const minutes = readingMinutes(post.body);
     border-left: 3px solid var(--accent);
     color: var(--muted);
   }
+  /* A long path in running text (scripts/measure_warming_trend.py) breaks instead of widening the
+     page on a phone. Code blocks do not wrap and scroll instead (pre, below). */
   .body :global(code) {
     font-family: var(--font-mono);
     font-size: 0.86em;
     background: var(--bg-2);
     border: 1px solid var(--line);
     padding: 0.05em 0.3em;
+    overflow-wrap: anywhere;
   }
   .body :global(pre) {
     background: var(--bg-2);

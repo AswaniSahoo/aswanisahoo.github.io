@@ -81,6 +81,8 @@ export interface PullRequest {
   url: string;
   status: 'merged' | 'open' | 'closed';
   date: string;
+  /** Open PRs only: the day of the last activity of any kind, from the GitHub API. */
+  updated?: string;
   mergedVia: 'api' | 'label' | null;
 }
 
