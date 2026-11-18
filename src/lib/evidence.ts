@@ -32,7 +32,8 @@ export function evidenceLabel(source: string): string {
   if (issue) return `issue #${issue[1]}`;
   if (/\/actions\/runs\//.test(p)) return 'CI run';
   if (/\/releases\/tag\//.test(p)) return 'release notes';
-  if (/eval/i.test(p) && p.endsWith('.json')) return 'eval report';
+  // An evals/ or eval/ folder, not any path with "eval" in it: retrieval_benchmark.json is a results file.
+  if (/\/evals?\//.test(p) && p.endsWith('.json')) return 'eval report';
   if (p.endsWith('.json')) return 'results file';
   if (p.endsWith('.ipynb')) return 'notebook';
   if (/\/tree\/[^/]+\/tests\/?$/.test(p)) return 'test suite';

@@ -4,7 +4,7 @@
  * Sections are optional: a project with little audited material gets a short page, not padding.
  */
 import type { Link, Metric, Station } from './types';
-import { climateRiskAgent, complaintFindings, hazardStats, iec, instruments, llamaTaskAgent, retrievalLatency, stations, veraBot, weatherByField, weatherTransformer } from './projects';
+import { climateRiskAgent, complaintFindings, earthgym, hazardStats, iec, instruments, llamaTaskAgent, retrievalLatency, stations, weatherByField, weatherTransformer } from './projects';
 import { negativeResults } from './negative';
 
 export interface Readout {
@@ -118,8 +118,8 @@ const climateRiskAgentCase: CaseStudy = {
     label: craStation.status.label,
     kind: craStation.status.kind,
     detail: climateRiskAgent.role,
-    // HTTP 200 from the live app, checked 2026-09-29.
-    check: { label: 'live app', verifiedAt: '2026-09-29', source: craLive.url },
+    // HTTP 200 from the live app, checked 2026-11-18.
+    check: { label: 'live app', verifiedAt: '2026-11-18', source: craLive.url },
   },
   metrics: climateRiskAgent.metrics,
   figures: [
@@ -199,7 +199,6 @@ const climateRiskAgentCase: CaseStudy = {
   ],
   stack: { chips: climateRiskAgent.stack },
   links: [repoLink(CRA), ...(climateRiskAgent.links ?? [])],
-  command: climateRiskAgent.command,
   relatedSeries: 'Building an evaluated climate-risk agent in public',
 };
 
@@ -255,28 +254,39 @@ const iecCase: CaseStudy = {
 };
 
 /* ------------------------------------------------------------------ */
-/* vera-bot (private)                                                  */
+/* Earthgym                                                            */
 /* ------------------------------------------------------------------ */
 
-const veraStation = station('vera-bot');
+const egStation = station('earthgym');
+const egReports = `${earthgym.repo}/blob/main/reports`;
 
-const veraCase: CaseStudy = {
-  slug: veraBot.slug,
-  station: veraStation,
-  name: veraBot.name,
-  summary: veraStation.summary,
-  status: { label: veraStation.status.label, kind: veraStation.status.kind, detail: veraBot.role },
-  metrics: veraBot.metrics,
+const egCase: CaseStudy = {
+  slug: earthgym.slug,
+  station: egStation,
+  name: earthgym.name,
+  summary: egStation.summary,
+  status: { label: egStation.status.label, kind: egStation.status.kind, detail: earthgym.role },
+  metrics: earthgym.metrics,
   how: {
-    lead: veraBot.summary,
-    notes: [{ title: 'Facts need provenance', text: need(veraBot.bullets[0], 'vera-bot provenance bullet') }],
+    lead: earthgym.summary,
+    notes: [{ title: 'Four task sets', text: need(earthgym.bullets[0], 'earthgym task sets bullet') }],
   },
   evaluation: {
-    text: [need(veraBot.bullets[1], 'vera-bot judge bullet'), need(veraBot.bullets[2], 'vera-bot trigger bullet')],
+    text: [need(earthgym.bullets[1], 'earthgym graders bullet'), need(earthgym.bullets[2], 'earthgym ClimaQA bullet')],
+    artifacts: [
+      { label: 'WeatherBench 2 reproduction', url: metric(earthgym.metrics, 'difference between').source },
+      { label: 'ClimaQA audit', url: metric(earthgym.metrics, 'validated ClimaQA').source },
+    ],
   },
-  changes: [{ title: 'gemini-3.7-flash', rows: [['Result', need(veraBot.bullets[3], 'vera-bot model bullet')]] }],
-  stack: { chips: veraBot.stack },
-  links: [],
+  changes: [
+    {
+      title: 'GRPO on ClimaQA multiple choice',
+      rows: [['Result', need(earthgym.bullets[3], 'earthgym GRPO bullet')]],
+      source: { label: 'run report', url: `${egReports}/grpo/2026-11-13-resample.md` },
+    },
+  ],
+  stack: { chips: earthgym.stack },
+  links: [repoLink(earthgym.repo)],
 };
 
 /* ------------------------------------------------------------------ */
@@ -423,15 +433,15 @@ const plain = (slug: string): CaseStudy => {
 const all: CaseStudy[] = [
   climateRiskAgentCase,
   iecCase,
-  veraCase,
+  egCase,
   fairnessCase,
   bioCase,
   wtCase,
   cisCase,
-  plain('kmesh-mcp-poc'),
   llamaCase,
-  plain('mlops-batch-signal-task'),
   plain('krkn-doc-sync-bot'),
+  // Private, with no figures on public record: the one-line description, the stack and nothing else.
+  plain('vera-bot'),
 ];
 
 // Every station on the Work sheet links to /work/<slug>/, so every station needs a case.
@@ -439,5 +449,5 @@ for (const s of stations) {
   if (!all.some((c) => c.slug === s.slug)) throw new Error(`cases.ts: no report for station ${s.slug}`);
 }
 
-/** In Work-sheet order: flagships first, then by test count. */
+/** In Work-sheet order: flagships first, then Complaint Intelligence System, then by test count, the private repository last. */
 export const cases: CaseStudy[] = stations.map((s) => need(all.find((c) => c.slug === s.slug), `case ${s.slug}`));

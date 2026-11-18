@@ -8,11 +8,15 @@ const IEC_CI_RUN = `${IEC}/actions/runs/33744139090`;
 // Latest CI run on main (2026-08-10), pytest summary line: "235 passed, 2 skipped".
 const FCR_CI_RUN = `${GH}/fairness-credit-risk/actions/runs/31434373846`;
 const CRA_LIVE = 'https://climate-risk-agent-714882950125.us-central1.run.app/';
-const CRA_IMAGE = 'ghcr.io/aswanisahoo/climate-ipcc-rag-mcp:0.1.0';
-// The repo-scoped /pkgs/container/ path returns 404; the user-scoped package page resolves (2026-10-04).
-// The image index holds one linux/amd64 image plus a build attestation, so it is not multi-arch.
-const CRA_IMAGE_PAGE = 'https://github.com/users/AswaniSahoo/packages/container/package/climate-ipcc-rag-mcp';
+// The registry entry points at a GHCR image that is private for now: an anonymous pull is refused
+// (README, "Published on the official MCP registry"; manifest request answered 403 on 2026-11-18).
 const CRA_REGISTRY = 'https://registry.modelcontextprotocol.io/v0/servers?search=climate-ipcc-rag';
+// The held-out run behind the README's results (fenced prompt, 2026-11-11).
+const CRA_HELDOUT = `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-11-11.json`;
+// CI on main at 12f5119 (2026-11-14). pytest -q prints no summary line here, so the counts are its
+// progress marks: 1,145 tests, 1,138 passed (.), 7 skipped (s), none failed.
+const CRA_CI_RUN = `${CRA}/actions/runs/43568814844`;
+const EG = `${GH}/earthgym`;
 
 /* ------------------------------------------------------------------ */
 /* Forecast: the atmosphere                                            */
@@ -52,7 +56,7 @@ export const meshSeries = {
 
 export const weatherTransformer: Project = {
   slug: 'weather-transformer-scratch',
-  name: 'Weather transformer, from scratch',
+  name: 'Weather Transformer from Scratch',
   repo: `${GH}/weather-transformer-scratch`,
   role: 'Solo',
   // Checked 2026-10-08 against the repo at 595f010: src/models/attention.py, src/training/physics_loss.py,
@@ -132,55 +136,59 @@ export const climateRiskAgent: Project = {
     'An agentic climate-risk analyst that returns typed, cited risk reports or an explicit refusal, for any location. A five-node LangGraph agent (plan, call, research, project, synthesize) over ERA5 hazard statistics, live forecasts, and a page-validated IPCC AR6 retrieval index.',
   bullets: [
     'Hybrid retrieval: BM25 plus dense embeddings fused with reciprocal rank fusion, citations validated against the source page. Two rerankers and a query rewriter were measured on the dev set and kept off: they cost 4 to 38 seconds per query, and none beat the baseline at any k.',
-    'Two MCP servers ship with it, weather and ipcc-rag, on protocol revision 2026-07-28 with ToolAnnotations. The IPCC server is indexed on the official MCP registry and published as a public container image.',
+    'Two MCP servers ship with it, weather and ipcc-rag, on protocol revision 2026-07-28 with ToolAnnotations. The IPCC server is indexed on the official MCP registry; its container image is private for now, so run it from a clone.',
     'Both eval sets are SHA-256 frozen. The 105-question held-out set was written after the dev set existed and never used to tune anything.',
   ],
   metrics: [
-    // e2e-test-gemini-2.5-flash-2026-07-22.json, the run behind the README's held-out citation validity
-    // (47/49): correct_answer 49, correct_refuse 35, false_refuse 21, no false_answer cell (checked 2026-10-07).
-    { label: 'on 105 held-out questions', value: '0 false answers', note: 'all 35 out-of-scope questions refused; 21 answerable ones refused too', verifiedAt: '2026-10-07', source: `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-07-22.json`, evidence: 'held-out run' },
-    { label: 'citation validity: held-out answers citing the right page', value: '96%', note: '47 of 49', verifiedAt: '2026-10-07', source: `${CRA}#readme` },
+    // CRA_HELDOUT (checked 2026-11-18): matrix correct_answer 52, correct_refuse 35, false_refuse 18, no
+    // false_answer cell; citation_validity 50 of 52. The README's Evaluation section gives the same figures.
+    { label: 'on 105 held-out questions', value: '0 false answers', note: 'all 35 out-of-scope questions refused; 18 answerable ones refused too', verifiedAt: '2026-11-18', source: CRA_HELDOUT, evidence: 'held-out run' },
+    { label: 'citation validity: held-out answers citing the right page', value: '96%', note: '50 of 52', verifiedAt: '2026-11-18', source: CRA_HELDOUT, evidence: 'held-out run' },
     // README (commit 7816673) line 98: "Held-out results (second exposure, on the exact configuration deployed):".
     // The cited JSON's HEADLINE (answer) row: n 70, recall@3 0.8714, @5 0.9143, @10 0.9571.
     { label: 'right page retrieved in the top 3 / 5 / 10', value: '87 / 91 / 96%', note: '70 questions', verifiedAt: '2026-09-30', source: `${CRA}/blob/main/evals/results/retrieval-test-2026-09-07.json` },
-    { label: 'test functions in the suite, 48 files', value: '490', verifiedAt: '2026-09-19', source: `${CRA}/tree/main/tests` },
-    { label: 'per question; median answer in 3.9 s', value: '≈ $0.003', verifiedAt: '2026-09-19', source: `${CRA}#readme` },
+    { label: 'tests passed in the CI run on main', value: '1,138', note: '7 skipped', verifiedAt: '2026-11-18', source: CRA_CI_RUN },
+    // CRA_HELDOUT telemetry.generate: est_cost_usd 0.258801 for the 105 questions, which the README gives as
+    // "about $0.0025 per question", and p50_ms 4091.83 over 95 model calls. The README's "p50 generation
+    // latency 3.2 s" does not match that file, so the page quotes the file (checked 2026-11-18).
+    { label: 'per question for the IPCC answer step; p50 4.1 s per model call', value: '≈ $0.0025', verifiedAt: '2026-11-18', source: CRA_HELDOUT, evidence: 'held-out run' },
   ],
   stack: ['LangGraph', 'Gemini', 'FastAPI', 'MCP', 'scipy', 'Docker', 'Cloud Run'],
-  command: `docker pull ${CRA_IMAGE}`,
   links: [
     { label: 'live app', url: CRA_LIVE },
-    { label: 'container', url: CRA_IMAGE_PAGE },
     { label: 'MCP registry', url: CRA_REGISTRY },
   ],
 };
 
-export const veraBot: Project = {
-  slug: 'vera-bot',
-  name: 'vera-bot',
-  repo: `${GH}/vera-bot`,
-  isPrivate: true,
-  role: 'Solo, built for the magicpin Vera AI Challenge',
+// README at 2ed5f18, main, and the reports it links (checked 2026-11-18): four environments with 648, 300,
+// 300 and 350 items; the forecast grader reproduces WeatherBench 2's IFS HRES MSLP 72 h RMSE to within
+// 3.2e-8 Pa (reports/era5/2026-10-30-wb2-reproduction.md); 43 validated Gold test questions appear word for
+// word in Silver (reports/climaqa/SUMMARY.md, leak.gold_in_silver: 9 cloze, 17 ffq, 17 mcq). GRPO,
+// reports/grpo/2026-11-13-resample.md: held-out 0.750 before, 0.774 after, two-sided sign test p 0.541.
+export const earthgym: Project = {
+  slug: 'earthgym',
+  name: 'Earthgym',
+  repo: EG,
+  role: 'Solo, MIT',
   summary:
-    'A merchant-messaging engine that is deterministic first: a resolver decides what is true, a validator gates every outbound body, and a template guarantees a message inside the latency budget. Gemini on Vertex AI rewrites the prose from the same facts when it answers in time, and is dropped when it does not.',
+    'Each environment is a verifiers taskset with an Inspect task beside it, and both score through one contract module. Code computes every reward: forecast skill over persistence and climatology, an exact answer, or an exact match.',
   bullets: [
-    'Fabrication is blocked at the type level: a Fact cannot be constructed without a provenance path into merchant, category, trigger or customer data.',
-    // Checked 2026-10-08 at d6ccb67 (docs/evaluation/plan.md, tests/test_replica.py, README "How it was evaluated").
-    'A local replica of the organiser\'s LLM judge scores every change before it ships. On the organiser\'s ten published example messages, each scored 15 times, its rank correlation with their scores is 0.830. Those scores all sit between 44 and 50, so the check shows agreement on good messages, not that it can tell good from bad.',
-    'On a 100-trigger set generated with the organiser\'s own script, a September 2026 run sent 69 messages and held back 31, and every message carried a fact tied to its trigger. The raw report is not in the repo; CI checks a floor of 55 messages on the template path.',
-    'gemini-3.7-flash was measured and rejected: minimal thinking returned HTTP 400 and other settings truncated output.',
+    'In era5-forecast-v1 the model forecasts ERA5 pressure or temperature from one grid cell’s history. In ibtracs-storm-v1 it computes a storm’s accumulated cyclone energy or peak category from the track, and in heat-basis-v1 it counts a heat policy’s trigger days from station data. The fourth, climaqa-v1, asks ClimaQA multiple-choice and cloze questions, with the leaked items taken out.',
+    'The forecast grader reproduces WeatherBench 2’s published IFS HRES scores for mean sea level pressure, the cyclone grader NOAA NCEI’s North Atlantic figures, and the heat grader NWS Phoenix’s counts.',
+    'The ClimaQA audit found validated Gold test questions word for word in Silver, the set the paper fine-tunes on. Only exact matches count, so the figure is a lower bound.',
+    'A small GRPO run of Qwen3.5-2B on the ClimaQA multiple-choice items showed no measurable transfer: held-out reward went from 0.750 to 0.774, which is not significant (two-sided sign test, p 0.541).',
   ],
   metrics: [
-    { label: 'rank correlation between its offline judge and the organiser\'s published scores, 10 example messages', value: '0.830', note: 'each scored 15 times; the published scores span only 44 to 50', verifiedAt: '2026-10-08', source: `${GH}/vera-bot` },
-    { label: 'test functions across 37 files', value: '1,135', verifiedAt: '2026-09-30', source: `${GH}/vera-bot` },
-    { label: 'commits in ten days, CI green on each of the last five runs', value: '97', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
+    { label: 'validated ClimaQA Gold test questions found word for word in Silver, the set the paper fine-tunes on', value: '43', note: 'exact matches, so a lower bound', verifiedAt: '2026-11-18', source: `${EG}/blob/main/reports/climaqa/SUMMARY.md`, evidence: 'audit report' },
+    { label: 'difference between its forecast grader and WeatherBench 2’s published IFS HRES MSLP 72 h RMSE', value: '3.2e-8 Pa', verifiedAt: '2026-11-18', source: `${EG}/blob/main/reports/era5/2026-10-30-wb2-reproduction.md`, evidence: 'reproduction report' },
+    { label: 'task sets: era5-forecast-v1, ibtracs-storm-v1, heat-basis-v1 and climaqa-v1', value: '4', note: '648, 300, 300 and 350 items', verifiedAt: '2026-11-18', source: `${EG}#readme`, evidence: 'README' },
   ],
-  stack: ['Python', 'FastAPI', 'Gemini on Vertex AI', 'Cloud Run', 'mypy --strict', 'pytest'],
+  stack: ['Python', 'Inspect AI', 'verifiers', 'TRL', 'ERA5', 'IBTrACS', 'GHCN-Daily'],
 };
 
 export const llamaTaskAgent: Project = {
   slug: 'llama-task-agent',
-  name: 'LLaMA task agent',
+  name: 'Llama Task Agent',
   repo: `${GH}/llama-task-agent`,
   role: 'Solo',
   summary:
@@ -200,21 +208,22 @@ export const instruments = [
     heading: 'Telemetry',
     items: [
       { text: 'Reads a real Prometheus through a bounded range-query client and exposes five metrics at /metrics: job outcomes, per-stage duration, provider timeouts, tokens and verdicts.', source: `${IEC}#readme`, verifiedAt: '2026-09-19' },
-      { text: 'Records per-request telemetry and cost, with a shared Redis cache, a disk fallback and a prewarm script for the hazard fits.', source: `${CRA}/blob/main/tools/cache_backend.py`, verifiedAt: '2026-09-19' },
+      // README, Operations: with CRG_CACHE_GCS_BUCKET set, the instance's disk and then that Cloud Storage
+      // bucket; otherwise Upstash Redis, with disk as its fallback. DEPLOY.md: the live service sets the
+      // bucket, "chosen over Upstash" on 2026-11-11 (checked 2026-11-18).
+      { text: 'Records per-request telemetry and cost, with a Cloud Storage cache in production (Redis optional), a disk fallback and a prewarm script for the hazard fits.', source: `${CRA}#operations`, verifiedAt: '2026-11-18' },
     ],
   },
   {
     heading: 'Evaluation discipline',
     items: [
       { text: 'Incident Evidence Compiler: the held-out split was sealed and opened once, against a named commit, with the protocol committed next to the results.', source: `${IEC}/blob/main/docs/evaluation/re2-tt-sealed-protocol.md`, verifiedAt: '2026-09-30' },
-      { text: 'Model ablations run with 5 seeds and a held-out split before any architecture claim is made.', source: `${GW}/issues/238#issuecomment-5150272270`, verifiedAt: '2026-09-30' },
       { text: 'Climate-Risk Agent: both eval sets are frozen by SHA-256, so neither can quietly change. Rerankers and query rewriting were measured on the dev set and kept off.', source: `${CRA}#readme`, verifiedAt: '2026-09-30' },
     ],
   },
   {
     heading: 'Resilience',
     items: [
-      { text: 'CNCF krkn-chaos: fixed the fitness range-query window so chaos runs are scored over the full test duration, synced pinned dev dependencies, corrected scenario docs.', source: 'https://github.com/krkn-chaos/krkn-ai/pulls?q=is%3Apr+author%3AAswaniSahoo', verifiedAt: '2026-09-03' },
       { text: '3,000 generated hostile inputs across two parser boundaries assert that only typed errors escape. Token comparison is constant-time, poison jobs fail closed, and opaque case ids keep fault labels out of the prompt.', source: `${IEC}#readme`, verifiedAt: '2026-09-19' },
     ],
   },
@@ -227,21 +236,12 @@ export const instruments = [
 export const principles = [
   { text: 'I freeze evaluation sets before I tune anything: SHA-256 hashes, or a held-out split sealed and opened once against a named commit.', source: `${IEC}/blob/main/docs/evaluation/re2-tt-sealed-protocol.md`, label: 'sealed-run protocol' },
   { text: 'My agents return a typed refusal when they cannot check an answer, and one false answer on the held-out matrix blocks a release.', source: `${CRA}#readme`, label: 'README' },
-  { text: 'I put a proper control under a claim before I make it, and I retract in public when one fails.', source: `${GW}/issues/238#issuecomment-5150272270`, label: 'issue #238' },
+  { text: 'I put a proper control under every claim, and retract in public when one fails.', source: `${GW}/issues/238#issuecomment-5150272270`, label: 'issue #238' },
   { text: 'I measure what running it costs: per-request cost and latency, Prometheus metrics, and 3,000 generated hostile inputs.', source: `${IEC}#readme`, label: 'README' },
 ];
 
-export const testCounts: Metric[] = [
-  { label: 'vera-bot, test functions (private)', value: '1,135', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
-  { label: 'Climate-Risk Agent, test functions', value: '490', verifiedAt: '2026-09-19', source: `${CRA}/tree/main/tests` },
-  { label: 'Incident Evidence Compiler, CI gate', value: '363', verifiedAt: '2026-09-19', source: IEC_CI_RUN },
-  { label: 'fairness-credit-risk', value: '235', verifiedAt: '2026-10-04', source: FCR_CI_RUN },
-  { label: 'biodiversity-publication-analyzer', value: '81', verifiedAt: '2026-07-19', source: `${GH}/biodiversity-publication-analyzer` },
-  { label: 'weather-transformer-scratch', value: '74', verifiedAt: '2026-07-19', source: `${GH}/weather-transformer-scratch` },
-];
-
 export const retrievalLatency = {
-  name: 'Retrieval latency, complaint-intelligence-system',
+  name: 'Retrieval latency, Complaint Intelligence System',
   repo: `${GH}/complaint-intelligence-system`,
   // data/results/retrieval_benchmark.json (checked 2026-10-08 at 5e608b7): 20 fixed queries, k=5, one run,
   // p50/p95 35.04/41.23 for vector search, whose times include encoding the query; the 200K run and the T4 are
@@ -302,14 +302,14 @@ export const stations: Station[] = [
     summary: 'Ask about heat, rain or wind risk for any place on Earth. It answers with a report that cites its sources, or refuses when the evidence is not there.',
     repo: CRA,
     status: { label: 'live', kind: 'live' },
-    tests: { label: 'test functions', value: '490', verifiedAt: '2026-09-19', source: `${CRA}/tree/main/tests` },
+    tests: { label: 'tests passed in CI', value: '1,138', note: '7 skipped', verifiedAt: '2026-11-18', source: CRA_CI_RUN },
     metrics: [
       { label: 'recall@3 held-out', value: '87%', verifiedAt: '2026-09-19', source: `${CRA}/blob/main/evals/results/retrieval-test-2026-09-07.json` },
-      { label: 'citation validity', value: '96%', note: '47 of 49 answers', verifiedAt: '2026-10-07', source: `${CRA}#readme` },
-      { label: 'false answers on 105 held-out questions', value: '0 false answers', verifiedAt: '2026-10-07', source: `${CRA}/blob/main/evals/results/e2e-test-gemini-2.5-flash-2026-07-22.json`, evidence: 'held-out run' },
+      { label: 'citation validity', value: '96%', note: '50 of 52 answers', verifiedAt: '2026-11-18', source: CRA_HELDOUT, evidence: 'held-out run' },
+      { label: 'false answers on 105 held-out questions', value: '0 false answers', verifiedAt: '2026-11-18', source: CRA_HELDOUT, evidence: 'held-out run' },
     ],
     stack: ['LangGraph', 'Gemini', 'MCP', 'FastAPI', 'Cloud Run'],
-    links: [repoLink(CRA), { label: 'live app', url: CRA_LIVE }, { label: 'container', url: CRA_IMAGE_PAGE }, { label: 'MCP registry', url: CRA_REGISTRY }],
+    links: [repoLink(CRA), { label: 'live app', url: CRA_LIVE }, { label: 'MCP registry', url: CRA_REGISTRY }],
   },
   {
     slug: 'incident-evidence-compiler',
@@ -343,6 +343,22 @@ export const stations: Station[] = [
     links: [repoLink(`${GH}/weather-transformer-scratch`)],
   },
   {
+    slug: 'earthgym',
+    name: 'Earthgym',
+    // At most about 30 characters: the banner keeps the label on one line, and 320px fits no more.
+    domain: 'RL environments · climate',
+    summary: 'Weather and climate tasks for training and testing AI models, with rewards a program can check. The forecast, cyclone and heat graders reproduce published numbers before they score anything.',
+    repo: EG,
+    // README, "Not finished": the author's own review of the decision records and hand checks is still open.
+    status: { label: 'in progress', kind: 'plain' },
+    metrics: [
+      { label: 'ClimaQA Gold test questions found word for word in Silver', value: '43', verifiedAt: '2026-11-18', source: `${EG}/blob/main/reports/climaqa/SUMMARY.md`, evidence: 'audit report' },
+      { label: 'grader gap to WeatherBench 2’s IFS HRES MSLP 72 h RMSE', value: '3.2e-8 Pa', verifiedAt: '2026-11-18', source: `${EG}/blob/main/reports/era5/2026-10-30-wb2-reproduction.md`, evidence: 'reproduction report' },
+    ],
+    stack: ['Python', 'Inspect AI', 'verifiers', 'ERA5'],
+    links: [repoLink(EG)],
+  },
+  {
     slug: 'complaint-intelligence-system',
     name: 'Complaint Intelligence System',
     domain: 'NLP · retrieval',
@@ -360,22 +376,6 @@ export const stations: Station[] = [
     links: [repoLink(`${GH}/complaint-intelligence-system`)],
   },
   {
-    slug: 'vera-bot',
-    name: 'vera-bot',
-    domain: 'LLM product · messaging',
-    summary: 'A merchant-messaging bot for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts, and is skipped when it is too slow.',
-    repo: `${GH}/vera-bot`,
-    isPrivate: true,
-    status: { label: 'private', kind: 'private' },
-    tests: { label: 'test functions', value: '1,135', verifiedAt: '2026-10-08', source: `${GH}/vera-bot` },
-    metrics: [
-      { label: 'judge-replica Spearman, 10 example messages', value: '0.830', verifiedAt: '2026-10-08', source: `${GH}/vera-bot` },
-      { label: 'actions / silences on 100 triggers', value: '69 / 31', verifiedAt: '2026-09-19', source: `${GH}/vera-bot` },
-    ],
-    stack: ['Python', 'FastAPI', 'Vertex AI', 'Cloud Run'],
-    links: [],
-  },
-  {
     slug: 'fairness-credit-risk',
     name: 'Fairness-Aware Credit Scoring',
     domain: 'Responsible AI · credit risk',
@@ -390,41 +390,29 @@ export const stations: Station[] = [
       { label: 'alternatives beat the tuned baseline by more than noise', value: '0 of 4', note: 'three fairness fixes (reweighing, ExponentiatedGradient, group thresholds) and a tabular foundation model', verifiedAt: '2026-10-07', source: `${GH}/fairness-credit-risk#readme`, evidence: 'README' },
       { label: 'baseline disparate impact on German Credit; its interval crosses the 0.8 fairness line', value: '0.7263', verifiedAt: '2026-08-11', source: `${GH}/fairness-credit-risk` },
     ],
-    stack: ['AIF360', 'Fairlearn', 'FastAPI', 'Docker', 'Streamlit'],
+    // requirements.txt: "aif360 is deliberately absent"; fairlearn, xgboost and scikit-learn are pinned there,
+    // fastapi in requirements-api.txt, and app.py is the Streamlit demo (checked 2026-11-18).
+    stack: ['Fairlearn', 'XGBoost', 'scikit-learn', 'FastAPI', 'Streamlit'],
     links: [repoLink(`${GH}/fairness-credit-risk`)],
   },
   {
     slug: 'biodiversity-publication-analyzer',
-    name: 'biodiversity-publication-analyzer',
+    name: 'Biodiversity Publication Analyzer',
     domain: 'AI for science · NLP',
     summary: 'Discovers and classifies biodiversity-genomics papers from Europe PMC with SciBERT and TF-IDF baselines, tested end to end.',
     repo: `${GH}/biodiversity-publication-analyzer`,
     status: { label: 'evaluated', kind: 'plain' },
-    tests: { label: 'tests', value: '81', verifiedAt: '2026-09-30', source: `${GH}/biodiversity-publication-analyzer` },
+    // README, Testing: "81 comprehensive tests across 6 test files" (checked 2026-11-18).
+    tests: { label: 'tests', value: '81', verifiedAt: '2026-11-18', source: `${GH}/biodiversity-publication-analyzer` },
     metrics: [],
     stack: ['SciBERT', 'scikit-learn', 'Europe PMC API'],
     links: [repoLink(`${GH}/biodiversity-publication-analyzer`)],
   },
   {
-    slug: 'kmesh-mcp-poc',
-    name: 'kmesh-mcp-poc',
-    domain: 'Agent tooling · service mesh',
-    // Checked 2026-10-08 at 9b7cbd4: 26 Go tests (server 13, stateful 2, trace 4, tracectx 7, README line 444),
-    // CI green, and a second workflow that runs live tests against real Kmesh daemons on a two-node kind cluster.
-    // The README calls it a personal proof of concept, not a proposed change to Kmesh.
-    summary: 'An MCP server in Go that gives AI agents three read-only tools over the Kmesh daemon’s admin API. A personal proof of concept; CI also runs it against real Kmesh daemons on a two-node kind cluster.',
-    repo: `${GH}/kmesh-mcp-poc`,
-    status: { label: 'proof of concept', kind: 'plain' },
-    tests: { label: 'Go tests', value: '26', verifiedAt: '2026-10-08', source: `${GH}/kmesh-mcp-poc` },
-    metrics: [],
-    stack: ['Go', 'MCP', 'Kubernetes'],
-    links: [repoLink(`${GH}/kmesh-mcp-poc`)],
-  },
-  {
     slug: 'krkn-doc-sync-bot',
-    name: 'krkn-doc-sync-bot',
+    name: 'Krkn Doc Sync Bot',
     domain: 'Developer tooling',
-    summary: 'Compares the inputs of krkn-hub chaos scenarios with the krkn-chaos docs and drafts the missing pages. An independent proof of concept for krkn-chaos/website#320, installed from source; the docs bot krkn-chaos adopted is a separate project.',
+    summary: 'Compares the inputs of krkn-hub chaos scenarios with the krkn-chaos docs and drafts the missing pages. An independent proof of concept for krkn-chaos/website#320, installed from source.',
     repo: `${GH}/krkn-doc-sync-bot`,
     status: { label: 'proof of concept', kind: 'plain' },
     tests: { label: 'tests', value: '22', verifiedAt: '2026-10-08', source: `${GH}/krkn-doc-sync-bot/tree/main/tests` },
@@ -434,24 +422,27 @@ export const stations: Station[] = [
   },
   {
     slug: 'llama-task-agent',
-    name: 'llama-task-agent',
+    name: 'Llama Task Agent',
     domain: 'LLM fine-tuning · agents',
     summary: 'LLaMA-3.1-8B with LoRA in 4-bit, trained to emit tool calls under a strict output contract.',
     repo: `${GH}/llama-task-agent`,
     status: { label: 'demo', kind: 'plain' },
     metrics: [],
     stack: ['PEFT / LoRA', 'Transformers', '4-bit quantization'],
-    links: [repoLink(`${GH}/llama-task-agent`)],
+    // The README links this notebook as the demo: "Test the trained model live" (checked 2026-11-18).
+    links: [repoLink(`${GH}/llama-task-agent`), { label: 'Kaggle demo notebook', url: 'https://www.kaggle.com/code/aswanisahoo/kaggle-demo135c45d783' }],
   },
   {
-    slug: 'mlops-batch-signal-task',
-    name: 'mlops-batch-signal-task',
-    domain: 'MLOps',
-    summary: 'A minimal reproducible batch job: price data in, a signal rate out, driven by a validated config, with pinned dependencies, a metrics file and a run log.',
-    repo: `${GH}/mlops-batch-signal-task`,
-    status: { label: 'reproducible', kind: 'plain' },
+    slug: 'vera-bot',
+    name: 'Vera Bot',
+    domain: 'LLM product · messaging',
+    // A private repository with no figures on public record, so it carries a description and nothing else.
+    summary: 'A merchant-messaging bot for the magicpin Vera AI Challenge. Code decides what is true; the LLM only rewrites checked facts, and is skipped when it is too slow.',
+    repo: `${GH}/vera-bot`,
+    isPrivate: true,
+    status: { label: 'private', kind: 'private' },
     metrics: [],
-    stack: ['Docker', 'Python'],
-    links: [repoLink(`${GH}/mlops-batch-signal-task`)],
+    stack: ['Python', 'FastAPI', 'Vertex AI', 'Cloud Run'],
+    links: [],
   },
 ];

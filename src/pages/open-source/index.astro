@@ -27,7 +27,13 @@ const groups = order.map((project) => {
   const org = (any?.org ?? '').replace(project, '').trim();
   return { project, org, counts: data.byProject[project], prs, manyRepos: new Set(prs.map((pr) => pr.repo)).size > 1 };
 });
-const open: PullRequest[] = data.prs.filter((pr) => pr.status === 'open');
+// The list shows open PRs with activity in the 90 days before the ledger was read. Idle ones stay
+// in prs.json and in every count; only this list leaves them out.
+const IDLE_DAYS = 90;
+const idleDays = (p: PullRequest) => (Date.parse(data.verifiedAt) - Date.parse(p.updated ?? p.date)) / 86_400_000;
+const openAll = data.prs.filter((pr) => pr.status === 'open');
+const open: PullRequest[] = openAll.filter((pr) => idleDays(pr) <= IDLE_DAYS);
+const idle = openAll.length - open.length;
 const pr = (n: number) => `${meshSeries.repo}/pull/${n}`;
 const ext = { target: '_blank', rel: 'noopener noreferrer' };
 ---
@@ -127,6 +133,7 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
 
   <section id="open" class="wrap section-block" aria-labelledby="open-title">
     <h2 id="open-title">Open PRs</h2>
+    {idle > 0 && <p class="prose muted">Open PRs with no activity for more than {IDLE_DAYS} days are left out of this list. They are still in the counts above.</p>}
     <ul class="open-list">
       {open.map((p) => (
         <li>
@@ -341,6 +348,11 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
   td a:hover {
     text-decoration: underline;
   }
+  /* A long identifier in a title (cnv_discordant_read_calls) wraps instead of widening every table
+     past a 320px screen. */
+  .title {
+    overflow-wrap: anywhere;
+  }
   .prnum {
     width: 5.5rem;
     color: var(--text);
@@ -424,7 +436,8 @@ const ext = { target: '_blank', rel: 'noopener noreferrer' };
     .date {
       display: none;
     }
-  </style>
+  }
+</style>
 
 <script>
   // A link to one org's group (#ledger-...) opens that group, from this sheet or from another.

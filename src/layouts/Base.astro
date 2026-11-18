@@ -26,6 +26,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 // The link preview card, rendered from the home page by scripts/og-image.mjs.
 const ogImage = new URL('/og.jpg', Astro.site).toString();
 const ogImageAlt = `${profile.name}, ${profile.title}. ${profile.tagline} Set over a weather chart of the Bay of Bengal.`;
+// Who the site is about, for search engines (schema.org Person). The url follows `site`.
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  url: new URL('/', Astro.site).toString(),
+  sameAs: [profile.links.github, 'https://www.linkedin.com/in/aswani-sahoo/', profile.links.x],
+  alumniOf: { '@type': 'CollegeOrUniversity', name: profile.education.school },
+};
 ---
 
 <!doctype html>
@@ -53,6 +62,7 @@ const ogImageAlt = `${profile.name}, ${profile.title}. ${profile.tagline} Set ov
     <meta property="og:image:alt" content={ogImageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:creator" content="@AswaniSahoo2" />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(person)} />
     <script is:inline>
       // Apply the stored theme before first paint so there is no flash. Client-side navigation
       // replaces the root element's attributes, so the same restore runs after every swap.

@@ -9,7 +9,7 @@ export const profile = {
   // The status tab on the hero card. Keep it short and true; update it when it changes.
   // The school goes here too: the first screen should say where the degree is from.
   // At most about 55 characters, or the tab takes two lines on a desktop card.
-  availability: 'Internship from Dec, then full-time · NIT Rourkela ’27',
+  availability: 'Internship from Dec 2026, then full-time · NIT Rourkela ’27',
   // The same in full, on the About page.
   availabilityDetail: 'Open to a 6-month internship from December 2026, in my final semester, and to full-time roles after that',
   // Served from public/. The résumé buttons appear only once this file exists (src/lib/resume.ts).
@@ -42,17 +42,20 @@ export const profile = {
   /** Tools with the repo that proves each one. Used in About. */
   stack: [
     { tool: 'Python', proof: 'everywhere' },
-    { tool: 'PyTorch', proof: 'weather-transformer-scratch, graph_weather' },
+    { tool: 'PyTorch', proof: 'Weather Transformer from Scratch, graph_weather' },
     { tool: 'LangGraph', proof: 'Climate-Risk Agent' },
     { tool: 'FastAPI', proof: 'Incident Evidence Compiler, Climate-Risk Agent' },
     { tool: 'PostgreSQL', proof: 'Incident Evidence Compiler' },
-    { tool: 'FAISS, BM25, rerankers', proof: 'complaint-intelligence-system' },
-    { tool: 'xarray, zarr, H3', proof: 'graph_weather, weather-transformer-scratch' },
-    { tool: 'PEFT / LoRA', proof: 'llama-task-agent' },
-    { tool: 'Gemini on Vertex AI', proof: 'Climate-Risk Agent, Incident Evidence Compiler, vera-bot' },
-    { tool: 'MCP', proof: 'Climate-Risk Agent: 2 servers, registry entry, public container' },
+    { tool: 'FAISS, BM25, rerankers', proof: 'Complaint Intelligence System' },
+    { tool: 'xarray, zarr, H3', proof: 'graph_weather, Weather Transformer from Scratch' },
+    { tool: 'PEFT / LoRA', proof: 'Llama Task Agent' },
+    { tool: 'Gemini on Vertex AI', proof: 'Climate-Risk Agent, Incident Evidence Compiler' },
+    { tool: 'MCP', proof: 'Climate-Risk Agent: 2 servers, registry entry' },
     { tool: 'Prometheus', proof: 'Incident Evidence Compiler: range-query ingestion and /metrics' },
-    { tool: 'Docker, Cloud Run, GitHub Actions', proof: 'Climate-Risk Agent, vera-bot, Incident Evidence Compiler' },
+    // Both repos have a Dockerfile and a GitHub Actions CI workflow; only the Climate-Risk Agent
+    // runs on Cloud Run (checked 2026-11-18).
+    { tool: 'Docker, GitHub Actions', proof: 'Climate-Risk Agent, Incident Evidence Compiler' },
+    { tool: 'Cloud Run', proof: 'Climate-Risk Agent' },
     { tool: 'scipy, extreme-value statistics', proof: 'Climate-Risk Agent GEV hazard fits' },
     { tool: 'Kubernetes (learning)', proof: 'krkn-chaos contributions' },
   ],
@@ -62,8 +65,6 @@ export const profile = {
       url: 'https://aswanisahoo.hashnode.dev/5-mistakes-that-cost-me-gsoc-and-lfx',
       date: '2026-06-14',
       opening: 'It took me five rejections to understand this: I had the merged pull requests.',
-      summary:
-        'Ranked #1 for one GSoC project, #2 for another, interviewed, and still 0 for 5 across GSoC and LFX. The post is about the decisions made before any code was written.',
       verifiedAt: '2026-09-03',
     },
   ],

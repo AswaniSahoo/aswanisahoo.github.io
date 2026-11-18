@@ -20,7 +20,8 @@ const n = stations.length;
     <p class="lede">Four flagships first, each with one result and a link to its evidence. Open any project for the full case study.</p>
   </SheetBanner>
 
-  <section class="wrap work" aria-label="Flagship projects">
+  <section class="wrap work" aria-labelledby="flagships-title">
+    <h2 id="flagships-title">Flagship projects</h2>
     <FeatureGrid />
   </section>
 
@@ -53,6 +54,7 @@ const n = stations.length;
   .more {
     padding-block: clamp(3rem, 6vw, 4.5rem) clamp(4rem, 8vw, 6rem);
   }
+  .work h2,
   .more h2 {
     font-size: var(--fs-h3);
     margin-bottom: 1rem;

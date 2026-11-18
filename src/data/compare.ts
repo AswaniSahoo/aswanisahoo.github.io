@@ -29,29 +29,8 @@ export interface Comparison {
   description: string;
 }
 
+/** The Climate-Risk Agent report draws its own flow (CraFlow), so it has no panel here. */
 export const comparisons: Record<string, Comparison> = {
-  'climate-risk-agent': {
-    generic: {
-      steps: [{ t: 'question' }, { t: 'retrieve context' }, { t: 'LLM writes' }],
-      outcome: { t: 'answers anyway', tone: 'muted' },
-    },
-    agent: {
-      steps: [
-        { t: 'question', s: 'free text' },
-        { t: 'scope check', s: 'refuses at step one', differs: true },
-        { t: 'forecast + AR6', s: 'forecast, IPCC AR6 search' },
-        { t: 'citation check', s: 'against the source page', differs: true },
-        { t: 'typed report', s: 'skill-weighted confidence', differs: true },
-      ],
-      outcomes: [
-        { t: 'refused', tone: 'accent', from: 1 },
-        { t: 'cited typed report', tone: 'ok', packet: 'accent' },
-      ],
-    },
-    caption: 'Red marks what differs. Release gate: any false answer fails the build.',
-    description:
-      'A generic pipeline goes from question to retrieved context to an LLM that answers anyway. The Climate-Risk Agent checks scope first and can refuse at that step; otherwise it fetches the forecast and searches IPCC AR6, checks every citation against the source page, and returns a typed report whose confidence is weighted by measured forecast skill.',
-  },
   'incident-evidence-compiler': {
     generic: {
       steps: [{ t: 'incident' }, { t: 'LLM reads signals' }, { t: 'LLM names a cause' }],

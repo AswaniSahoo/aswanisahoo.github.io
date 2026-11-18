@@ -38,7 +38,7 @@ export const featured: Featured[] = [
   card('climate-risk-agent', {
     name: 'Climate-Risk Agent',
     outcome: 'Answers climate-risk questions for any place with cited reports, and refuses when it cannot check the answer.',
-    metric: figure('climate-risk-agent', 'false answers', 'on 105 held-out questions; 21 answerable ones refused'),
+    metric: figure('climate-risk-agent', 'false answers', 'on 105 held-out questions; 18 answerable ones refused'),
     tags: ['LangGraph', 'MCP', 'Gemini'],
     live: station('climate-risk-agent').links.find((l) => l.label === 'live app')?.url,
   }),
@@ -55,11 +55,11 @@ export const featured: Featured[] = [
     metric: figure('weather-transformer-scratch', 'lower wind RMSE than persistence (u10 / v10)', 'lower 10 m wind error than a no-change forecast over 2020; temperature and geopotential still trail anomaly persistence'),
     tags: ['PyTorch', 'xarray', 'ERA5'],
   }),
-  card('complaint-intelligence-system', {
-    name: 'Complaint Intelligence System',
-    outcome: 'Benchmarks four ways to search 200K US consumer complaints and two ways to group them into topics.',
-    metric: figure('complaint-intelligence-system', 'vector search p95', '95th-percentile search time over 200K complaints, including encoding the query'),
-    tags: ['FAISS', 'Sentence-Transformers', 'BERTopic'],
+  card('earthgym', {
+    name: 'Earthgym',
+    outcome: 'Weather and climate tasks for training and testing AI models, scored by code. The forecast, cyclone and heat graders reproduce published results before they score anything.',
+    metric: figure('earthgym', 'ClimaQA Gold test questions', 'validated ClimaQA test questions that also appear, word for word, in the set its paper fine-tunes on'),
+    tags: ['Inspect AI', 'verifiers', 'ERA5'],
   }),
 ];
 
@@ -68,8 +68,10 @@ export const others: Station[] = stations.filter((s) => !featured.some((f) => f.
 
 /** The one figure a listed project shows, in plain words, where it has one. */
 export const listFigure: Record<string, Metric> = {
-  // A measured count; the judge-replica correlation needs its caveat, so it stays on the case study.
-  'vera-bot': { ...station('vera-bot').tests!, label: 'test functions across 37 files' },
+  // The figure its flagship card used to carry, now that Earthgym holds that slot.
+  'complaint-intelligence-system': figure('complaint-intelligence-system', 'vector search p95', '95th-percentile search time over 200K complaints, including encoding the query'),
   // The same finding as the case study's "0 of 4": three fairness fixes and a tabular foundation model.
   'fairness-credit-risk': figure('fairness-credit-risk', 'alternatives beat', 'methods beat the tuned baseline by more than noise'),
+  // README, Testing: "81 comprehensive tests across 6 test files".
+  'biodiversity-publication-analyzer': { ...station('biodiversity-publication-analyzer').tests!, label: 'tests across 6 test files' },
 };

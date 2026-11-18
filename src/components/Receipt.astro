@@ -34,14 +34,19 @@ const when = fast && verifiedAt ? monthYear(verifiedAt) : undefined;
   .receipt {
     display: inline-block;
     max-width: 100%;
+    /* 24px tall to tap: 18px of text and 3px above and below. The negative margin keeps the
+       layout around it where it was. */
+    padding-block: 3px;
+    margin-block: -3px;
     font-family: var(--font-mono);
     font-size: var(--fs-label);
     letter-spacing: 0.02em;
     line-height: 1.5;
     color: var(--accent);
     text-decoration: none;
-    /* The underline sweeps in on hover. */
+    /* The underline sweeps in on hover, under the text rather than under the padding. */
     background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    background-origin: content-box;
     transition: background-size 220ms var(--ease), color 200ms var(--ease);
   }
   a.receipt::before {

@@ -277,7 +277,13 @@ const next = cases[position];
     letter-spacing: 0.06em;
     color: var(--muted);
   }
+  /* 24px tall to tap: 18px of text and 3px above and below. The negative margin keeps the line
+     where it was. */
   .crumbs a {
+    display: inline-block;
+    padding-block: 3px;
+    margin-block: -3px;
+    line-height: 1.5;
     color: var(--text);
   }
   .status {
@@ -403,10 +409,13 @@ const next = cases[position];
     font-size: var(--fs-text);
     max-width: 65ch;
   }
+  /* A results table wider than a phone scrolls inside its own box, so the page never scrolls
+     sideways (the Incident Evidence Compiler table needs about 345px). */
   .latency {
     margin: 0;
     display: grid;
     gap: 0.6rem;
+    overflow-x: auto;
   }
   .latency table {
     width: 100%;
