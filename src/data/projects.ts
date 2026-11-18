@@ -62,12 +62,14 @@ export const weatherTransformer: Project = {
     'A vision transformer with 4.8 million parameters that forecasts four ERA5 fields six hours ahead, with attention written by hand instead of nn.MultiheadAttention. Its loss adds two penalties to the error: one for jagged fields and one for a wrong global mean.',
   bullets: [
     'Every block implemented and unit-tested on its own: patch embedding, positional encoding, attention, transformer block and loss. A test checks that nn.MultiheadAttention is never used.',
-    'Tested on all 1,463 six-hour steps of 2020, a year held out from training, against persistence: a forecast that assumes nothing changes in six hours. The error is pooled over four standardised fields on a 5.625° grid without latitude weighting, so it does not compare with WeatherBench2 scores. Almost all of the gain is in wind; for temperature the model is slightly worse than persistence.',
+    'Tested on all 1,463 six-hour steps of 2020, a year held out from training, against two baselines: persistence, which assumes nothing changes in six hours, and anomaly persistence, which carries the current departure from the seasonal average forward. Scores are latitude-weighted and in physical units. On 10 m wind the model beats both. On 850 hPa temperature and 500 hPa geopotential it does not beat anomaly persistence: 1.24 K against 1.02 K, and 213 against 191 m²/s². Over India it is level with persistence on wind and behind it on temperature and geopotential.',
   ],
   metrics: [
-    // results/metrics.json: rmse 0.19598 (model) against 0.26805 (persistence), a 26.9% reduction.
-    { label: 'lower error (RMSE) than a no-change forecast, on the 2020 test year', value: '27%', note: '0.196 against 0.268 in standardised units, pooled over four fields', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/blob/main/results/metrics.json`, evidence: 'results file' },
-    { label: 'unit tests', value: '74', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/tree/main/tests` },
+    // results/metrics.json (retrained baseline, repo PR #17), physical units, latitude-weighted: u10 1.165 against
+    // 1.491 m/s for persistence (21.8% lower), v10 1.183 against 1.807 m/s (34.5% lower). README: 129 tests.
+    { label: 'lower error (RMSE) than a no-change forecast on 10 m east-west wind (u10), 2020 test year', value: '22%', note: '1.17 against 1.49 m/s, latitude-weighted', verifiedAt: '2026-11-18', source: `${GH}/weather-transformer-scratch/blob/main/results/metrics.json`, evidence: 'results file' },
+    { label: 'lower error (RMSE) than a no-change forecast on 10 m north-south wind (v10)', value: '35%', note: '1.18 against 1.81 m/s, latitude-weighted', verifiedAt: '2026-11-18', source: `${GH}/weather-transformer-scratch/blob/main/results/metrics.json`, evidence: 'results file' },
+    { label: 'unit tests', value: '129', verifiedAt: '2026-11-18', source: `${GH}/weather-transformer-scratch/tree/main/tests` },
   ],
   stack: ['PyTorch', 'xarray', 'zarr', 'ERA5 / WeatherBench2'],
 };
@@ -264,18 +266,18 @@ export const complaintFindings: Metric[] = [
   { label: 'faster embedding with MiniLM than with BGE: 374.6 against 59.7 texts a second, on 5,000 texts', value: '6.3×', verifiedAt: '2026-10-08', source: `${GH}/complaint-intelligence-system/blob/main/data/results/embedding_benchmark.json`, evidence: 'results file' },
 ];
 
-/** Weather transformer, error by field (results/metrics.json; the change against persistence is printed in
- *  notebooks/03_results_analysis.ipynb, the per-variable chart). Standardised units. */
+/** Weather transformer, error by field (results/metrics.json, retrained baseline, repo PR #17). Physical units,
+ *  latitude-weighted; the change is against persistence. The pooled row is in standardised units. */
 export const weatherByField = {
   rows: [
-    { field: '850 hPa temperature', rmse: '0.084', change: '2.8% worse' },
-    { field: '500 hPa height', rmse: '0.067', change: '1.3% better' },
-    { field: '10 m wind, east–west', rmse: '0.240', change: '20.6% better' },
-    { field: '10 m wind, north–south', rmse: '0.291', change: '32.4% better' },
-    { field: 'All four, pooled', rmse: '0.196', change: '26.9% better' },
+    { field: '850 hPa temperature', rmse: '1.24 K', change: '3.4% worse' },
+    { field: '500 hPa geopotential', rmse: '213 m²/s²', change: '3.5% better' },
+    { field: '10 m wind, east–west', rmse: '1.17 m/s', change: '21.8% better' },
+    { field: '10 m wind, north–south', rmse: '1.18 m/s', change: '34.5% better' },
+    { field: 'All four, pooled (standardised)', rmse: '0.185', change: '28.7% better' },
   ],
-  verifiedAt: '2026-10-08',
-  source: `${GH}/weather-transformer-scratch/blob/main/notebooks/03_results_analysis.ipynb`,
+  verifiedAt: '2026-11-18',
+  source: `${GH}/weather-transformer-scratch/blob/main/results/metrics.json`,
 };
 
 export const docathon = {
@@ -332,9 +334,9 @@ export const stations: Station[] = [
     summary: 'Forecasts four ERA5 weather fields six hours ahead with a vision transformer. Every block, attention included, is written and unit-tested by hand.',
     repo: `${GH}/weather-transformer-scratch`,
     status: { label: 'evaluated', kind: 'plain' },
-    tests: { label: 'unit tests', value: '74', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/tree/main/tests` },
+    tests: { label: 'unit tests', value: '129', verifiedAt: '2026-11-18', source: `${GH}/weather-transformer-scratch/tree/main/tests` },
     metrics: [
-      { label: 'RMSE over persistence', value: '27%', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/blob/main/results/metrics.json`, evidence: 'results file' },
+      { label: 'lower wind RMSE than persistence (u10 / v10)', value: '22% / 35%', verifiedAt: '2026-11-18', source: `${GH}/weather-transformer-scratch/blob/main/results/metrics.json`, evidence: 'results file' },
       { label: 'parameters', value: '4,805,440', verifiedAt: '2026-10-08', source: `${GH}/weather-transformer-scratch/blob/main/notebooks/03_results_analysis.ipynb`, evidence: 'notebook' },
     ],
     stack: ['PyTorch', 'xarray', 'ERA5'],

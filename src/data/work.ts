@@ -52,7 +52,7 @@ export const featured: Featured[] = [
     name: 'Weather Transformer from Scratch',
     outcome: 'Forecasts four ERA5 weather fields six hours ahead. Every block, attention included, is written and unit-tested by hand.',
     // Pooled over four fields; the per-field split is on the case study, and the caption says where the gain is.
-    metric: figure('weather-transformer-scratch', 'RMSE over persistence', 'lower error (RMSE) than a no-change forecast over 2020, mostly in wind; temperature is 2.8% worse'),
+    metric: figure('weather-transformer-scratch', 'lower wind RMSE than persistence (u10 / v10)', 'lower 10 m wind error than a no-change forecast over 2020; temperature and geopotential still trail anomaly persistence'),
     tags: ['PyTorch', 'xarray', 'ERA5'],
   }),
   card('complaint-intelligence-system', {

@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path';
 
 const AUTHOR = 'AswaniSahoo';
 
-// `project` is the unit the site counts ("34 merged upstream PRs across 5 orgs").
+// `project` is the unit the site counts ("35 merged upstream PRs across 6 projects").
 // PyTorch and ExecuTorch share a GitHub org but are separate projects with
 // separate maintainers, so they count separately, matching wiki/oss-prs.md.
 const REPOS = [
@@ -24,6 +24,7 @@ const REPOS = [
   { slug: 'krkn-chaos/krkn-ai', org: 'CNCF krkn-chaos', project: 'krkn-chaos', domain: 'chaos-engineering' },
   { slug: 'krkn-chaos/website', org: 'CNCF krkn-chaos', project: 'krkn-chaos', domain: 'chaos-engineering' },
   { slug: 'malariagen/malariagen-data-python', org: 'MalariaGEN', project: 'MalariaGEN', domain: 'genomics' },
+  { slug: 'brightbandtech/ExtremeWeatherBench', org: 'Brightband', project: 'ExtremeWeatherBench', domain: 'weather' },
 ];
 
 const FIELDS = 'number,title,url,state,mergedAt,closedAt,createdAt,labels';
