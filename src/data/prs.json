@@ -1,13 +1,18 @@
 {
-  "verifiedAt": "2026-09-30",
+  "verifiedAt": "2026-11-18",
   "author": "AswaniSahoo",
   "totals": {
-    "merged": 34,
+    "merged": 35,
     "open": 4,
     "closed": 4,
-    "projects": 5
+    "projects": 6
   },
   "byProject": {
+    "ExtremeWeatherBench": {
+      "merged": 1,
+      "open": 0,
+      "closed": 0
+    },
     "krkn-chaos": {
       "merged": 4,
       "open": 1,
@@ -45,6 +50,18 @@
     }
   },
   "prs": [
+    {
+      "repo": "brightbandtech/ExtremeWeatherBench",
+      "org": "Brightband",
+      "project": "ExtremeWeatherBench",
+      "domain": "weather",
+      "number": 437,
+      "title": "feat: add netCDF output option for case caches",
+      "url": "https://github.com/brightbandtech/ExtremeWeatherBench/pull/437",
+      "status": "merged",
+      "date": "2026-11-16",
+      "mergedVia": "api"
+    },
     {
       "repo": "krkn-chaos/krkn-ai",
       "org": "CNCF krkn-chaos",

@@ -5,16 +5,17 @@ const data = ledger as PrLedger;
 
 /**
  * The upstream headline is frozen (wiki/state.md). Raised from 33 to 34 on 2026-09-30 after
- * krkn-chaos/krkn-ai #481 merged on 2026-09-29, checked with gh. It is never
+ * krkn-chaos/krkn-ai #481 merged on 2026-09-29, and from 34 to 35 on 2026-11-18 after
+ * brightbandtech/ExtremeWeatherBench #437 merged on 2026-11-16, both checked with gh. It is never
  * recomputed from a GitHub is:merged query, which under-counts the bot-merged PyTorch,
  * ExecuTorch and MalariaGEN PRs. If a ledger refresh ever disagrees, the build stops here
  * so the change is made on purpose, in this file and in the wiki, not silently.
  */
 export const upstreamHeadline = {
-  merged: 34,
-  orgs: 5,
-  text: '34 merged upstream PRs across 5 orgs',
-  verifiedAt: '2026-09-30',
+  merged: 35,
+  orgs: 6,
+  text: '35 merged upstream PRs across 6 projects',
+  verifiedAt: '2026-11-18',
 } as const;
 
 if (data.totals.merged !== upstreamHeadline.merged || data.totals.projects !== upstreamHeadline.orgs) {
@@ -45,6 +46,7 @@ export const projectNote: Record<string, string> = {
   ExecuTorch: 'docs',
   'krkn-chaos': 'CNCF',
   MalariaGEN: 'genomics',
+  ExtremeWeatherBench: 'Brightband',
 };
 for (const o of mergedByOrg) {
   if (!projectNote[o.name]) throw new Error(`upstream.ts: ${o.name} has merged PRs but no note in projectNote`);

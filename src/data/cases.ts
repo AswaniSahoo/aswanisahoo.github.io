@@ -346,7 +346,7 @@ const wtCase: CaseStudy = {
       size: 'wide',
       alt: 'Four world maps of north–south surface wind for one 2020 test case: the input, the 6-hour forecast, the true field six hours later, and the forecast minus the truth. The forecast keeps the large-scale patterns; the errors are small and scattered.',
       caption: 'The first 2020 test case, north–south wind at 10 m: the input, the 6-hour forecast, the truth and the error, in standardised units. Wind is where the model gains most over a no-change forecast.',
-      source: weatherByField.source,
+      source: 'https://github.com/AswaniSahoo/weather-transformer-scratch/blob/main/notebooks/03_results_analysis.ipynb',
     },
   ],
   how: {
@@ -356,7 +356,7 @@ const wtCase: CaseStudy = {
   evaluation: {
     text: [need(weatherTransformer.bullets[1], 'transformer evaluation bullet')],
     table: {
-      caption: 'Error by field, 2020 test year, standardised units',
+      caption: 'Error by field, 2020 test year, physical units, latitude-weighted; the pooled row is in standardised units',
       head: ['field', 'model RMSE', 'vs a no-change forecast'],
       rows: weatherByField.rows.map((r) => [r.field, r.rmse, r.change]),
       verifiedAt: weatherByField.verifiedAt,
